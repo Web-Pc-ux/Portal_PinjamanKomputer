@@ -4,35 +4,46 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lupa Kata Laluan</title>
+    <title>Lupa Kata Laluan | Portal Peminjaman UMS</title>
     <link rel="stylesheet" href="forgot.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-    <div class="container">
-        <h2>Lupa Kata Laluan</h2>
+    <div class="forgot-container anim-fade-up">
+        <img src="https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png" alt="Logo Digital UMS"
+            class="logo" />
 
-        <label for="userid">Masukkan ID atau Email:</label><br />
-        <input type="text" id="userid" placeholder="ID atau Email" autocomplete="off" />
-        <button id="searchBtn">Cari</button>
+        <h2>Lupa Kata Laluan</h2>
+        <p class="subtitle">Sila masukkan ID Pengguna atau Email anda untuk mencari maklumat akaun.</p>
+
+        <div class="input-group">
+            <label for="userid"><i class="fas fa-user-circle"></i> ID Pengguna / Email</label>
+            <input type="text" id="userid" placeholder="Cth: chris123" autocomplete="off" />
+        </div>
+
+        <div class="button-group">
+            <button id="searchBtn" class="btn btn-primary">
+                <i class="fas fa-search"></i> Cari Maklumat
+            </button>
+            <button id="backBtn" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Kembali ke Login
+            </button>
+        </div>
 
         <div id="result" class="result"></div>
-
-        <button id="requestBtn" style="display:none;">Request Forgot</button>
-        <!-- Tambah Butang Kembali -->
-        <button id="backBtn" style="margin-top:10px;">Kembali</button>
+        <button id="requestBtn" class="btn btn-success" style="display:none; margin-top: 15px;">
+            <i class="fas fa-paper-plane"></i> Mohon Set Semula
+        </button>
     </div>
 
-    <footer id="forgotFooter"
-        style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; padding: 2rem 0; border-top: 1px solid #e2e8f0; margin-top: 2rem;">
+    <footer id="forgotFooter">
         © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
     </footer>
 
     <script src="forgot.js"></script>
-    </script>
-
-
 </body>
 
 </html>
