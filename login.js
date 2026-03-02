@@ -148,4 +148,8 @@ document.getElementById('forgotBtn').addEventListener('click', () => {
     window.location.href = 'forgot/forget.html';
 });
 
+document.getElementById('borrowBtn').addEventListener('click', () => {
+    window.location.href = 'formuser/index.html';
+});
+
 // Copyright load removed for static fallback
