@@ -75,7 +75,7 @@ loginForm.addEventListener('submit', async function (e) {
 
         if (!finalAdmin) {
             console.log("❌ Tiada padanan di Excel untuk:", username);
-            throw new Error("ID Pengguna tidak dijumpai dalam rekod (Excel). Sila daftar dalam Excel dahulu.");
+            throw new Error("ID Pengguna tidak dijumpai. Sila hubungi pentadbir.");
         }
 
         const validEmail = getVal(finalAdmin, 'email') || (username.includes('@') ? username : (getVal(finalAdmin, 'username') || username) + "@ums.edu.my");
