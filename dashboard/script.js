@@ -134,6 +134,51 @@ function initializeDashboard(adminData) {
     initMockData();
     loadSettings();
     fetchAllFromGAS(); // Tarik semua data dari Cloud setiap kali buka dashboard
+
+    // 3. Auto Logout Logic (Idle Monitor)
+    initIdleMonitor();
+}
+
+let idleTimer;
+function initIdleMonitor() {
+    let lastActivity = Date.now();
+
+    const resetTimer = () => {
+        lastActivity = Date.now();
+    };
+
+    // Events to track
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+        document.addEventListener(evt, resetTimer, true);
+    });
+
+    if (idleTimer) clearInterval(idleTimer);
+
+    idleTimer = setInterval(() => {
+        const settings = getDB('db_settings');
+        const idleLimitSeconds = parseInt(settings.idle || "1800");
+        const elapsedSeconds = (Date.now() - lastActivity) / 1000;
+
+        if (elapsedSeconds >= idleLimitSeconds) {
+            console.warn("⏰ Idle timeout reached. Automatic logout.");
+            performAutoLogout();
+        }
+    }, 10000); // Check every 10 seconds
+}
+
+function performAutoLogout() {
+    clearInterval(idleTimer);
+    localStorage.removeItem('loggedInAdmin');
+
+    Swal.fire({
+        title: 'Sesi Tamat',
+        text: 'Anda telah dilog keluar secara automatik kerana tidak aktif.',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+    }).then(() => {
+        window.location.href = '../index.html';
+    });
 }
 
 // Modal Logic
@@ -583,6 +628,7 @@ async function saveSettings() {
     if (logoEl && logoEl.files[0]) logo = await readFileAsDataURL(logoEl.files[0]);
     if (bgEl && bgEl.files[0]) bg = await readFileAsDataURL(bgEl.files[0]);
 
+    const themeChoice = document.getElementById('themeChoice')?.value || "light";
     const settings = { idle, sound, volume, isMuted, gasToken, logo, bg, themeChoice };
     localStorage.setItem('db_settings', JSON.stringify(settings));
 
@@ -599,6 +645,7 @@ async function saveSettings() {
 
         // Refresh UI
         loadSettings();
+        playSound('bell');
 
         Swal.fire('Berjaya!', 'Tetapan telah disimpan ke Cloud.', 'success');
         console.log('✅ Settings Saved & Synced:', settings);
@@ -633,12 +680,95 @@ function loadSettings() {
         if (logoImg) logoImg.src = settings.logo;
     }
     if (settings.bg) {
-        document.body.style.backgroundImage = `url(${settings.bg})`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundAttachment = 'fixed';
+        const bgContainer = document.getElementById('bgBlurContainer');
+        if (bgContainer) bgContainer.style.backgroundImage = `url(${settings.bg})`;
     }
 
     applyTheme(settings.themeChoice || 'light');
+}
+
+/* ==============================
+   SOUND & NOTIFICATION ENGINE
+ ============================== */
+const SOUNDS = {
+    bell: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
+    chime: 'https://assets.mixkit.co/active_storage/sfx/2218/2218-preview.mp3',
+    alert: 'https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3'
+};
+
+function playSound(type = null) {
+    const settings = getDB('db_settings');
+    if (settings.isMuted) return;
+
+    const chosenType = type || settings.sound || 'bell';
+    const volume = (settings.volume || 80) / 100;
+    const url = SOUNDS[chosenType] || SOUNDS.bell;
+
+    try {
+        const audio = new Audio(url);
+        audio.volume = volume;
+        audio.play().catch(e => console.warn("🔇 Audio playback blocked by browser policy. Interaction required."));
+    } catch (err) {
+        console.error("❌ Audio Error:", err);
+    }
+}
+
+function testSound() {
+    const soundType = document.getElementById('soundChoice')?.value || 'bell';
+    const volume = document.getElementById('soundVolume')?.value || 80;
+    const isMuted = document.getElementById('muteSound')?.checked || false;
+
+    if (isMuted) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'Bunyi sedang di-mute',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        return;
+    }
+
+    // Play temporary sound with current UI settings
+    const url = SOUNDS[soundType] || SOUNDS.bell;
+    const audio = new Audio(url);
+    audio.volume = volume / 100;
+    audio.play();
+}
+
+/* ==============================
+   IMAGE CLEAR FUNCTIONS
+ ============================== */
+async function clearImage(type) {
+    const settings = getDB('db_settings');
+    if (type === 'logo') {
+        settings.logo = '';
+        const logoImg = document.getElementById('sidebarLogo');
+        if (logoImg) logoImg.src = "https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png";
+        document.getElementById('logoUpload').value = '';
+    } else if (type === 'bg') {
+        settings.bg = '';
+        const bgContainer = document.getElementById('bgBlurContainer');
+        if (bgContainer) bgContainer.style.backgroundImage = 'none';
+        document.getElementById('bgUpload').value = '';
+    }
+
+    saveDB('db_settings', settings);
+
+    try {
+        await syncToGAS({ id: 'current', ...settings }, 'update', 'tetapan');
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Imej ${type} telah dipadam`,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    } catch (e) {
+        console.error("❌ Gagal sync pemadaman imej:", e);
+    }
 }
 
 /* ==============================
@@ -826,13 +956,41 @@ async function fetchAllFromGAS() {
             ];
 
             mappings.forEach(m => {
-                let newData = allData[m.sheet] || [];
+                // 1. Dynamic Search (Case-Insensitive & Common Plurals)
+                const possibleNames = [m.sheet, m.sheet + 's', m.sheet + 'res'];
+                let newData = undefined;
+
+                // Cari key yang sepadan dalam respons GAS (Case Insensitive)
+                const responseKeys = Object.keys(allData);
+                for (const potentialName of possibleNames) {
+                    const match = responseKeys.find(k => k.toLowerCase() === potentialName.toLowerCase());
+                    if (match) {
+                        newData = allData[match];
+                        break;
+                    }
+                }
+
+                // 2. Perlindungan 'Data Hilang': Jika sheet tiada dalam respons, abaikan perbandingan.
+                if (newData === undefined) {
+                    console.warn(`⚠️ Sheet [${m.sheet}] tidak dijumpai dalam respons Bulk. Melangkau update.`);
+                    return;
+                }
+
+                // 3. Perlindungan 'Overwrite Kosong': Jangan benarkan overwrite dengan senarai kosong jika local ada data
+                const currentData = getDB(m.key);
+                if (Array.isArray(newData) && newData.length === 0 && currentData.length > 0) {
+                    // Kecuali jika memang kita nak kosongkan, tapi buat masa ni kita protect
+                    if (m.sheet === 'admin') {
+                        console.warn(`⚠️ Respons Cloud untuk [admin] adalah kosong. Mode perlindungan diaktifkan.`);
+                        return;
+                    }
+                }
+
                 if (m.sheet === 'tetapan') {
-                    // Update: search in settings logic
                     newData = (Array.isArray(newData) && newData.length > 0) ? newData[0] : newData;
                 }
 
-                const currentDataStr = JSON.stringify(getDB(m.key));
+                const currentDataStr = JSON.stringify(currentData);
                 const newDataStr = JSON.stringify(newData);
 
                 if (currentDataStr !== newDataStr) {
@@ -942,17 +1100,35 @@ function saveDB(key, data) {
 }
 
 function initMockData() {
-    // Sediakan Admin kecemasan dalam memory jika Cloud belum ditarik
+    // 1. Ambil data sesi semasa
+    const session = localStorage.getItem('loggedInAdmin');
+    const currentUser = session ? JSON.parse(session) : null;
+
+    // 2. Sediakan Admin kecemasan dalam memory (Hanya jika Cloud belum ditarik)
     if (CORE_DATA[DB_KEYS.ADMINS].length === 0) {
-        CORE_DATA[DB_KEYS.ADMINS].push({
-            id: 1,
-            nama: 'Super Admin',
-            username: 'admin',
-            email: 'admin@ums.edu.my',
-            jawatan: 'Pentadbir Sistem',
-            peranan: 'Pemilik',
-            password: 'admin123'
-        });
+        if (currentUser) {
+            // Gunakan identiti sebenar user yang sedang login sebagai admin pertama
+            CORE_DATA[DB_KEYS.ADMINS].push({
+                id: currentUser.id || 1,
+                nama: currentUser.nama || 'Admin Utama',
+                email: currentUser.email || 'admin@ums.edu.my',
+                username: currentUser.username || (currentUser.email ? currentUser.email.split('@')[0] : 'admin'),
+                jawatan: currentUser.jawatan || 'Pentadbir Sistem',
+                peranan: currentUser.peranan || 'Admin',
+                password: '***'
+            });
+        } else {
+            // Fallback terakhir jika tiada sesi langsung
+            CORE_DATA[DB_KEYS.ADMINS].push({
+                id: 1,
+                nama: 'Super Admin',
+                username: 'admin',
+                email: 'admin@ums.edu.my',
+                jawatan: 'Pentadbir Sistem',
+                peranan: 'Pemilik',
+                password: 'admin123'
+            });
+        }
     }
 
     renderAllTables();
@@ -1015,11 +1191,25 @@ function renderDashboardStats() {
 function renderAdminTable() {
     const table = document.getElementById('adminTableBody');
     if (!table) return;
-    const data = getDB(DB_KEYS.ADMINS);
+
+    let data = getDB(DB_KEYS.ADMINS);
 
     // Dapatkan data sesi semasa
     const session = localStorage.getItem('loggedInAdmin');
     const currentUser = session ? JSON.parse(session) : null;
+
+    // EMERGENCY RECOVERY: Jika data kosong, cuba masukkan user semasa (Proteksi Penuh)
+    if (data.length === 0 && currentUser) {
+        console.warn("⚠️ Data admin kosong. Memulihkan daripada sesi untuk paparan.");
+        data = [{
+            id: currentUser.id || 1,
+            nama: currentUser.nama,
+            email: currentUser.email,
+            username: currentUser.username || currentUser.email.split('@')[0],
+            jawatan: currentUser.jawatan || 'Pentadbir',
+            peranan: currentUser.peranan || 'Admin'
+        }];
+    }
 
     if (data.length === 0) {
         table.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tiada data admin.</td></tr>`;
@@ -1962,6 +2152,7 @@ function updateAppManagement(id) {
 
         renderApplicationTable();
         closeModal('urusModal');
+        playSound('chime');
 
         Swal.fire({
             icon: 'success',

@@ -26,7 +26,7 @@
 </head>
 
 <body>
-
+    <div class="bg-blur-container" id="bgBlurContainer"></div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Sidebar -->
@@ -547,6 +547,10 @@
                         <input type="checkbox" id="muteSound" style="width: auto;">
                         <label style="margin: 0;">Mute Sound</label>
                     </div>
+                    <button class="btn btn-outline" onclick="testSound()"
+                        style="width: 100%; margin-top: 0.5rem; justify-content: center; border-color: var(--primary); color: var(--primary);">
+                        <i class="fas fa-volume-up"></i> Uji Bunyi
+                    </button>
                 </div>
 
                 <!-- Theme Settings -->
@@ -566,11 +570,25 @@
                     <h3>Imej & Identiti</h3>
                     <div class="form-group">
                         <label>Logo Sistem</label>
-                        <input type="file" id="logoUpload" accept="image/*">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="file" id="logoUpload" accept="image/*" style="flex: 1;">
+                            <button class="btn btn-outline" onclick="clearImage('logo')"
+                                style="color: var(--danger); border-color: var(--danger); padding: 0.5rem; aspect-ratio: 1; min-width: 40px;"
+                                title="Padam Logo">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Background Laman</label>
-                        <input type="file" id="bgUpload" accept="image/*">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="file" id="bgUpload" accept="image/*" style="flex: 1;">
+                            <button class="btn btn-outline" onclick="clearImage('bg')"
+                                style="color: var(--danger); border-color: var(--danger); padding: 0.5rem; aspect-ratio: 1; min-width: 40px;"
+                                title="Padam Background">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
