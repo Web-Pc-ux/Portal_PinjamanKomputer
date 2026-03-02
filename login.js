@@ -86,13 +86,18 @@ loginForm.addEventListener('submit', async function (e) {
             userCredential = await auth.signInWithEmailAndPassword(validEmail, password);
             console.log("✅ Disahkan oleh Firebase Auth");
         } catch (firebaseErr) {
+            console.log("Firebase Error Code:", firebaseErr.code);
             // Jika akaun tiada di Firebase, sistem 'Auto-Create'
             if (firebaseErr.code === 'auth/user-not-found' || firebaseErr.code === 'auth/invalid-credential' || firebaseErr.code === 'auth/invalid-email') {
                 try {
-                    btn.textContent = 'Loading...';
+                    btn.textContent = 'Setting up profile...';
                     userCredential = await auth.createUserWithEmailAndPassword(validEmail, password);
                     console.log("✅ Profil Firebase baharu berjaya dicipta secara automatik");
                 } catch (createErr) {
+                    // Jika emel sudah ada (padahal sign-in gagal), bermaksud PASSWORD SALAH
+                    if (createErr.code === 'auth/email-already-in-use') {
+                        throw new Error('Kata Laluan Tidak Sah.');
+                    }
                     throw new Error('Gagal setup profil Firebase: ' + createErr.message);
                 }
             } else if (firebaseErr.code === 'auth/wrong-password') {

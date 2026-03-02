@@ -10,10 +10,16 @@ body {
     background: linear-gradient(135deg, #667eea, #764ba2);
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 20px;
+}
+
+.login-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 .logo {
