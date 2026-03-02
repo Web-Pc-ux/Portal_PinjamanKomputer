@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Peminjaman Komputer - Admin Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- XLSX Library for Excel Upload -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png" alt="UMS Logo"
+                id="sidebarLogo">
+            <span style="font-weight: 700; font-size: 1.10rem;">Portal Peminjaman Komputer</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" data-section="dashboard">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-section="pemohon">
+                <i class="fas fa-users"></i>
+                <span>Senarai Pemohon</span>
+            </div>
+            <div class="nav-item" data-section="komputer">
+                <i class="fas fa-laptop"></i>
+                <span>Senarai Komputer</span>
+            </div>
+            <div class="nav-item" data-section="laporan">
+                <i class="fas fa-chart-bar"></i>
+                <span>Laporan</span>
+            </div>
+            <div class="nav-item" data-section="admin">
+                <i class="fas fa-user-shield"></i>
+                <span>Senarai Admin</span>
+            </div>
+            <div class="nav-item" data-section="tetapan">
+                <i class="fas fa-cog"></i>
+                <span>Tetapan</span>
+            </div>
+        </nav>
+        <div class="nav-item" style="color: var(--danger); margin-top: auto;" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Log Keluar</span>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <div class="header-title" style="display: flex; align-items: center; gap: 1rem;">
+                <button class="burger-menu" id="burgerBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="sectionTitle">Dashboard</h1>
+            </div>
+            <div class="user-profile" style="position: relative;">
+                <button id="darkModeTopBtn" onclick="toggleDarkMode()"
+                    style="background: none; border: none; font-size: 1.15rem; color: var(--text-main); cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; aspect-ratio: 1; width: 36px; height: 36px;"
+                    title="Tukar Tema (Dark/Light)">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: background 0.2s;"
+                    onclick="toggleProfileMenu(event)">
+                    <span style="font-size: 0.875rem; font-weight: 500;">Admin Utama</span>
+                    <div id="userProfileIcon"
+                        style="width: 40px; height: 40px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--border);">
+                        <i class="fas fa-user" style="color: #64748b;"></i>
+                    </div>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-header">Profil Saya</div>
+                    <a href="#" onclick="editMyProfile()"><i class="fas fa-user-edit"></i> Ubah Profil</a>
+                    <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
+                    <a href="#" onclick="logout()" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Log
+                        Keluar</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Section: Dashboard -->
+        <section id="dashboard" class="section-content active">
+            <div class="alert alert-info"
+                style="background: #e0f2fe; padding: 1rem; border-radius: var(--radius); margin-bottom: 2rem; border-left: 4px solid var(--info);">
+                <i class="fas fa-bell"></i> <strong>Notifikasi:</strong> 3 permohonan baru menunggu kelulusan.
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="stat-card jumlah">
+                    <span class="label">Jumlah Keseluruhan</span>
+                    <span class="value">0</span>
+                </div>
+                <div class="stat-card baru">
+                    <span class="label">Baru</span>
+                    <span class="value">12</span>
+                </div>
+                <div class="stat-card lulus">
+                    <span class="label">Lulus</span>
+                    <span class="value">45</span>
+                </div>
+                <div class="stat-card dipulangkan">
+                    <span class="label">Dipulangkan</span>
+                    <span class="value">38</span>
+                </div>
+                <div class="stat-card lewat">
+                    <span class="label">Lewat</span>
+                    <span class="value" style="color: var(--danger);">5</span>
+                </div>
+                <div class="stat-card ditolak">
+                    <span class="label">Ditolak</span>
+                    <span class="value">0</span>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3>Notifikasi Tindakan</h3>
+                <div id="actionNotifications">
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">Tiada tindakan segera diperlukan.</p>
+                </div>
+            </div>
+        </section>
+
+        </section>
+
+        <!-- Section: Senarai Pemohon -->
+        <section id="pemohon" class="section-content">
+            <div class="action-header">
+                <button class="btn btn-primary" onclick="showShareModal()"><i class="fas fa-share-nodes"></i> Borang
+                    User</button>
+                <button class="btn btn-primary" onclick="openFormAdmin()" style="background-color: #2a3eb1;"><i
+                        class="fas fa-file-signature"></i> Form Admin</button>
+            </div>
+
+            <!-- Jadual 1: Permohonan Sedang Diproses -->
+            <div class="settings-card" style="margin-bottom: 2rem;">
+                <h3 style="color: var(--primary);"><i class="fas fa-clock"></i> Senarai Permohonan Aktif</h3>
+                <div class="table-container">
+                    <table class="table-compact">
+                        <thead>
+                            <tr>
+                                <th>No. Permohonan</th>
+                                <th>Maklumat Pemohon</th>
+                                <th>Maklumat Pinjaman</th>
+                                <th>Tempoh Penggunaan</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicantTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    Memuatkan data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Jadual 2: Permohonan Lewat -->
+            <div class="settings-card" style="margin-bottom: 2rem;">
+                <h3 style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Senarai Permohonan Lewat
+                </h3>
+                <div id="lateAlertContainer"></div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Senarai peralatan yang
+                    masih belum dipulangkan melepasi tarikh tamat.</p>
+                <div class="table-container">
+                    <table class="table-compact">
+                        <thead>
+                            <tr>
+                                <th>No. Permohonan</th>
+                                <th>Maklumat Pemohon</th>
+                                <th>Maklumat Pinjaman</th>
+                                <th>Tempoh Penggunaan</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delayedTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    Tiada rekod lewat.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Jadual 3: Permohonan Telah Selesai -->
+            <div class="settings-card" style="margin-bottom: 2rem;">
+                <h3 style="color: var(--success);"><i class="fas fa-check-double"></i> Rekod Peminjaman Selesai</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Senarai di bawah
+                    menunjukkan permohonan yang telah dipulangkan atau selesai sepenuhnya.</p>
+                <div class="table-container">
+                    <table class="table-compact">
+                        <thead>
+                            <tr>
+                                <th>No. Permohonan</th>
+                                <th>Maklumat Pemohon</th>
+                                <th>Maklumat Pinjaman</th>
+                                <th>Tempoh Penggunaan</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="completedTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    Tiada rekod selesai.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Jadual 4: Rekod Permohonan Ditolak -->
+            <div class="settings-card">
+                <h3 style="color: #64748b;"><i class="fas fa-ban"></i> Rekod Permohonan Ditolak</h3>
+                <div class="table-container">
+                    <table class="table-compact">
+                        <thead>
+                            <tr>
+                                <th>No. Permohonan</th>
+                                <th>Maklumat Pemohon</th>
+                                <th>Maklumat Pinjaman</th>
+                                <th>Tempoh Penggunaan</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rejectedTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    Tiada rekod ditolak.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Senarai Komputer -->
+        <section id="komputer" class="section-content">
+            <div class="action-header">
+                <button class="btn btn-primary" onclick="showTambahKategori()"><i class="fas fa-plus"></i>
+                    Kategori</button>
+                <button class="btn btn-primary" onclick="showTambahModel()"><i class="fas fa-desktop"></i>
+                    Model</button>
+                <button class="btn btn-outline" onclick="document.getElementById('excelUpload').click()"
+                    style="border-color: #16a34a; color: #16a34a;">
+                    <i class="fas fa-file-excel"></i> Muat Naik Excel
+                </button>
+                <button class="btn btn-outline" onclick="downloadExcelTemplate()"
+                    style="border-color: #3b82f6; color: #3b82f6;">
+                    <i class="fas fa-download"></i> Templat Excel
+                </button>
+                <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;"
+                    onchange="handleExcelUpload(this)">
+            </div>
+
+            <!-- Excel Guide Box -->
+            <div class="alert alert-info"
+                style="margin-top: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; padding: 1.25rem; border-radius: 8px; display: flex; align-items: flex-start; gap: 1rem;">
+                <i class="fas fa-list-check" style="color: #16a34a; margin-top: 5px; font-size: 1.2rem;"></i>
+                <div>
+                    <h4 style="color: #166534; margin: 0 0 0.75rem 0; font-size: 0.95rem; font-weight: 700;">Tatacara
+                        Import & Pengisian Templat:</h4>
+                    <ul style="font-size: 0.8rem; color: #15803d; line-height: 1.6; margin: 0; padding-left: 1.2rem;">
+                        <li><strong>Langkah 1:</strong> Klik butang <span
+                                style="color: #3b82f6; font-weight: 600;">Templat Excel</span> untuk memuat turun format
+                            fail yang tepat.</li>
+                        <li><strong>Langkah 2:</strong> Buka fail tersebut dan masukkan maklumat peralatan bermula pada
+                            <strong>Baris Ke-2</strong>.
+                        </li>
+                        <li><strong>Langkah 3:</strong> <strong style="color: #c2410c;">PANTANG:</strong> Jangan ubah
+                            atau padam nama tajuk (Header) pada baris pertama.</li>
+                        <li><strong>Langkah 4:</strong> Simpan fail (Save) dan klik butang <span
+                                style="color: #16a34a; font-weight: 600;">Muat Naik Excel</span> untuk proses baki
+                            automatik.</li>
+                    </ul>
+                    <div
+                        style="margin-top: 0.75rem; padding: 0.5rem; background: #dcfce7; border-radius: 4px; font-size: 0.75rem; color: #166534;">
+                        <strong>Format Lajur:</strong> Kategori | Model | No PC | No Siri | No Pendaftaran
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>Table Kategori</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nama Kategori</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Table Senarai Peralatan</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kategori</th>
+                                    <th>Model</th>
+                                    <th>No. PC</th>
+                                    <th>No. Siri</th>
+                                    <th>No. Pendaftaran UMS</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="computerTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Laporan -->
+        <section id="laporan" class="section-content">
+            <!-- Ringkasan Statistik -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="border-left-color: var(--primary);">
+                    <span class="label">Jumlah Permohonan</span>
+                    <span class="value" id="rptTotal">0</span>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--warning);">
+                    <span class="label">Menunggu</span>
+                    <span class="value" id="rptMenunggu" style="color: var(--warning);">0</span>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--success);">
+                    <span class="label">Lulus</span>
+                    <span class="value" id="rptLulus" style="color: var(--success);">0</span>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--danger);">
+                    <span class="label">Ditolak</span>
+                    <span class="value" id="rptTolak" style="color: var(--danger);">0</span>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--primary);">
+                    <span class="label">Dipulangkan</span>
+                    <span class="value" id="rptPulang" style="color: var(--primary);">0</span>
+                </div>
+                <div class="stat-card" style="border-left-color: #ef4444;">
+                    <span class="label">Lewat</span>
+                    <span class="value" id="rptLewat" style="color: #ef4444;">0</span>
+                </div>
+            </div>
+
+            <!-- Tapis & Carian -->
+            <div class="settings-card" style="margin-bottom: 1.5rem;">
+                <h3><i class="fas fa-filter" style="color: var(--primary);"></i> Tapis Laporan</h3>
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Tarikh Mula</label>
+                        <input type="date" id="rptDateFrom">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Tarikh Akhir</label>
+                        <input type="date" id="rptDateTo">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Status</label>
+                        <select id="rptStatus">
+                            <option value="semua">Semua Status</option>
+                            <option value="Menunggu">Menunggu</option>
+                            <option value="Lulus">Lulus</option>
+                            <option value="Tolak">Ditolak</option>
+                            <option value="Dipulangkan">Dipulangkan</option>
+                            <option value="Lewat">Lewat</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Carian</label>
+                        <input type="text" id="rptSearch" placeholder="Cari nama, no. permohonan...">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="applyReportFilter()">
+                        <i class="fas fa-search"></i> Tapis
+                    </button>
+                    <button class="btn btn-outline" onclick="resetReportFilter()">
+                        <i class="fas fa-redo"></i> Set Semula
+                    </button>
+                </div>
+            </div>
+
+            <!-- Butang Export -->
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="printReport()" style="background: #1e40af;">
+                    <i class="fas fa-print"></i> Cetak / PDF
+                </button>
+                <button class="btn btn-primary" onclick="exportExcel()" style="background: #16a34a;">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+                <button class="btn btn-outline" onclick="exportCSV()">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+            </div>
+
+            <!-- Table Laporan -->
+            <div class="table-container" id="reportTableContainer">
+                <table class="table-compact">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>No. Permohonan</th>
+                            <th>Maklumat Pemohon</th>
+                            <th>Maklumat Pinjaman</th>
+                            <th>Tempoh</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                Klik "Tapis" untuk menjana laporan.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Jumlah Rekod -->
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                <span id="rptRecordCount">0 rekod dijumpai</span>
+            </div>
+
+            <!-- Statistik Penggunaan Komputer -->
+            <div class="settings-card" style="margin-top: 2rem;">
+                <h3><i class="fas fa-desktop" style="color: var(--primary);"></i> Statistik Penggunaan Komputer</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Menunjukkan jumlah penggunaan setiap komputer berdasarkan rekod permohonan.
+                </p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bil</th>
+                                <th>Model</th>
+                                <th>No. PC</th>
+                                <th>No. Siri</th>
+                                <th>No. Pendaftaran UMS</th>
+                                <th>Jumlah Penggunaan</th>
+                                <th>Status Terkini</th>
+                            </tr>
+                        </thead>
+                        <tbody id="computerUsageTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    Memuatkan data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Senarai Admin -->
+        <section id="admin" class="section-content">
+            <div style="margin-bottom: 2rem;">
+                <button class="btn btn-primary" onclick="showTambahAdmin()"><i class="fas fa-user-plus"></i> Tambah
+                    Admin</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Jawatan</th>
+                            <th>Role</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section: Tetapan -->
+        <section id="tetapan" class="section-content">
+            <div class="settings-grid">
+                <!-- Idle Settings -->
+                <div class="settings-card">
+                    <h3>Tetapan Keselamatan</h3>
+                    <div class="form-group">
+                        <label>Auto Logout / Idle Time</label>
+                        <select id="idleTime">
+                            <option value="10">10 Saat</option>
+                            <option value="60">1 Minit</option>
+                            <option value="300">5 Minit</option>
+                            <option value="1800">30 Minit</option>
+                            <option value="3600">1 Jam</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sound Settings -->
+                <div class="settings-card">
+                    <h3>Tetapan Bunyi & Notifikasi</h3>
+                    <div class="form-group">
+                        <label>Pilihan Bunyi</label>
+                        <select id="soundChoice">
+                            <option value="bell">Loceng (Default)</option>
+                            <option value="chime">Chime</option>
+                            <option value="alert">Alert</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kelantangan Bunyi</label>
+                        <input type="range" id="soundVolume" min="0" max="100" value="80">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="muteSound" style="width: auto;">
+                        <label style="margin: 0;">Mute Sound</label>
+                    </div>
+                </div>
+
+                <!-- Theme Settings -->
+                <div class="settings-card">
+                    <h3>Tema Paparan</h3>
+                    <div class="form-group">
+                        <label>Pilihan Tema</label>
+                        <select id="themeChoice" onchange="handleThemeSelect(this.value)">
+                            <option value="light">Terang (Default)</option>
+                            <option value="dark">Gelap (Dark Mode)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Image Settings -->
+                <div class="settings-card">
+                    <h3>Imej & Identiti</h3>
+                    <div class="form-group">
+                        <label>Logo Sistem</label>
+                        <input type="file" id="logoUpload" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Background Laman</label>
+                        <input type="file" id="bgUpload" accept="image/*">
+                    </div>
+                </div>
+
+                <!-- Integrasi Google Sheets (GAS) - URL Hardcoded -->
+                <div class="settings-card" style="grid-column: span 2;">
+                    <h3><i class="fas fa-database"></i> Integrasi Google Sheets (GAS)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                        Sistem sedang berhubung ke Google Sheets menggunakan pautan yang telah ditetapkan secara
+                        selamat. Data akan ditarik secara automatik setiap kali dashboard dibuka.
+                    </p>
+
+                    <div id="connectionStatus"
+                        style="display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 12px; border-radius: 8px; border: 1px dashed #94a3b8; margin-bottom: 1.25rem; transition: all 0.3s ease;">
+                        <i id="statusIcon" class="fas fa-sync-alt fa-spin" style="color: #64748b;"></i>
+                        <span id="statusText" style="font-size: 0.8rem; color: #475569; font-weight: 600;">Status:
+                            Menyemak Sambungan...</span>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; grid-column: span 2; margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="saveSettings()"
+                            style="flex: 1; justify-content: center;">
+                            <i class="fas fa-save"></i> Simpan & Selaras
+                        </button>
+                        <button class="btn btn-outline" onclick="testGasConnection()"
+                            style="flex: 1; justify-content: center; border-color: var(--primary); color: var(--primary);">
+                            <i class="fas fa-plug"></i> Uji Sambungan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer-text" id="commonFooter">
+            © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
+        </footer>
+    </main>
+
+    <!-- Modals -->
+    <!-- Modal Tambah Admin -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <h3>Tambah Admin Baru</h3>
+            <form id="addAdminForm" style="margin-top: 1.5rem;">
+                <div class="form-group"><label>Nama</label><input type="text" required></div>
+                <div class="form-group"><label>Username</label><input type="text" required></div>
+                <div class="form-group"><label>Email</label><input type="email" required></div>
+                <div class="form-group"><label>Jawatan</label><input type="text" required></div>
+                <div class="form-group"><label>Password</label><input type="password" required></div>
+                <div class="form-group"><label>Role</label><input type="text" value="Admin" readonly></div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('adminModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Urus Permohonan -->
+    <div class="modal" id="urusModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3>Urus Permohonan</h3>
+            <div id="urusDetailBody"
+                style="margin-top: 1.5rem; max-height: 400px; overflow-y: auto; text-align: left; font-size: 0.9rem;">
+                <!-- Butiran akan dimasukkan melalui JS -->
+            </div>
+            <div id="urusActions"
+                style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('urusModal')">Tutup</button>
+                <div id="actionButtons" style="display: flex; gap: 1rem;">
+                    <!-- Butang Lulus/Tolak akan dimasukkan melalui JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Komputer -->
+    <div class="modal" id="computerModal">
+        <div class="modal-content">
+            <h3>Tambah Komputer</h3>
+            <form id="addComputerForm" style="margin-top: 1.5rem;">
+                <div class="form-group">
+                    <label>Pilihan Kategori</label>
+                    <select id="compCategorySelect" required>
+                        <option value="">-- Pilih Kategori --</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Nama Model</label><input type="text" required></div>
+                <div class="form-group"><label>Nombor PC</label><input type="text" required></div>
+                <div class="form-group"><label>Nombor Siri</label><input type="text" required></div>
+                <div class="form-group"><label>No. Pendaftaran UMS</label><input type="text" required></div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('computerModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

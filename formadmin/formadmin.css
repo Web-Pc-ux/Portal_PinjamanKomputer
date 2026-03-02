@@ -1,0 +1,345 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('https://storage.pixteller.com/designs/designs-images/2019-03-27/05/simple-background-backgrounds-passion-simple-1-5c9b95c3a34f9.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 30px;
+    max-width: 720px;
+    margin: 0 auto;
+    color: #222;
+    min-height: 100vh;
+
+    /* overlay putih transparan */
+    position: relative;
+}
+
+/* Floating Back Button Styles */
+.floating-back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #2a3eb1;
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.floating-back-btn:hover {
+    background-color: #1e2a81;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsiveness for floating back button */
+@media (max-width: 600px) {
+    .floating-back-btn {
+        top: 15px;
+        left: 15px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Buat layer overlay putih dengan opacity */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.70);
+    /* % putih */
+    z-index: -1;
+    /* di belakang konten */
+}
+
+.logo {
+    max-width: 120px;
+    display: block;
+    margin: 0 auto 20px;
+}
+
+
+.terms-box {
+    border: 1.8px solid #ccc;
+    background-color: #fafafa;
+    padding: 20px 25px 25px 25px;
+    border-radius: 6px;
+    margin-bottom: 30px;
+}
+
+.terms-box legend {
+    font-weight: 700;
+    font-style: italic;
+    font-size: 1.1rem;
+    padding: 0 10px;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+
+h2 {
+    text-align: center;
+    color: #2a3eb1;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.address,
+.form-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #444;
+    font-size: 0.95rem;
+}
+
+h3.form-title {
+    font-weight: 700;
+    text-decoration: underline;
+    margin-bottom: 20px;
+}
+
+ul {
+    margin-left: 25px;
+    margin-bottom: 25px;
+    line-height: 1.7;
+    color: #333;
+    font-style: italic;
+}
+
+ul li strong {
+    font-weight: 700;
+    font-style: normal;
+}
+
+.btn-container {
+    text-align: center;
+    margin-top: 25px;
+}
+
+button {
+    background-color: #2a3eb1;
+    color: white;
+    border: none;
+    padding: 12px 36px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 5px;
+    transition: background-color 0.25s ease;
+    font-weight: 600;
+}
+
+button:hover {
+    background-color: #1e2a81;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin: 14px 0 6px 0;
+    color: #222;
+}
+
+input[type=text],
+input[type=email],
+input[type=tel],
+input[type=datetime-local],
+select,
+textarea,
+input[type=number] {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 4px;
+    border: 1.8px solid #ccc;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    outline-offset: 2px;
+}
+
+input[type=text]:focus,
+input[type=email]:focus,
+input[type=tel]:focus,
+input[type=datetime-local]:focus,
+select:focus,
+textarea:focus,
+input[type=number]:focus {
+    border-color: #2a3eb1;
+    outline: none;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+fieldset.multi-choice {
+    margin-top: 25px;
+    border: 1.8px solid #ccc;
+    padding: 5px 20px 20px 20px;
+    border-radius: 6px;
+    background-color: #fafafa;
+    position: relative;
+}
+
+fieldset.multi-choice legend {
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.10px;
+    max-width: 100%;
+    white-space: normal;
+    display: inline-block;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+}
+
+
+.multi-choice>div {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.multi-choice label {
+    font-weight: normal;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.multi-choice input[type=number] {
+    width: 120px;
+    padding: 7px 8px;
+    border-radius: 4px;
+    border: 1.5px solid #bbb;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+.multi-choice input[type=number]:disabled {
+    background-color: #eee;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+.sub-models {
+    display: none;
+    margin-left: 28px;
+    margin-top: 8px;
+    padding: 10px;
+    border-left: 3px solid #2a3eb1;
+    background: #f4f7ff;
+    border-radius: 4px;
+}
+
+.sub-models label {
+    display: block;
+    font-weight: normal;
+    margin: 5px 0;
+    cursor: pointer;
+}
+
+.item-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Form layout grid for page 2 */
+#page2 form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 25px;
+}
+
+#page2 form label {
+    margin-top: 0;
+}
+
+#page2 form label[for="tujuan"],
+#page2 form textarea,
+#page2 form fieldset,
+#page2 form .btn-container {
+    grid-column: 1 / -1;
+}
+
+#page2 form textarea {
+    min-height: 90px;
+}
+
+/* Adjust buttons container */
+#page2 .btn-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+/* Responsive for small screens */
+@media (max-width: 600px) {
+    #page2 form {
+        grid-template-columns: 1fr;
+    }
+
+    #page2 .btn-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    #page2 .btn-container button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    input[type=text],
+    input[type=email],
+    input[type=tel],
+    input[type=datetime-local],
+    select,
+    textarea,
+    input[type=number] {
+        font-size: 1rem;
+    }
+
+    fieldset.multi-choice>div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .multi-choice input[type=number] {
+        width: 100%;
+        margin-top: 6px;
+    }
+}
+
+.stock-status {
+    font-weight: 700;
+    margin-left: 8px;
+    font-size: 0.9rem;
+}
+
+.out-of-stock {
+    color: #d32f2f;
+    font-weight: 700;
+}
+
+.error-input {
+    border-color: #d32f2f !important;
+}
+
+.disabled-label {
+    color: #888888;
+    cursor: not-allowed;
+}

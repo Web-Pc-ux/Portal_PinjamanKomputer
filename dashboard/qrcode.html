@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengesahan Peminjaman/Pemulangan</title>
+    <link rel="stylesheet" href="../dashboard/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: #f1f5f9;
+        }
+
+        .verify-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .verify-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .verify-header i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--text-main);
+            text-align: right;
+            max-width: 60%;
+        }
+
+        .terms-box {
+            margin-top: 2rem;
+            padding: 1.25rem;
+            background: #fef2f2;
+            border-radius: 12px;
+            border: 1px solid #fee2e2;
+        }
+
+        .checkbox-container {
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #991b1b;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        #successState {
+            display: none;
+            text-align: center;
+        }
+
+        .scan-table {
+            width: 100%;
+            margin-top: 0.5rem;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .scan-table th,
+        .scan-table td {
+            padding: 0.6rem;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .scan-table th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+
+        .scan-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .scan-area-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Feedback Styles */
+        .feedback-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #e2e8f0;
+        }
+
+        .logo {
+            max-width: 140px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+
+        .feedback-title {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .rating-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .rating-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .rating-options {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+
+        .rating-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .rating-btn i {
+            font-size: 0.7rem;
+            color: #cbd5e1;
+        }
+
+        .rating-btn:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .rating-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .rating-btn.active i {
+            color: #fbbf24;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 80px;
+            margin-top: 0.5rem;
+        }
+
+        .help-question {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f0fdf4;
+            border-radius: 12px;
+            border: 1px solid #dcfce7;
+        }
+
+        .help-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .help-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .help-btn.active {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+
+        /* Stars Animation */
+        @keyframes starPop {
+            0% {
+                transform: scale(0) rotate(0);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.5) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .star-anim {
+            position: absolute;
+            color: #fbbf24;
+            pointer-events: none;
+            z-index: 100;
+            animation: starPop 1s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="verify-card" id="mainCard">
+        <div class="verify-header">
+            <img src="https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png" class="logo" />
+            <i id="headerIcon" class="fas fa-file-signature"></i>
+            <h2 id="pageTitle">Pengesahan</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Sila semak maklumat dan sahkan di bawah.</p>
+        </div>
+
+        <div id="loading" style="text-align: center; padding: 2rem;">
+            <i class="fas fa-spinner fa-spin"></i> Memuatkan data...
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="info-row">
+                <span class="info-label">No. Permohonan</span>
+                <span class="info-value" id="dispNo"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Penama Pinjam</span>
+                <span class="info-value" id="dispNama"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Model & Kuantiti</span>
+                <span class="info-value" id="dispItem"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tarikh Pinjam</span>
+                <span class="info-value" id="dispMula"></span>
+            </div>
+
+            <!-- Table bernama scan - dibawah area mula -->
+            <div id="scanArea"
+                style="display: none; margin: 1rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <div class="scan-area-title">
+                    <i class="fas fa-clock"></i> Rekod Imbasan (Scan)
+                </div>
+                <table id="scan" class="scan-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Tarikh & Masa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scanBody"></tbody>
+                </table>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tarikh Pulang</span>
+                <span class="info-value" id="dispTamat"></span>
+            </div>
+
+            <!-- Table Rating (Hidden by default, used in success state) -->
+            <div id="feedbackResultArea"
+                style="display: none; margin: 1rem 0; padding: 1rem; background: #fff7ed; border-radius: 12px; border: 1px dashed #fdba74;">
+                <div class="scan-area-title" style="color: #ea580c;">
+                    <i class="fas fa-star"></i> Maklumbalas Anda
+                </div>
+                <table class="scan-table">
+                    <thead>
+                        <tr>
+                            <th>Perkara</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedbackBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Feedback Section (Pulang Only) -->
+            <div id="feedbackSection" class="feedback-section" style="display: none;">
+                <div class="feedback-title">D. Maklumbalas Pengguna</div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem;">Maklumbalas anda adalah
+                    penting bagi penambahbaikan mutu perkhidmatan kami.</p>
+
+                <div class="rating-group" data-rating-id="kemudahan">
+                    <label class="rating-label">1. Kemudahan (Peralatan yang dipinjam)</label>
+                    <div class="rating-options">
+                        <button class="rating-btn" onclick="setRating('kemudahan', 1)">1 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('kemudahan', 2)">2 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('kemudahan', 3)">3 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('kemudahan', 4)">4 <i
+                                class="fas fa-star"></i></button>
+                    </div>
+                </div>
+
+                <div class="rating-group" data-rating-id="penyampaian">
+                    <label class="rating-label">2. Penyampaian</label>
+                    <div class="rating-options">
+                        <button class="rating-btn" onclick="setRating('penyampaian', 1)">1 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('penyampaian', 2)">2 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('penyampaian', 3)">3 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('penyampaian', 4)">4 <i
+                                class="fas fa-star"></i></button>
+                    </div>
+                </div>
+
+                <div class="rating-group" data-rating-id="keseluruhan">
+                    <label class="rating-label">3. Keseluruhan</label>
+                    <div class="rating-options">
+                        <button class="rating-btn" onclick="setRating('keseluruhan', 1)">1 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('keseluruhan', 2)">2 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('keseluruhan', 3)">3 <i
+                                class="fas fa-star"></i></button>
+                        <button class="rating-btn" onclick="setRating('keseluruhan', 4)">4 <i
+                                class="fas fa-star"></i></button>
+                    </div>
+                </div>
+
+                <div class="rating-group">
+                    <label class="rating-label">Cadangan Penambahbaikan (Jika ada)</label>
+                    <textarea id="feedbackNotes" class="feedback-textarea"
+                        placeholder="Tuliskan cadangan anda di sini..."></textarea>
+                </div>
+
+                <div class="help-question">
+                    <label class="rating-label" style="color: #166534;">Adakah kami membantu anda?</label>
+                    <div class="help-options">
+                        <button class="help-btn" onclick="setHelpOption('YA')">YA</button>
+                        <button class="help-btn" onclick="setHelpOption('TIDAK')">TIDAK</button>
+                        <button class="help-btn" onclick="setHelpOption('BELUM PASTI')">BELUM PASTI</button>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem; text-align: center;">1 = Kurang
+                    Memuaskan | 2 = Memuaskan | 3 = Baik | 4 = Sangat Baik</p>
+            </div>
+
+            <div class="terms-box">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="termsCheck" style="width: 20px; height: 20px;">
+                    <span id="termsText"></span>
+                </label>
+            </div>
+
+            <button class="btn btn-primary submit-btn" id="btnSubmit" onclick="submitVerify()">
+                Hantar & Sahkan
+            </button>
+        </div>
+
+        <div id="successState">
+            <i class="fas fa-check-circle" style="font-size: 5rem; color: var(--success); margin-bottom: 1.5rem;"></i>
+            <h3>Berjaya Disahkan!</h3>
+            <p style="margin: 1rem 0; color: var(--text-muted);">Masa dan tarikh telah direkodkan secara automatik ke
+                dalam sistem.</p>
+            <button class="btn btn-outline" onclick="window.close()">Tutup Halaman</button>
+        </div>
+    </div>
+
+    <footer class="footer-text" id="qrFooter"
+        style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
+        © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
+    </footer>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const appId = parseInt(urlParams.get('id'));
+        const type = urlParams.get('type'); // 'pinjam' or 'pulang'
+
+        // --- KONFIGURASI INTEGRASI (TANAM) ---
+        const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const data = localStorage.getItem('db_applications');
+            let app = null;
+
+            if (data) {
+                const apps = JSON.parse(data);
+                app = apps.find(a => a.id === appId);
+            }
+
+            // FALLBACK: Tarik terus dari GAS jika tiada dalam localStorage (Dashboard Memory-Only mode)
+            if (!app && GAS_URL) {
+                try {
+                    const res = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=permohonan`);
+                    const result = await res.json();
+                    if (result.status === 'success' && result.data) {
+                        app = result.data.find(a => a.id === appId);
+                    }
+                } catch (e) { console.error('Gagal tarik Cloud:', e); }
+            }
+
+            if (app) {
+                renderAppData(app);
+            } else {
+                document.getElementById('loading').innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Rekod tidak dijumpai.';
+            }
+        });
+
+        function renderAppData(app) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            document.getElementById('dispNo').textContent = app.noPermohonan;
+            document.getElementById('dispNama').textContent = app.nama;
+
+            const modelHtml = `<div style="font-weight:700; color:var(--primary); margin-bottom:4px;">${app.model}</div>` +
+                `<div style="font-size:0.85rem; line-height:1.5;">${app.kuantiti}</div>`;
+            document.getElementById('dispItem').innerHTML = modelHtml;
+
+            document.getElementById('dispMula').textContent = app.mula;
+            document.getElementById('dispTamat').textContent = app.tamat;
+
+            updateScanTable(app);
+
+            if (type === 'pinjam') {
+                document.getElementById('pageTitle').textContent = 'Pengesahan Peminjaman';
+                document.getElementById('headerIcon').className = 'fas fa-box-open';
+                document.getElementById('headerIcon').style.color = '#f59e0b';
+                document.getElementById('termsText').textContent = 'Saya akan bertanggungjawab sepenuhnya keatas barang yang dibawa seperti diatas.';
+            } else {
+                document.getElementById('pageTitle').textContent = 'Pengesahan Pemulangan';
+                document.getElementById('headerIcon').className = 'fas fa-history';
+                document.getElementById('headerIcon').style.color = '#10b981';
+                document.getElementById('termsText').textContent = 'Saya telah memulangkan peralatan yang dipinjam pada tarikh yang dinyatakan.';
+                document.getElementById('feedbackSection').style.display = 'block';
+            }
+
+            // Simpan window app global untuk submission
+            window.currentApp = app;
+        }
+
+        let ratings = { kemudahan: 0, penyampaian: 0, keseluruhan: 0 };
+        let helpOption = '';
+
+        function setRating(categoryId, value) {
+            ratings[categoryId] = value;
+            const container = document.querySelector(`.rating-group[data-rating-id="${categoryId}"]`);
+            container.querySelectorAll('.rating-btn').forEach((btn, idx) => {
+                if (idx + 1 === value) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function setHelpOption(val) {
+            helpOption = val;
+            document.querySelectorAll('.help-btn').forEach(btn => {
+                if (btn.textContent === val) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function createStarExplosion() {
+            const successIcon = document.querySelector('#successState i');
+            const rect = successIcon.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 20; i++) {
+                const star = document.createElement('i');
+                star.className = 'fas fa-star star-anim';
+                star.style.left = centerX + 'px';
+                star.style.top = centerY + 'px';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * 150;
+                const tx = Math.cos(angle) * dist;
+                const ty = Math.sin(angle) * dist;
+
+                star.animate([
+                    { transform: 'translate(0, 0) scale(0)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(1.5) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0, .9, .57, 1)',
+                    fill: 'forwards'
+                });
+
+                document.body.appendChild(star);
+                setTimeout(() => star.remove(), 2000);
+            }
+        }
+
+        function updateScanTable(app) {
+            const scanBody = document.getElementById('scanBody');
+            const scanArea = document.getElementById('scanArea');
+            scanBody.innerHTML = '';
+            let hasScan = false;
+
+            if (app.scanPinjam) {
+                hasScan = true;
+                scanBody.innerHTML += `<tr><td style="color: #f59e0b; font-weight: 600;"><i class="fas fa-sign-out-alt"></i> Pinjam</td><td style="font-family: monospace; font-weight: 600;">${app.scanPinjam}</td></tr>`;
+            }
+            if (app.scanPulang) {
+                hasScan = true;
+                scanBody.innerHTML += `<tr><td style="color: #10b981; font-weight: 600;"><i class="fas fa-sign-in-alt"></i> Pulang</td><td style="font-family: monospace; font-weight: 600;">${app.scanPulang}</td></tr>`;
+            }
+            if (hasScan) scanArea.style.display = 'block';
+        }
+
+        async function submitVerify() {
+            if (!document.getElementById('termsCheck').checked) {
+                alert('Sila tanda kotak pengesahan terlebih dahulu.');
+                return;
+            }
+
+            const app = window.currentApp;
+            if (!app) return;
+
+            const now = new Date();
+            const timestamp = now.toLocaleDateString('ms-MY') + ' ' + now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
+
+            if (type === 'pinjam') {
+                app.scanPinjam = timestamp;
+                app.status = 'Dipinjam';
+            } else {
+                app.scanPulang = timestamp;
+                app.status = 'Selesai';
+                // Stringify feedback supaya tidak error semasa masuk ke Google Sheets
+                app.feedback = JSON.stringify({
+                    ratings: ratings,
+                    notes: document.getElementById('feedbackNotes').value,
+                    help: helpOption,
+                    submittedAt: timestamp
+                });
+            }
+
+            // TURBO MODE: Paparkan kejayaan serta-merta (Optimistic Update)
+            showSuccessUI(app);
+
+            // Sync di belakang tabir supaya user tak perlu tunggu network
+            syncToGAS(app);
+        }
+
+        function showSuccessUI(app) {
+            updateScanTable(app);
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+            createStarExplosion();
+
+            const clonedScan = document.getElementById('scanArea').cloneNode(true);
+            clonedScan.style.marginTop = '1.5rem';
+            document.getElementById('successState').insertBefore(clonedScan, document.getElementById('successState').lastElementChild);
+
+            if (type === 'pulang' && app.feedback) {
+                const fbBody = document.getElementById('feedbackBody');
+                const fbArea = document.getElementById('feedbackResultArea');
+                fbBody.innerHTML = `
+                    <tr><td>Kemudahan</td><td style="color:#fbbf24; font-weight:700;">${'★'.repeat(ratings.kemudahan)}${'☆'.repeat(4 - ratings.kemudahan)}</td></tr>
+                    <tr><td>Penyampaian</td><td style="color:#fbbf24; font-weight:700;">${'★'.repeat(ratings.penyampaian)}${'☆'.repeat(4 - ratings.penyampaian)}</td></tr>
+                    <tr><td>Keseluruhan</td><td style="color:#fbbf24; font-weight:700;">${'★'.repeat(ratings.keseluruhan)}${'☆'.repeat(4 - ratings.keseluruhan)}</td></tr>
+                    <tr><td>Membantu?</td><td style="font-weight:700; color:#10b981;">${helpOption}</td></tr>
+                `;
+                fbArea.style.display = 'block';
+                const clonedFb = fbArea.cloneNode(true);
+                clonedFb.style.marginTop = '1rem';
+                document.getElementById('successState').insertBefore(clonedFb, document.getElementById('successState').lastElementChild);
+            }
+        }
+
+        function syncToGAS(data) {
+            if (!GAS_URL) return;
+            // No await here - fire and forget for speed
+            // Use keepalive:true to ensure request completes if tab is closed
+            fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                keepalive: true,
+                body: JSON.stringify({
+                    action: 'update',
+                    token: GAS_TOKEN,
+                    data: {
+                        ...data,
+                        jenis_data: 'permohonan'
+                    }
+                })
+            }).catch(e => console.error('GAS Sync Error:', e));
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login Page</title>
+    <link rel="stylesheet" href="login.css" />
+</head>
+
+<body>
+    <div class="login-container">
+        <form id="loginForm" novalidate>
+            <img src="https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png" alt="Logo Digital UMS"
+                class="logo" />
+            <h2>Portal Peminjaman Komputer</h2>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Enter username" />
+                <span class="error-message" id="usernameError"></span>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password" />
+                <span class="error-message" id="passwordError"></span>
+            </div>
+            <button type="submit">Log In</button>
+            <button type="button" id="forgotBtn" class="link-button">Lupa Kata Laluan?</button>
+        </form>
+    </div>
+
+    <footer id="loginFooter"
+        style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #64748b; font-size: 0.8rem;">
+        © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
+    </footer>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="login.js?v=1.1"></script>
+</body>
+
+</html>

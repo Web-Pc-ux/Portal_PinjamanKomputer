@@ -1,0 +1,6 @@
+node_modules/
+_archive_lama/
+.DS_Store
+Thumbs.db
+*.log
+.vscode/

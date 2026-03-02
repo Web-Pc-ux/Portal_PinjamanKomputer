@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Borang Permohonan Peminjaman Peralatan ICT</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="formadmin.css" />
+</head>
+
+<body>
+
+    <!-- Floating Back Button -->
+    <a href="../dashboard/main.html" class="floating-back-btn" title="Kembali ke Senarai Pemohon">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
+
+    <div id="page1">
+        <img src="https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png" class="logo" />
+        <h2>JABATAN DIGITAL</h2>
+        <h2>UNIVERSITI MALAYSIA SABAH</h2>
+        <p class="address">
+            JALAN UMS, 88400 KOTA KINABALU, SABAH, MALAYSIA<br />
+            Tel: 088 320000 Samb. 613100/613031/613040
+        </p>
+        <h3 class="form-title"><span style="text-decoration: underline;">BORANG PERMOHONAN PEMINJAMAN PERALATAN ICT
+                SEKTOR PUSAT DATA & PERKOMPUTERAN DIGITAL UMS</h3>
+
+        <div class="terms-box">
+            <h4><em>SYARAT-SYARAT PEMINJAMAN:</em></h4>
+            <ul>
+                <li><em> Tempahan hendaklah dibuat <strong>TUJUH (7)</strong> hari sebelum tarikh peminjaman.</em></li>
+                <li><em> Tempahan hanya untuk <strong>AKTIVITI RASMI UNIVERSITI</strong> sahaja.</em></li>
+                <li><em> Tempahan adalah <strong>TERTAKLUK KEPADA KEUTAMAAN DIGITAL UMS</strong>.</em></li>
+                <li><em> Peralatan hendaklah dikembalikan pada <strong>TARIKH</strong> yang ditetapkan.</em></li>
+                <li><em> Peminjam <strong>BERTANGGUNGJAWAB</strong> diatas sebarang kerosakan peralatan yang
+                        dipinjam.</em></li>
+                <li><em> Pihak <strong>DIGITAL</strong> berhak menuntut sebarang <strong>KOS/GANTIRUGI</strong>
+                        sekiranya berlaku sebarang <strong>KEROSAKAN</strong> atau <strong>KEHILANGAN</strong>
+                        pada peralatan yang dipinjam.</em></li>
+            </ul>
+        </div>
+
+
+
+
+        <div class="btn-container">
+            <button id="agreeBtn">SAYA BERSETUJU</button>
+        </div>
+    </div>
+
+    <div id="page2" style="display:none;">
+        <h2>MAKLUMAT PEMOHON</h2>
+
+        <form id="applicationForm">
+            <label for="name">1. Nama Pemohon :</label>
+            <input type="text" id="name" name="name" required />
+
+            <label for="noPekerja">2. No. Pekerja :</label>
+            <input type="text" id="noPekerja" name="noPekerja" required />
+
+            <label for="email">3. Email UMS :</label>
+            <input type="email" id="email" name="email" required />
+
+            <label for="phone">4. No. Telefon :</label>
+            <input type="tel" id="phone" name="phone" required />
+
+            <label for="jabatan">5. J/A/F/P/I/B :</label>
+            <input type="text" id="jabatan" name="jabatan" required />
+
+            <label for="jenisPermohonan">6. Jenis Permohonan :</label>
+            <select id="jenisPermohonan" name="jenisPermohonan" required>
+                <option value="">-- Sila Pilih --</option>
+                <option value="Email">Email</option>
+                <option value="Surat">Surat</option>
+                <option value="Lain-lain">Lain-lain</option>
+            </select>
+
+            <label for="lokasi">7. Lokasi Penggunaan :</label>
+            <input type="text" id="lokasi" name="lokasi" required />
+
+            <label for="tujuan">8. Tujuan Penggunaan :</label>
+            <textarea id="tujuan" name="tujuan" rows="3" required></textarea>
+
+            <label for="tarikhMasaPinjam">9. Tarikh dan Masa Peminjaman :</label>
+            <input type="datetime-local" id="tarikhMasaPinjam" name="tarikhMasaPinjam" required />
+
+            <label for="tarikhMasaPulangan">10. Tarikh dan Masa Pemulangan :</label>
+            <input type="datetime-local" id="tarikhMasaPulangan" name="tarikhMasaPulangan" required />
+
+            <fieldset class="multi-choice">
+                <legend>11. Model dan Kuantiti Peminjaman:</legend>
+                <div id="modelContainer">
+                    <!-- Dinamik: diisi oleh JS dari db_computers -->
+                    <p style="color:#999; font-size:0.9em;">Memuatkan senarai komputer...</p>
+                </div>
+            </fieldset>
+
+            <div class="btn-container">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="successMessage"
+        style="display:none; text-align:center; padding:20px; border:2px solid #2a3eb1; border-radius:10px; background-color:#e0f0ff; margin-top:20px; font-weight:bold; font-size:1.1rem;">
+        <div id="successText">Borang berjaya dihantar!</div>
+        <div id="applicationNo" style="margin-top:10px; font-size:0.95rem;"></div>
+    </div>
+
+    <footer id="adminFooter"
+        style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; padding: 2rem 0; border-top: 1px solid #e2e8f0; margin-top: 2rem;">
+        © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
+    </footer>
+
+    <script src="formadmin.js"></script>
+    </script>
+</body>
+
+</html>

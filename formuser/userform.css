@@ -1,0 +1,385 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('https://storage.pixteller.com/designs/designs-images/2019-03-27/05/simple-background-backgrounds-passion-simple-1-5c9b95c3a34f9.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 30px;
+    max-width: 720px;
+    margin: 0 auto;
+    color: #222;
+    min-height: 100vh;
+
+    /* overlay putih transparan */
+    position: relative;
+}
+
+/* Buat layer overlay putih dengan opacity */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.70);
+    /* % putih */
+    z-index: -1;
+    /* di belakang konten */
+}
+
+.logo {
+    max-width: 120px;
+    display: block;
+    margin: 0 auto 20px;
+}
+
+
+.terms-box {
+    border: 1.8px solid #ccc;
+    background-color: #fafafa;
+    padding: 20px 25px 25px 25px;
+    border-radius: 6px;
+    margin-bottom: 30px;
+}
+
+.terms-box legend {
+    font-weight: 700;
+    font-style: italic;
+    font-size: 1.1rem;
+    padding: 0 10px;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+
+h2 {
+    text-align: center;
+    color: #2a3eb1;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.address,
+.form-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #444;
+    font-size: 0.95rem;
+}
+
+h3.form-title {
+    font-weight: 700;
+    text-decoration: underline;
+    margin-bottom: 20px;
+}
+
+ul {
+    margin-left: 25px;
+    margin-bottom: 25px;
+    line-height: 1.7;
+    color: #333;
+    font-style: italic;
+}
+
+ul li strong {
+    font-weight: 700;
+    font-style: normal;
+}
+
+.btn-container {
+    text-align: center;
+    margin-top: 25px;
+}
+
+button {
+    background-color: #2a3eb1;
+    color: white;
+    border: none;
+    padding: 12px 36px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 5px;
+    transition: background-color 0.25s ease;
+    font-weight: 600;
+}
+
+button:hover {
+    background-color: #1e2a81;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin: 14px 0 6px 0;
+    color: #222;
+}
+
+input[type=text],
+input[type=email],
+input[type=tel],
+input[type=datetime-local],
+select,
+textarea,
+input[type=number] {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 4px;
+    border: 1.8px solid #ccc;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    outline-offset: 2px;
+}
+
+input[type=text]:focus,
+input[type=email]:focus,
+input[type=tel]:focus,
+input[type=datetime-local]:focus,
+select:focus,
+textarea:focus,
+input[type=number]:focus {
+    border-color: #2a3eb1;
+    outline: none;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+fieldset.multi-choice {
+    margin-top: 25px;
+    border: 1.8px solid #ccc;
+    padding: 5px 20px 20px 20px;
+    border-radius: 6px;
+    background-color: #fafafa;
+    position: relative;
+}
+
+fieldset.multi-choice legend {
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.10px;
+    max-width: 100%;
+    white-space: normal;
+    display: inline-block;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+}
+
+
+.multi-choice>div {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.multi-choice label {
+    font-weight: normal;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.multi-choice input[type=number] {
+    width: 120px;
+    padding: 7px 8px;
+    border-radius: 4px;
+    border: 1.5px solid #bbb;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+.multi-choice input[type=number]:disabled {
+    background-color: #eee;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+/* Form layout grid for page 2 */
+#page2 form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.full-width {
+    grid-column: 1 / -1 !important;
+}
+
+.conditional-field {
+    display: none;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #2a3eb1;
+    margin-top: 10px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    animation: slideDown 0.3s ease-out forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive for small screens */
+@media (max-width: 600px) {
+    #page2 form {
+        grid-template-columns: 1fr;
+    }
+
+    #page2 .btn-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    #page2 .btn-container button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    input[type=text],
+    input[type=email],
+    input[type=tel],
+    input[type=datetime-local],
+    select,
+    textarea,
+    input[type=number] {
+        font-size: 1rem;
+    }
+
+    fieldset.multi-choice>div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .multi-choice input[type=number] {
+        width: 100%;
+        margin-top: 6px;
+    }
+}
+
+.stock-status {
+    font-weight: 700;
+    margin-left: 8px;
+    font-size: 0.9rem;
+}
+
+.out-of-stock {
+    color: #d32f2f;
+    font-weight: 700;
+}
+
+.error-input {
+    border-color: #d32f2f !important;
+}
+
+.disabled-label {
+    color: #888888;
+    cursor: not-allowed;
+}
+
+/* Modal overlay */
+.modal {
+    display: none;
+    /* hide by default */
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Modal content box */
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 30px 40px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: scale(0.7);
+    opacity: 0;
+    animation: scaleIn 0.4s forwards;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+    color: #2a3eb1;
+    margin-bottom: 12px;
+}
+
+.modal-content p {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+/* Close button */
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #2a3eb1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+#confettiCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1000;
+}

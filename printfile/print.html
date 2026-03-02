@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cetak Borang Peminjaman ICT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="print.css">
+</head>
+
+<body>
+    <div class="print-container">
+        <!-- Header -->
+        <header class="form-header">
+            <div class="logo-section">
+                <img src="https://digital.ums.edu.my/images/2025/10/03/logo-digital-ums-warnapng.png" alt="UMS Logo"
+                    class="ums-logo">
+                <div class="header-text">
+                    <h1>JABATAN DIGITAL</h1>
+                    <h2>UNIVERSITI MALAYSIA SABAH</h2>
+                    <p>JALAN UMS, 88400 KOTA KINABALU, SABAH, MALAYSIA</p>
+                    <p>Tel: 088 320000 Samb. 613100/613031/613040</p>
+                </div>
+            </div>
+            <div class="form-no-box">
+                <p>No Borang</p>
+                <div class="box-content">
+                    <span id="borang-no">_____</span>
+                </div>
+            </div>
+        </header>
+
+        <h3 class="form-title">BORANG PERMOHONAN PEMINJAMAN PERALATAN ICT SEKTOR PUSAT DATA & PERKOMPUTERAN DIGITAL UMS
+        </h3>
+
+        <!-- Terms Section -->
+        <section class="terms-section">
+            <h4>SYARAT-SYARAT PEMINJAMAN:</h4>
+            <ul>
+                <li>Tempahan hendaklah dibuat <strong>TUJUH (7)</strong> hari sebelum tarikh peminjaman.</li>
+                <li>Tempahan hanya untuk <strong>AKTIVITI RASMI UNIVERSITI</strong> sahaja.</li>
+                <li>Tempahan adalah <strong>TERTAKLUK KEPADA KEUTAMAAN DIGITAL UMS</strong>.</li>
+                <li>Peralatan hendaklah dikembalikan pada <strong>TARIKH</strong> yang ditetapkan.</li>
+                <li>Peminjam <strong>BERTANGGUNGJAWAB</strong> diatas sebarang kerosakan peralatan yang dipinjam.</li>
+                <li>Pihak JTMK berhak menuntut sebarang <strong>KOS/GANTIRUGI</strong> sekiranya berlaku sebarang
+                    <strong>KEROSAKAN</strong> atau <strong>KEHILANGAN</strong> pada peralatan yang dipinjam.
+                </li>
+            </ul>
+        </section>
+
+        <!-- Borrower Info Table -->
+        <table class="info-table">
+            <tr>
+                <td class="label-cell">Nama Penuh</td>
+                <td colspan="3" id="print-name"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">Tujuan</td>
+                <td colspan="3" id="print-tujuan"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">No. Pekerja</td>
+                <td id="print-noPekerja"></td>
+                <td class="label-cell gray-bg">J/A/F/P/I/B</td>
+                <td id="print-jabatan"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">No. Samb.</td>
+                <td id="print-noSamb"></td>
+                <td class="label-cell gray-bg">No. HP</td>
+                <td id="print-phone"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">Tarikh Peminjaman</td>
+                <td id="print-tarikhPinjam"></td>
+                <td class="label-cell gray-bg">Tarikh Pemulangan</td>
+                <td id="print-tarikhPulang"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">Lokasi Penggunaan</td>
+                <td colspan="3" id="print-lokasi"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">Jenis Permohonan (Surat / E-mail / Lain-Lain)</td>
+                <td colspan="3" id="print-jenisPermohonan"></td>
+            </tr>
+            <tr>
+                <td colspan="4" class="small-note">Sila nyatakan</td>
+            </tr>
+        </table>
+
+        <!-- Section A -->
+        <div class="section-header">
+            <span class="section-letter">A.</span> BUTIR-BUTIR PERALATAN YANG DIPINJAM / KELUAR
+        </div>
+        <p class="section-instruction">❖ <u>PERALATAN ICT</u> <em>*Isi lampiran sekiranya ruang tidak cukup.</em></p>
+        <table class="equipment-table">
+            <thead>
+                <tr>
+                    <th width="5%">Bil</th>
+                    <th width="50%">Peralatan & Model</th>
+                    <th width="15%">Kuantiti</th>
+                    <th width="30%">No. Siri</th>
+                </tr>
+            </thead>
+            <tbody id="equipment-list">
+                <!-- Data populated by JS, default 3 empty rows -->
+                <tr>
+                    <td>1</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Section B -->
+        <div class="section-header">
+            <span class="section-letter">B.</span> PENGESAHAN PERALATAN YANG DIPINJAM / KELUAR
+        </div>
+        <div class="confirmation-container">
+            <div class="conf-left">
+                <p>Disahkan bahawa peralatan dalam keadaan baik dan boleh digunakan. Dibenarkan peralatan tersebut
+                    dibawa keluar untuk tujuan seperti yang dinyatakan.</p>
+                <div class="sign-box">
+                    <p>Tandatangan DIGITAL UMS : ______________________</p>
+                    <p>Nama : ______________________</p>
+                    <p>Tarikh / Masa : ______________________</p>
+                </div>
+            </div>
+            <div class="conf-right">
+                <p>Saya akan bertanggungjawab sepenuhnya keatas barang yang dibawa seperti diatas.</p>
+                <div class="sign-box">
+                    <p>Tandatangan Peminjam : ______________________</p>
+                    <p>Nama : ______________________</p>
+                    <p>Tarikh / Masa : ______________________</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section C -->
+        <div class="section-header">
+            <span class="section-letter">C.</span> PENGESAHAN PEMULANGAN PERALATAN
+        </div>
+        <div class="return-container">
+            <div class="conf-left">
+                <p>Saya telah memulangkan peralatan yang dipinjam pada tarikh yang dinyatakan.</p>
+                <div class="sign-box">
+                    <p>Tandatangan Peminjam : ______________________</p>
+                    <p>Nama : ______________________</p>
+                    <p>Tarikh / Masa : ______________________</p>
+                </div>
+            </div>
+            <div class="conf-right">
+                <p>Disahkan bahawa peralatan yang dipinjam telah dikembalikan dan dalam keadaan baik.</p>
+                <div class="sign-box">
+                    <p>Tandatangan DIGITAL UMS : ______________________</p>
+                    <p>Nama : ______________________</p>
+                    <p>Tarikh / Masa : ______________________</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section D -->
+        <div class="section-header">
+            <span class="section-letter">D.</span> MAKLUMBALAS PENGGUNA
+        </div>
+        <p class="fb-instruction">Maklumbalas anda adalah penting bagi penambahbaikan mutu perkhidmatan kami.
+            <em>(Bulatkan mana yang berkenaan)</em>
+        </p>
+        <table class="feedback-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" width="5%">NO</th>
+                    <th rowspan="2" width="45%">PERKARA</th>
+                    <th colspan="4">PEMARKAHAN</th>
+                </tr>
+                <tr>
+                    <th>1 = Kurang Memuaskan</th>
+                    <th>2 = Memuaskan</th>
+                    <th>3 = Baik</th>
+                    <th>4 = Sangat Baik</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Kemudahan (Peralatan yang dipinjam)</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Penyampaian</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Keseluruhan</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer-notes">
+            <p><strong>Cadangan Penambahbaikan(Jika ada)</strong></p>
+            <p>__________________________________________________________________________________________</p>
+            <p><strong>Adakah kami membantu anda?</strong></p>
+            <p>(YA / TIDAK / BELUM PASTI)</p>
+        </div>
+
+        <footer class="form-footer" id="printFooter">
+            <span>© 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.</span>
+        </footer>
+    </div>
+
+    <div class="no-print floating-print">
+        <button onclick="window.print()"><i class="fas fa-print"></i> Cetak Borang Sekarang</button>
+    </div>
+
+    <div class="no-print floating-back">
+        <a href="../dashboard/main.html"><button><i class="fas fa-arrow-left"></i> Kembali</button></a>
+    </div>
+
+    <script src="print.js"></script>
+</body>
+
+</html>
