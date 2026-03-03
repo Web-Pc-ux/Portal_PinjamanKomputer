@@ -17,7 +17,7 @@ const db = firebase.firestore();
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Monitor Sesi Firebase Secara Real-time (Lebih Selamat)
-    firebase.auth().onAuthStateChanged((user) => {
+    firebase.auth().onAuthStateChanged(async (user) => {
         if (!user) {
             console.warn("⚠️ Sesi tidak sah. Kembali ke Login.");
             window.location.href = '../index.html';
@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. Ambil data admin dari LocalStorage (Session Cache)
         const session = localStorage.getItem('loggedInAdmin');
         if (!session) {
-            // Jika Firebase login tapi localStorage hilang (Cth: clear cache), logout
             firebase.auth().signOut().then(() => {
                 window.location.href = '../index.html';
             });
@@ -35,6 +34,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const adminData = JSON.parse(session);
+
+        // 3. Semakan Sesi Ganda & Real-time Session Monitoring
+        try {
+            // Kita guna Username sebagai kunci dokumen supaya unik walaupun kongsi emel/UID
+            const usernameKey = adminData.username.toLowerCase().trim();
+
+            db.collection('admins').doc(usernameKey).onSnapshot(async (doc) => {
+                if (doc.exists) {
+                    const cloudSessionId = doc.data().sessionId;
+                    // Ambil semula adminData terbaru dari localStorage untuk dipadankan
+                    const latestSession = localStorage.getItem('loggedInAdmin');
+                    if (!latestSession) return;
+
+                    const latestAdminData = JSON.parse(latestSession);
+
+                    if (cloudSessionId && latestAdminData.sessionId !== cloudSessionId) {
+                        console.warn("⚠️ Sesi ditamatkan secara real-time: Login dikesan dari peranti lain.");
+                        localStorage.removeItem('loggedInAdmin');
+
+                        await Swal.fire({
+                            title: 'Sesi Bertindih',
+                            text: 'Akaun anda baru sahaja log masuk di peranti lain. Sesi ini ditamatkan.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            allowOutsideClick: false
+                        });
+
+                        await firebase.auth().signOut();
+                        window.location.href = '../index.html';
+                    }
+                }
+            }, (err) => {
+                console.error("Ralat Snapshot Sesi:", err);
+            });
+        } catch (e) {
+            console.error("Gagal memulakan pemantauan sesi:", e);
+        }
+
         initializeDashboard(adminData);
     });
 });
@@ -166,8 +203,21 @@ function initIdleMonitor() {
     }, 10000); // Check every 10 seconds
 }
 
-function performAutoLogout() {
+async function performAutoLogout() {
     clearInterval(idleTimer);
+
+    // Clear SessionId in Firestore before logout
+    const session = localStorage.getItem('loggedInAdmin');
+    if (session) {
+        const adminData = JSON.parse(session);
+        const usernameKey = adminData.username.toLowerCase().trim();
+        try {
+            await db.collection('admins').doc(usernameKey).update({ sessionId: null });
+        } catch (e) {
+            console.error("Gagal memadam sessionId semasa auto-logout:", e);
+        }
+    }
+
     localStorage.removeItem('loggedInAdmin');
 
     Swal.fire({
@@ -177,7 +227,9 @@ function performAutoLogout() {
         confirmButtonText: 'OK',
         allowOutsideClick: false
     }).then(() => {
-        window.location.href = '../index.html';
+        firebase.auth().signOut().then(() => {
+            window.location.href = '../index.html';
+        });
     });
 }
 
@@ -1031,10 +1083,24 @@ function logout() {
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Ya, Log Keluar',
         cancelButtonText: 'Batal'
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
+            // Clear SessionId in Firestore
+            const session = localStorage.getItem('loggedInAdmin');
+            if (session) {
+                const adminData = JSON.parse(session);
+                const usernameKey = adminData.username.toLowerCase().trim();
+                try {
+                    await db.collection('admins').doc(usernameKey).update({ sessionId: null });
+                } catch (e) {
+                    console.error("Gagal memadam sessionId:", e);
+                }
+            }
+
             localStorage.removeItem('loggedInAdmin');
-            window.location.href = '../index.html';
+            firebase.auth().signOut().then(() => {
+                window.location.href = '../index.html';
+            });
         }
     });
 }

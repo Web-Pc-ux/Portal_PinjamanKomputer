@@ -107,18 +107,46 @@ loginForm.addEventListener('submit', async function (e) {
             }
         }
 
-        // 4. Salin UID ke Firestore 
-        btn.textContent = 'Loading...';
+        // 4. Salin Profile & Check Multi-login (Gunakan Username sebagai ID Dokumen supaya unik walaupun kongsi emel)
+        btn.textContent = 'Checking session...';
         const user = userCredential.user;
+        const usernameKey = (getVal(finalAdmin, 'username') || username).toLowerCase().trim();
+        const userDocRef = db.collection('admins').doc(usernameKey);
 
-        await db.collection('admins').doc(user.uid).set({
-            uid: user.uid,
+        const userDoc = await userDocRef.get();
+        const existingSession = userDoc.exists ? userDoc.data().sessionId : null;
+        const newSessionId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+
+        if (existingSession) {
+            const result = await Swal.fire({
+                title: 'Akaun Sedang Digunakan',
+                text: `ID "${usernameKey}" dikesan sedang aktif di peranti lain. Teruskan dan log keluar peranti tersebut?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Teruskan',
+                cancelButtonText: 'Batal'
+            });
+
+            if (!result.isConfirmed) {
+                await auth.signOut();
+                btn.disabled = false;
+                btn.textContent = 'Log In';
+                return;
+            }
+        }
+
+        btn.textContent = 'Finalizing...';
+        await userDocRef.set({
+            uid: user.uid, // Simpan UID untuk rujukan sahaja
             nama: getVal(finalAdmin, 'nama'),
             email: validEmail,
             username: getVal(finalAdmin, 'username') || username,
             jawatan: getVal(finalAdmin, 'jawatan') || '',
             peranan: getVal(finalAdmin, 'peranan') || 'Admin',
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+            sessionId: newSessionId
         }, { merge: true });
 
         // 5. Simpan Session
@@ -128,11 +156,16 @@ loginForm.addEventListener('submit', async function (e) {
             nama: getVal(finalAdmin, 'nama'),
             email: validEmail,
             peranan: getVal(finalAdmin, 'peranan'),
-            loginTime: new Date().toISOString()
+            loginTime: new Date().toISOString(),
+            sessionId: newSessionId
         }));
 
         btn.textContent = '✓ Berjaya Log Masuk!';
         btn.style.backgroundColor = '#28a745';
+
+        // Reset dashboard view to 'dashboard' for every fresh login
+        localStorage.removeItem('activeDashboardSection');
+
         setTimeout(() => {
             window.location.href = 'dashboard/main.html';
         }, 1200);

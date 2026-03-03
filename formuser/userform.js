@@ -164,7 +164,7 @@ function buildModelSection() {
             <div ${!isFirst ? 'style="margin-top: 10px;"' : ''}>
                 <label id="label-${catId}">
                     <input type="checkbox" class="cat-check" data-cat="${catId}" data-catname="${origCatName}" data-stok="${available}" ${available === 0 ? 'disabled' : ''} />
-                    ${origCatName} (${available} Tersedia) 
+                    ${origCatName} 
                     <span class="stock-status ${available === 0 ? 'out-of-stock' : ''}">${available === 0 ? 'HABIS' : ''}</span>
                 </label>
                 <input type="number" class="cat-qty" id="qty-${catId}" min="1" max="${available}" placeholder="Kuantiti" disabled />
