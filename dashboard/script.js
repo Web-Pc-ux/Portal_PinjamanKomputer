@@ -101,6 +101,103 @@ function initializeDashboard(adminData) {
         };
     }
 
+    // Digital Clock
+    function updateDigitalClock() {
+        const clockEl = document.getElementById('digital-clock');
+        if (!clockEl) return;
+        const now = new Date();
+        const options = {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        };
+        clockEl.textContent = now.toLocaleString('ms-MY', options).replace(/,/g, '');
+    }
+    setInterval(updateDigitalClock, 1000);
+    updateDigitalClock();
+
+    // Calendar Popup
+    const clockBtn = document.getElementById('digital-clock');
+    if (clockBtn) {
+        clockBtn.addEventListener('click', () => {
+            showCalendar();
+        });
+    }
+
+    // State for Calendar Navigation
+    let currentCalendarDate = new Date();
+
+    function showCalendar(targetDate = new Date()) {
+        currentCalendarDate = targetDate;
+        const now = new Date();
+        const month = targetDate.getMonth();
+        const year = targetDate.getFullYear();
+        const monthNames = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        let daysHtml = '';
+        const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+        for (let i = 0; i < adjustedFirstDay; i++) {
+            daysHtml += '<div class="calendar-day empty"></div>';
+        }
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear()) ? 'today' : '';
+            daysHtml += `<div class="calendar-day ${isToday}" onclick="Swal.close()">${i}</div>`;
+        }
+
+        Swal.fire({
+            title: '',
+            html: `
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)" title="Bulan Sebelum">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3>${monthNames[month]} ${year}</h3>
+                        <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)" title="Bulan Depan">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="calendar-day-name">Sn</div>
+                        <div class="calendar-day-name">Sl</div>
+                        <div class="calendar-day-name">Rb</div>
+                        <div class="calendar-day-name">Kh</div>
+                        <div class="calendar-day-name">Jm</div>
+                        <div class="calendar-day-name">Sb</div>
+                        <div class="calendar-day-name">Ah</div>
+                        ${daysHtml}
+                    </div>
+                    <div style="margin-top: 1.5rem; text-align: center;">
+                        <button class="btn btn-outline" onclick="showCalendar(new Date())" style="font-size: 0.75rem; padding: 0.4rem 1rem;">Hari Ini</button>
+                    </div>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: '400px',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            didOpen: () => {
+                const container = Swal.getHtmlContainer();
+                if (container) container.style.color = 'var(--text-main)';
+            }
+        });
+    }
+
+    window.changeCalendarMonth = function (offset) {
+        const newDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + offset, 1);
+        showCalendar(newDate);
+    };
+
     // Navigation logic
     const navItems = document.querySelectorAll('.nav-item[data-section]');
     const sections = document.querySelectorAll('.section-content');
@@ -998,6 +1095,18 @@ async function fetchAllFromGAS() {
             const allData = result.data;
             let hasChanges = false;
 
+            // 3. SPECIAL FETCH: Tarik data 'admin' secara berasingan (Kerana GAS skip admin dalam bulk fetch)
+            try {
+                const adminRes = await fetch(`${url}?action=read&token=${GAS_TOKEN}&sheet=admin`);
+                const adminDataResult = await adminRes.json();
+                if (adminDataResult.status === 'success' && Array.isArray(adminDataResult.data)) {
+                    allData['admin'] = adminDataResult.data;
+                    console.log(`📡 Data Admin berjaya ditarik secara berasingan (${allData['admin'].length} user).`);
+                }
+            } catch (e) {
+                console.warn("⚠️ Gagal menarik data admin secara berasingan.");
+            }
+
             // Mapping data dari Bulk Response
             const mappings = [
                 { sheet: 'permohonan', key: DB_KEYS.APPS },
@@ -1009,22 +1118,25 @@ async function fetchAllFromGAS() {
 
             mappings.forEach(m => {
                 // 1. Dynamic Search (Case-Insensitive & Common Plurals)
-                const possibleNames = [m.sheet, m.sheet + 's', m.sheet + 'res'];
+                const possibleNames = [m.sheet, m.sheet + 's', m.sheet + 'res', m.sheet + ' list'];
                 let newData = undefined;
 
-                // Cari key yang sepadan dalam respons GAS (Case Insensitive)
+                // cari key yang sepadan dalam respons GAS (Case Insentive)
                 const responseKeys = Object.keys(allData);
-                for (const potentialName of possibleNames) {
-                    const match = responseKeys.find(k => k.toLowerCase() === potentialName.toLowerCase());
+                console.log(`🔍 Mencari sheet [${m.sheet}] dalam:`, responseKeys);
+
+                for (const potential of possibleNames) {
+                    const match = responseKeys.find(k => k.toLowerCase() === potential.toLowerCase());
                     if (match) {
                         newData = allData[match];
+                        console.log(`✅ Jumpa [${m.sheet}] dalam key: ${match} (${Array.isArray(newData) ? newData.length : 'object'} item)`);
                         break;
                     }
                 }
 
                 // 2. Perlindungan 'Data Hilang': Jika sheet tiada dalam respons, abaikan perbandingan.
                 if (newData === undefined) {
-                    console.warn(`⚠️ Sheet [${m.sheet}] tidak dijumpai dalam respons Bulk. Melangkau update.`);
+                    console.warn(`⚠️ Sheet [${m.sheet}] tidak dijumpai dalam respons Bulk Cloud.`);
                     return;
                 }
 
@@ -1033,7 +1145,7 @@ async function fetchAllFromGAS() {
                 if (Array.isArray(newData) && newData.length === 0 && currentData.length > 0) {
                     // Kecuali jika memang kita nak kosongkan, tapi buat masa ni kita protect
                     if (m.sheet === 'admin') {
-                        console.warn(`⚠️ Respons Cloud untuk [admin] adalah kosong. Mode perlindungan diaktifkan.`);
+                        console.warn(`⚠️ Respons Cloud untuk [admin] adalah kosong. Mengabaikan update untuk melindungi data sedia ada.`);
                         return;
                     }
                 }
@@ -1073,37 +1185,7 @@ function renderAllUI() {
     loadSettings();
 }
 
-function logout() {
-    Swal.fire({
-        title: 'Log Keluar?',
-        text: "Anda pasti ingin keluar dari sistem?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Ya, Log Keluar',
-        cancelButtonText: 'Batal'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            // Clear SessionId in Firestore
-            const session = localStorage.getItem('loggedInAdmin');
-            if (session) {
-                const adminData = JSON.parse(session);
-                const usernameKey = adminData.username.toLowerCase().trim();
-                try {
-                    await db.collection('admins').doc(usernameKey).update({ sessionId: null });
-                } catch (e) {
-                    console.error("Gagal memadam sessionId:", e);
-                }
-            }
-
-            localStorage.removeItem('loggedInAdmin');
-            firebase.auth().signOut().then(() => {
-                window.location.href = '../index.html';
-            });
-        }
-    });
-}
+// Duplicate logout removed
 
 function previewForm() {
     Swal.fire({
@@ -1146,23 +1228,39 @@ let CORE_DATA = {
 };
 
 function getDB(key) {
-    // Tetapan & Login masih di LocalStorage untuk memori browser
-    if (key === 'db_settings' || key === 'loggedInAdmin') {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : (key === 'db_settings' ? {} : null);
+    // 1. Cuba ambil dari Memory (Laju)
+    if (CORE_DATA[key] && CORE_DATA[key].length > 0) {
+        return CORE_DATA[key];
     }
-    // Jadual data diambil dari memory
-    return CORE_DATA[key] || [];
+
+    // 2. Cuba ambil dari LocalStorage (Persistence Cache)
+    const cachedData = localStorage.getItem(key);
+    if (cachedData) {
+        try {
+            const parsed = JSON.parse(cachedData);
+            // Simpan dalam memory untuk kegunaan seterusnya
+            if (key !== 'db_settings' && key !== 'loggedInAdmin') {
+                CORE_DATA[key] = parsed;
+            }
+            return parsed;
+        } catch (e) {
+            console.error(`Ralat Parse Cache [${key}]:`, e);
+        }
+    }
+
+    // 3. Failover
+    return (key === 'db_settings') ? {} : (key === 'loggedInAdmin' ? null : []);
 }
 
 function saveDB(key, data) {
-    if (key === 'db_settings' || key === 'loggedInAdmin') {
-        localStorage.setItem(key, JSON.stringify(data));
-        return;
+    // Simpan ke Memory
+    if (key !== 'db_settings' && key !== 'loggedInAdmin') {
+        CORE_DATA[key] = data;
     }
-    // Update memory only (Matikan simpanan ke LocalStorage)
-    CORE_DATA[key] = data;
-    console.log(`ℹ️ Memory Update [${key}]. Simpanan ke LocalStorage dilangkau (Cloud Only mode).`);
+
+    // Simpan ke LocalStorage (Cache Aktif)
+    localStorage.setItem(key, JSON.stringify(data));
+    console.log(`💾 Cache Update [${key}] - Tersimpan ke LocalStorage.`);
 }
 
 function initMockData() {
@@ -1170,32 +1268,8 @@ function initMockData() {
     const session = localStorage.getItem('loggedInAdmin');
     const currentUser = session ? JSON.parse(session) : null;
 
-    // 2. Sediakan Admin kecemasan dalam memory (Hanya jika Cloud belum ditarik)
-    if (CORE_DATA[DB_KEYS.ADMINS].length === 0) {
-        if (currentUser) {
-            // Gunakan identiti sebenar user yang sedang login sebagai admin pertama
-            CORE_DATA[DB_KEYS.ADMINS].push({
-                id: currentUser.id || 1,
-                nama: currentUser.nama || 'Admin Utama',
-                email: currentUser.email || 'admin@ums.edu.my',
-                username: currentUser.username || (currentUser.email ? currentUser.email.split('@')[0] : 'admin'),
-                jawatan: currentUser.jawatan || 'Pentadbir Sistem',
-                peranan: currentUser.peranan || 'Admin',
-                password: '***'
-            });
-        } else {
-            // Fallback terakhir jika tiada sesi langsung
-            CORE_DATA[DB_KEYS.ADMINS].push({
-                id: 1,
-                nama: 'Super Admin',
-                username: 'admin',
-                email: 'admin@ums.edu.my',
-                jawatan: 'Pentadbir Sistem',
-                peranan: 'Pemilik',
-                password: 'admin123'
-            });
-        }
-    }
+    // 2. Sediakan Admin kecemasan dalam memory dilepaskan (Biarkan renderAdminTable handle fallback jika tiada data)
+    // CORE_DATA[DB_KEYS.ADMINS] dibiarkan kosong untuk diisi oleh fetchAllFromGAS
 
     renderAllTables();
     renderDashboardStats();
@@ -1259,6 +1333,10 @@ function renderAdminTable() {
     if (!table) return;
 
     let data = getDB(DB_KEYS.ADMINS);
+    console.log("📊 Rendering Admin Table with data:", data);
+
+    // 1. Tapis data sampah (baris kosong dari Excel)
+    data = data.filter(admin => admin.nama && (admin.email || admin.username));
 
     // Dapatkan data sesi semasa
     const session = localStorage.getItem('loggedInAdmin');
@@ -1283,7 +1361,12 @@ function renderAdminTable() {
     }
 
     table.innerHTML = data.map(admin => {
-        const isMe = currentUser && (admin.email === currentUser.email || admin.id === currentUser.id);
+        // Pengecaman "SAYA" yang lebih unik (Guna Email/Username dahulu)
+        const isMe = currentUser && (
+            (admin.email && admin.email === currentUser.email) ||
+            (admin.username && admin.username === currentUser.username) ||
+            (admin.id && admin.id === currentUser.id && admin.email === currentUser.email)
+        );
 
         return `
             <tr class="${isMe ? 'row-me' : ''}">
@@ -2572,12 +2655,15 @@ function deleteCategory(id) {
 document.addEventListener('DOMContentLoaded', () => {
     const addAdminForm = document.getElementById('addAdminForm');
     if (addAdminForm) {
-        addAdminForm.addEventListener('submit', (e) => {
+        addAdminForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const inputs = addAdminForm.querySelectorAll('input');
 
-            const admins = getDB(DB_KEYS.ADMINS);
-            const newId = admins.length > 0 ? Math.max(...admins.map(a => a.id)) + 1 : 1;
+            // 1. Pastikan data terkini ditarik dulu sebelum kira ID
+            let admins = getDB(DB_KEYS.ADMINS);
+
+            // Logik ID yang lebih selamat menggunakan timestamp jika data kosong
+            const newId = admins.length > 0 ? Math.max(...admins.map(a => a.id)) + 1 : Date.now();
 
             const newAdmin = {
                 id: newId,
@@ -2585,14 +2671,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 username: inputs[1].value,
                 email: inputs[2].value,
                 jawatan: inputs[3].value,
-                password: inputs[4].value, // Ambil dari input baru
+                password: inputs[4].value,
                 peranan: inputs[5].value || 'Admin'
             };
 
+            // 2. Simpan ke Firestore (Supaya boleh login & monitor sesi)
+            try {
+                const usernameKey = newAdmin.username.toLowerCase().trim();
+                await db.collection('admins').doc(usernameKey).set({
+                    nama: newAdmin.nama,
+                    email: newAdmin.email,
+                    username: newAdmin.username,
+                    jawatan: newAdmin.jawatan,
+                    peranan: newAdmin.peranan,
+                    lastLogin: null,
+                    sessionId: null
+                });
+                console.log("✅ Firestore record created for new admin.");
+            } catch (err) {
+                console.error("❌ Firestore Error:", err);
+            }
+
+            // 3. Simpan ke Local Memory & Excel
             admins.push(newAdmin);
             saveDB(DB_KEYS.ADMINS, admins);
 
-            // Sync to GAS - Tanpa Password
             const { password, ...adminData } = newAdmin;
             syncToGAS(adminData, 'create', 'admin');
 
@@ -2600,12 +2703,17 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal('adminModal');
             addAdminForm.reset();
 
-            Swal.fire({
+            await Swal.fire({
                 icon: 'success',
                 title: 'Admin Ditambah!',
-                html: `<p>${newAdmin.nama} telah berjaya ditambah ke dalam sistem.</p>`,
-                timer: 3000,
-                showConfirmButton: true
+                html: `
+                    <p><b>${newAdmin.nama}</b> telah berjaya ditambah.</p>
+                    <hr>
+                    <p style="font-size: 0.85rem; color: var(--danger);">
+                        <b>PERHATIAN:</b> Sila pastikan anda mencipta akaun email <b>${newAdmin.email}</b> di <b>Firebase Console > Authentication</b> secara manual supaya admin ini boleh log masuk.
+                    </p>
+                `,
+                confirmButtonText: 'Faham'
             });
         });
     }
@@ -3258,8 +3366,8 @@ async function editMyProfile() {
             }
 
             // 2. Kemaskini Firestore
-            const myUid = currentUser.uid;
-            await db.collection('admins').doc(myUid).set({
+            const usernameKey = admin.username.toLowerCase().trim();
+            await db.collection('admins').doc(usernameKey).set({
                 nama: formValues.nama,
                 jawatan: formValues.jawatan,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -3306,18 +3414,32 @@ async function editMyProfile() {
     }
 }
 
-function logout() {
-    Swal.fire({
+async function logout() {
+    const result = await Swal.fire({
         title: 'Log Keluar?',
         text: "Anda akan dipandu ke halaman log masuk.",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: 'var(--danger)',
         confirmButtonText: 'Ya, Keluar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            localStorage.removeItem('loggedInAdmin');
-            window.location.href = '../index.html';
-        }
     });
+
+    if (result.isConfirmed) {
+        // Clear SessionId in Firestore before logout
+        const session = localStorage.getItem('loggedInAdmin');
+        if (session) {
+            const adminData = JSON.parse(session);
+            const usernameKey = adminData.username.toLowerCase().trim();
+            try {
+                // Gunakan set merge true atau update untuk padam sessionId
+                await db.collection('admins').doc(usernameKey).update({ sessionId: null });
+            } catch (e) {
+                console.error("Gagal memadam sessionId semasa logout:", e);
+            }
+        }
+
+        localStorage.removeItem('loggedInAdmin');
+        await firebase.auth().signOut();
+        window.location.href = '../index.html';
+    }
 }

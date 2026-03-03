@@ -205,6 +205,152 @@ body {
     font-weight: 700;
 }
 
+/* Digital Clock Style */
+.digital-clock {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    font-family: 'Inter', monospace;
+    letter-spacing: 0.5px;
+    display: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.digital-clock:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+@media (min-width: 641px) {
+    .digital-clock {
+        display: block;
+    }
+}
+
+/* Calendar Styles for Modal */
+.calendar-container {
+    padding: 0.5rem;
+    background: transparent;
+    color: var(--text-main);
+    animation: calendarFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes calendarFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+}
+
+.calendar-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+}
+
+.calendar-nav-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    text-align: center;
+}
+
+.calendar-day-name {
+    font-weight: 800;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover:not(.empty) {
+    background: var(--bg-main);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    border: none;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+body.dark-mode .calendar-header {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .calendar-day:hover:not(.empty) {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary);
+}
+
 /* Burger Menu */
 .burger-menu {
     display: none;
@@ -634,6 +780,10 @@ tbody tr:nth-child(even) {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
+}
+
+.settings-grid.stack-vertical {
+    grid-template-columns: 1fr;
 }
 
 .settings-card {

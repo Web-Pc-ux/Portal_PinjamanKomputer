@@ -117,7 +117,22 @@ loginForm.addEventListener('submit', async function (e) {
         const existingSession = userDoc.exists ? userDoc.data().sessionId : null;
         const newSessionId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 
-        if (existingSession) {
+        // Semakan: Jika sesi sedia ada adalah dari peranti/pelayar yang sama (leaked session)
+        const localSession = localStorage.getItem('loggedInAdmin');
+        let isSameDevice = false;
+        if (localSession) {
+            try {
+                const localData = JSON.parse(localSession);
+                if (localData.username && localData.username.toLowerCase().trim() === usernameKey && localData.sessionId === existingSession) {
+                    isSameDevice = true;
+                    console.log("ℹ️ Sesi sedia ada dikesan dari peranti yang sama. Mengabaikan amaran redundan.");
+                }
+            } catch (e) {
+                console.warn("Ralat membaca sesi tempatan:", e);
+            }
+        }
+
+        if (existingSession && !isSameDevice) {
             const result = await Swal.fire({
                 title: 'Akaun Sedang Digunakan',
                 text: `ID "${usernameKey}" dikesan sedang aktif di peranti lain. Teruskan dan log keluar peranti tersebut?`,
@@ -154,6 +169,7 @@ loginForm.addEventListener('submit', async function (e) {
             id: getVal(finalAdmin, 'id') || 99,
             uid: user.uid,
             nama: getVal(finalAdmin, 'nama'),
+            username: getVal(finalAdmin, 'username') || username,
             email: validEmail,
             peranan: getVal(finalAdmin, 'peranan'),
             loginTime: new Date().toISOString(),
