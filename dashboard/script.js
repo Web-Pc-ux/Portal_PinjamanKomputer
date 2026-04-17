@@ -894,7 +894,7 @@ async function clearImage(type) {
     if (type === 'logo') {
         settings.logo = '';
         const logoImg = document.getElementById('sidebarLogo');
-        if (logoImg) logoImg.src = "https://kukuro.ums.edu.my/img/Logo%20Digital%20UMS%20warnaPNG.png";
+        if (logoImg) logoImg.src = "../Pictrure/Logo Digital UMS.png";
         document.getElementById('logoUpload').value = '';
     } else if (type === 'bg') {
         settings.bg = '';
