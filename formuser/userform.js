@@ -398,7 +398,11 @@ form.addEventListener('submit', (e) => {
         scanPulang: '-',
         catatanAdmin: '',
         status: 'Menunggu',
-        timestamp: timestamp
+        timestamp: timestamp,
+        // Kolum tersembunyi khas untuk perekodan Google Login (Audit)
+        authName: window.loggedInGoogleName || '',
+        authEmail: window.loggedInGoogleEmail || '',
+        authTimestamp: new Date().toISOString()
     };
 
     // Kirim ke Google Sheets (GAS)
@@ -525,8 +529,152 @@ window.addEventListener('click', (e) => {
 });
 
 /* ==============================
+   FIREBASE & LOGIN LOGIC
+============================== */
+const firebaseConfig = {
+    apiKey: "AIzaSyCkXpGW5uQRWos4J8Bnsctdshs6hf3Wti0",
+    authDomain: "loginpage-38cbb.firebaseapp.com",
+    databaseURL: "https://loginpage-38cbb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "loginpage-38cbb",
+    storageBucket: "loginpage-38cbb.firebasestorage.app",
+    messagingSenderId: "330112161697",
+    appId: "1:330112161697:web:0b687c4e5db4d0c40d1de0",
+    measurementId: "G-LC3Q7E8BSH"
+};
+
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
+
+/* ==============================
    INIT
 ============================== */
 document.addEventListener('DOMContentLoaded', () => {
-    fetchInitialData();
+    const loginOverlay = document.getElementById('loginOverlay');
+    const mainContent = document.getElementById('mainContent');
+    const btnLogin = document.getElementById('userGoogleLoginBtn');
+    const btnText = document.getElementById('userGoogleLoginText');
+    const btnMsLogin = document.getElementById('userMsLoginBtn');
+    const btnMsText = document.getElementById('userMsLoginText');
+    
+    if (auth) {
+        // Check if user is already logged in
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                let email = user.email || "";
+                if (!email && user.providerData) {
+                    for(let p of user.providerData) {
+                        if (p.email) { email = p.email; break; }
+                    }
+                }
+                
+                // Verify UMS Email
+                if (email.toLowerCase().endsWith('@ums.edu.my')) {
+                    // Simpan data login secara rahsia (global)
+                    window.loggedInGoogleEmail = email;
+                    window.loggedInGoogleName = user.displayName || "";
+                    
+                    // Sembunyikan login, tunjuk borang
+                    if (loginOverlay) loginOverlay.style.display = 'none';
+                    if (mainContent) mainContent.style.display = 'block';
+                    
+                    fetchInitialData();
+                } else {
+                    auth.signOut();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses Ditolak',
+                        text: 'Hanya pengguna dengan emel rasmi UMS (@ums.edu.my) dibenarkan untuk mengakses borang ini.'
+                    });
+                    if (btnLogin) {
+                        btnLogin.disabled = false;
+                        btnText.innerHTML = 'Log Masuk Google';
+                    }
+                }
+            } else {
+                // Tiada user log masuk - pastikan borang disembunyikan
+                if (loginOverlay) loginOverlay.style.display = 'flex';
+                if (mainContent) mainContent.style.display = 'none';
+            }
+        });
+    } else {
+        // Jika Firebase tiada, terus buka borang (fallback lokal)
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
+        fetchInitialData();
+    }
+
+    if (btnLogin) {
+        btnLogin.addEventListener('click', async () => {
+            try {
+                btnLogin.disabled = true;
+                btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+                
+                // Trik fokus: Jika pengguna kembali ke tingkap utama (tutup popup) 
+                // butang akan terus dibersihkan dari loading.
+                const resetBtnOnFocus = () => {
+                    setTimeout(() => {
+                        btnLogin.disabled = false;
+                        btnText.innerHTML = 'Log Masuk Google';
+                        window.removeEventListener('focus', resetBtnOnFocus);
+                    }, 800);
+                };
+                window.addEventListener('focus', resetBtnOnFocus);
+
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                
+                await auth.signInWithPopup(provider);
+                // onAuthStateChanged akan uruskan validasi emel
+            } catch (error) {
+                btnLogin.disabled = false;
+                btnText.innerHTML = 'Log Masuk Google';
+                console.error(error);
+                if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                    Swal.fire('Ralat', 'Gagal log masuk: ' + error.message, 'error');
+                }
+            }
+        });
+    }
+
+    if (btnMsLogin) {
+        btnMsLogin.addEventListener('click', async () => {
+            try {
+                btnMsLogin.disabled = true;
+                btnMsText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+                
+                const resetBtnOnFocus = () => {
+                    setTimeout(() => {
+                        btnMsLogin.disabled = false;
+                        btnMsText.innerHTML = 'Log Masuk Microsoft';
+                        window.removeEventListener('focus', resetBtnOnFocus);
+                    }, 800);
+                };
+                window.addEventListener('focus', resetBtnOnFocus);
+
+                const provider = new firebase.auth.OAuthProvider('microsoft.com');
+                provider.addScope('email');
+                provider.addScope('User.Read');
+                provider.setCustomParameters({ prompt: 'select_account' });
+
+                await auth.signInWithPopup(provider);
+                // onAuthStateChanged akan uruskan validasi emel
+            } catch (error) {
+                btnMsLogin.disabled = false;
+                btnMsText.innerHTML = 'Log Masuk Microsoft';
+                console.error(error);
+                if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                    Swal.fire('Ralat', 'Gagal log masuk: ' + error.message, 'error');
+                }
+            }
+        });
+    }
+
+    const backBtn = document.getElementById('backToPortalBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.href = '../index.html';
+        });
+    }
 });

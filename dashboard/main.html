@@ -39,32 +39,36 @@
         <nav class="sidebar-nav">
             <div class="nav-item active" data-section="dashboard">
                 <i class="fas fa-th-large"></i>
-                <span>Dashboard</span>
+                <span data-i18n="nav_dashboard">Dashboard</span>
             </div>
             <div class="nav-item" data-section="pemohon">
                 <i class="fas fa-users"></i>
-                <span>Senarai Pemohon</span>
+                <span data-i18n="nav_applicant">Senarai Pemohon</span>
             </div>
             <div class="nav-item" data-section="komputer">
                 <i class="fas fa-laptop"></i>
-                <span>Senarai Komputer</span>
+                <span data-i18n="nav_computer">Senarai Komputer</span>
             </div>
             <div class="nav-item" data-section="laporan">
                 <i class="fas fa-chart-bar"></i>
-                <span>Laporan</span>
+                <span data-i18n="nav_report">Laporan</span>
             </div>
             <div class="nav-item" data-section="admin">
                 <i class="fas fa-user-shield"></i>
-                <span>Senarai Admin</span>
+                <span data-i18n="nav_admin">Senarai Admin</span>
             </div>
             <div class="nav-item" data-section="tetapan">
                 <i class="fas fa-cog"></i>
-                <span>Tetapan</span>
+                <span data-i18n="nav_settings">Tetapan</span>
             </div>
         </nav>
-        <div class="nav-item" style="color: var(--danger); margin-top: auto;" onclick="logout()">
+        <div class="nav-item" style="margin-top: auto; color: #3b82f6; font-weight: bold; background: rgba(59, 130, 246, 0.1); border-radius: 8px; padding: 0.75rem 1rem;" onclick="toggleLanguage()">
+            <i class="fas fa-globe"></i>
+            <span id="langTextSidebar">Tukar Bahasa (EN)</span>
+        </div>
+        <div class="nav-item" style="color: var(--danger);" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
-            <span>Log Keluar</span>
+            <span data-i18n="nav_logout">Log Keluar</span>
         </div>
     </aside>
 
@@ -95,8 +99,8 @@
 
                 <!-- Dropdown Menu -->
                 <div class="profile-dropdown" id="profileDropdown">
-                    <div class="dropdown-header">Profil Saya</div>
-                    <a href="#" onclick="editMyProfile()"><i class="fas fa-user-edit"></i> Ubah Profil</a>
+                    <div class="dropdown-header" data-i18n="menu_my_profile">Profil Saya</div>
+                    <a href="#" onclick="editMyProfile()"><i class="fas fa-user-edit"></i> <span data-i18n="menu_edit_profile">Ubah Profil</span></a>
                     <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
                     <a href="#" onclick="logout()" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Log
                         Keluar</a>
@@ -113,33 +117,33 @@
 
             <div class="dashboard-grid">
                 <div class="stat-card jumlah">
-                    <span class="label">Jumlah Keseluruhan</span>
+                    <span class="label" data-i18n="dash_total">Jumlah Keseluruhan</span>
                     <span class="value">0</span>
                 </div>
                 <div class="stat-card baru">
-                    <span class="label">Baru</span>
+                    <span class="label" data-i18n="dash_new">Baru</span>
                     <span class="value">12</span>
                 </div>
                 <div class="stat-card lulus">
-                    <span class="label">Lulus</span>
+                    <span class="label" data-i18n="dash_approved">Lulus</span>
                     <span class="value">45</span>
                 </div>
                 <div class="stat-card dipulangkan">
-                    <span class="label">Dipulangkan</span>
+                    <span class="label" data-i18n="dash_returned">Dipulangkan</span>
                     <span class="value">38</span>
                 </div>
                 <div class="stat-card lewat">
-                    <span class="label">Lewat</span>
+                    <span class="label" data-i18n="dash_late">Lewat</span>
                     <span class="value" style="color: var(--danger);">5</span>
                 </div>
                 <div class="stat-card ditolak">
-                    <span class="label">Ditolak</span>
+                    <span class="label" data-i18n="dash_rejected">Ditolak</span>
                     <span class="value">0</span>
                 </div>
             </div>
 
             <div class="settings-card">
-                <h3>Notifikasi Tindakan</h3>
+                <h3 data-i18n="dash_action_notif">Notifikasi Tindakan</h3>
                 <div id="actionNotifications">
                     <p style="color: var(--text-muted); font-size: 0.875rem;">Tiada tindakan segera diperlukan.</p>
                 </div>
@@ -150,26 +154,32 @@
 
         <!-- Section: Senarai Pemohon -->
         <section id="pemohon" class="section-content">
-            <div class="action-header">
-                <button class="btn btn-primary" onclick="showShareModal()"><i class="fas fa-share-nodes"></i> Borang
-                    User</button>
-                <button class="btn btn-primary" onclick="openFormAdmin()" style="background-color: #2a3eb1;"><i
-                        class="fas fa-file-signature"></i> Form Admin</button>
+            <div class="action-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="showShareModal()"><i class="fas fa-share-nodes"></i> <span data-i18n="btn_user_form">Borang User</span></button>
+                    <button class="btn btn-primary" onclick="openFormAdmin()" style="background-color: #2a3eb1;"><i
+                            class="fas fa-file-signature"></i> <span data-i18n="btn_admin_form">Form Admin</span></button>
+                </div>
+                <div class="search-box" style="position: relative; flex: 1; max-width: 350px;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="text" id="pemohonSearch" data-i18n="lbl_search" placeholder="Cari nama, no permohonan, status..." onkeyup="searchPemohon()" style="width: 100%; padding: 10px 15px 10px 40px; border-radius: 20px; border: 1px solid var(--border); outline: none; font-family: 'Inter', sans-serif;">
+                    <div id="searchError" style="display: none; position: absolute; top: 110%; left: 10px; color: #ef4444; font-size: 0.8rem; font-weight: 600; background: #fee2e2; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;"><i class="fas fa-exclamation-circle"></i> Tiada rekod dijumpai!</div>
+                </div>
             </div>
 
             <!-- Jadual 1: Permohonan Sedang Diproses -->
             <div class="settings-card" style="margin-bottom: 2rem;">
-                <h3 style="color: var(--primary);"><i class="fas fa-clock"></i> Senarai Permohonan Aktif</h3>
+                <h3 style="color: var(--primary);"><i class="fas fa-clock"></i> <span data-i18n="title_active_app">Senarai Permohonan Aktif</span></h3>
                 <div class="table-container">
                     <table class="table-compact">
                         <thead>
                             <tr>
-                                <th>No. Permohonan</th>
-                                <th>Maklumat Pemohon</th>
-                                <th>Maklumat Pinjaman</th>
-                                <th>Tempoh Penggunaan</th>
-                                <th>Status</th>
-                                <th>Tindakan</th>
+                                <th data-i18n="th_app_no">No. Permohonan</th>
+                                <th data-i18n="th_applicant_info">Maklumat Pemohon</th>
+                                <th data-i18n="th_loan_info">Maklumat Pinjaman</th>
+                                <th data-i18n="th_usage_period">Tempoh Penggunaan</th>
+                                <th data-i18n="th_status">Status</th>
+                                <th data-i18n="th_action">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody id="applicantTableBody">
@@ -184,8 +194,7 @@
 
             <!-- Jadual 2: Permohonan Lewat -->
             <div class="settings-card" style="margin-bottom: 2rem;">
-                <h3 style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Senarai Permohonan Lewat
-                </h3>
+                <h3 style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="title_late_app">Senarai Permohonan Lewat</span></h3>
                 <div id="lateAlertContainer"></div>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Senarai peralatan yang
                     masih belum dipulangkan melepasi tarikh tamat.</p>
@@ -193,12 +202,12 @@
                     <table class="table-compact">
                         <thead>
                             <tr>
-                                <th>No. Permohonan</th>
-                                <th>Maklumat Pemohon</th>
-                                <th>Maklumat Pinjaman</th>
-                                <th>Tempoh Penggunaan</th>
-                                <th>Status</th>
-                                <th>Tindakan</th>
+                                <th data-i18n="th_app_no">No. Permohonan</th>
+                                <th data-i18n="th_applicant_info">Maklumat Pemohon</th>
+                                <th data-i18n="th_loan_info">Maklumat Pinjaman</th>
+                                <th data-i18n="th_usage_period">Tempoh Penggunaan</th>
+                                <th data-i18n="th_status">Status</th>
+                                <th data-i18n="th_action">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody id="delayedTableBody">
@@ -213,19 +222,19 @@
 
             <!-- Jadual 3: Permohonan Telah Selesai -->
             <div class="settings-card" style="margin-bottom: 2rem;">
-                <h3 style="color: var(--success);"><i class="fas fa-check-double"></i> Rekod Peminjaman Selesai</h3>
+                <h3 style="color: var(--success);"><i class="fas fa-check-double"></i> <span data-i18n="title_completed_app">Rekod Peminjaman Selesai</span></h3>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Senarai di bawah
                     menunjukkan permohonan yang telah dipulangkan atau selesai sepenuhnya.</p>
                 <div class="table-container">
                     <table class="table-compact">
                         <thead>
                             <tr>
-                                <th>No. Permohonan</th>
-                                <th>Maklumat Pemohon</th>
-                                <th>Maklumat Pinjaman</th>
-                                <th>Tempoh Penggunaan</th>
-                                <th>Status</th>
-                                <th>Tindakan</th>
+                                <th data-i18n="th_app_no">No. Permohonan</th>
+                                <th data-i18n="th_applicant_info">Maklumat Pemohon</th>
+                                <th data-i18n="th_loan_info">Maklumat Pinjaman</th>
+                                <th data-i18n="th_usage_period">Tempoh Penggunaan</th>
+                                <th data-i18n="th_status">Status</th>
+                                <th data-i18n="th_action">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody id="completedTableBody">
@@ -240,17 +249,17 @@
 
             <!-- Jadual 4: Rekod Permohonan Ditolak -->
             <div class="settings-card">
-                <h3 style="color: #64748b;"><i class="fas fa-ban"></i> Rekod Permohonan Ditolak</h3>
+                <h3 style="color: #64748b;"><i class="fas fa-ban"></i> <span data-i18n="title_rejected_app">Rekod Permohonan Ditolak</span></h3>
                 <div class="table-container">
                     <table class="table-compact">
                         <thead>
                             <tr>
-                                <th>No. Permohonan</th>
-                                <th>Maklumat Pemohon</th>
-                                <th>Maklumat Pinjaman</th>
-                                <th>Tempoh Penggunaan</th>
-                                <th>Status</th>
-                                <th>Tindakan</th>
+                                <th data-i18n="th_app_no">No. Permohonan</th>
+                                <th data-i18n="th_applicant_info">Maklumat Pemohon</th>
+                                <th data-i18n="th_loan_info">Maklumat Pinjaman</th>
+                                <th data-i18n="th_usage_period">Tempoh Penggunaan</th>
+                                <th data-i18n="th_status">Status</th>
+                                <th data-i18n="th_action">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody id="rejectedTableBody">
@@ -267,18 +276,14 @@
         <!-- Section: Senarai Komputer -->
         <section id="komputer" class="section-content">
             <div class="action-header">
-                <button class="btn btn-primary" onclick="showTambahKategori()"><i class="fas fa-plus"></i>
-                    Kategori</button>
-                <button class="btn btn-primary" onclick="showTambahModel()"><i class="fas fa-desktop"></i>
-                    Model</button>
+                <button class="btn btn-primary" onclick="showTambahKategori()"><i class="fas fa-plus"></i> <span data-i18n="btn_category">Kategori</span></button>
+                <button class="btn btn-primary" onclick="showTambahModel()"><i class="fas fa-desktop"></i> <span data-i18n="btn_model">Model</span></button>
                 <button class="btn btn-outline" onclick="document.getElementById('excelUpload').click()"
                     style="border-color: #16a34a; color: #16a34a;">
-                    <i class="fas fa-file-excel"></i> Muat Naik Excel
-                </button>
+                    <i class="fas fa-file-excel"></i> <span data-i18n="btn_upload_excel">Muat Naik Excel</span></button>
                 <button class="btn btn-outline" onclick="downloadExcelTemplate()"
                     style="border-color: #3b82f6; color: #3b82f6;">
-                    <i class="fas fa-download"></i> Templat Excel
-                </button>
+                    <i class="fas fa-download"></i> <span data-i18n="btn_excel_template">Templat Excel</span></button>
                 <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;"
                     onchange="handleExcelUpload(this)">
             </div>
@@ -292,7 +297,7 @@
                         Import & Pengisian Templat:</h4>
                     <ul style="font-size: 0.8rem; color: #15803d; line-height: 1.6; margin: 0; padding-left: 1.2rem;">
                         <li><strong>Langkah 1:</strong> Klik butang <span
-                                style="color: #3b82f6; font-weight: 600;">Templat Excel</span> untuk memuat turun format
+                                style="color: #3b82f6; font-weight: 600;" data-i18n="btn_excel_template">Templat Excel</span> untuk memuat turun format
                             fail yang tepat.</li>
                         <li><strong>Langkah 2:</strong> Buka fail tersebut dan masukkan maklumat peralatan bermula pada
                             <strong>Baris Ke-2</strong>.
@@ -300,7 +305,7 @@
                         <li><strong>Langkah 3:</strong> <strong style="color: #c2410c;">PANTANG:</strong> Jangan ubah
                             atau padam nama tajuk (Header) pada baris pertama.</li>
                         <li><strong>Langkah 4:</strong> Simpan fail (Save) dan klik butang <span
-                                style="color: #16a34a; font-weight: 600;">Muat Naik Excel</span> untuk proses baki
+                                style="color: #16a34a; font-weight: 600;" data-i18n="btn_upload_excel">Muat Naik Excel</span> untuk proses baki
                             automatik.</li>
                     </ul>
                     <div
@@ -312,13 +317,13 @@
 
             <div class="settings-grid stack-vertical">
                 <div class="settings-card">
-                    <h3>Table Kategori</h3>
+                    <h3 data-i18n="title_table_category">Table Kategori</h3>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Nama Kategori</th>
-                                    <th>Tindakan</th>
+                                    <th data-i18n="th_category_name">Nama Kategori</th>
+                                    <th data-i18n="th_action">Tindakan</th>
                                 </tr>
                             </thead>
                             <tbody id="categoryTableBody"></tbody>
@@ -327,17 +332,17 @@
                 </div>
 
                 <div class="settings-card">
-                    <h3>Table Senarai Peralatan</h3>
+                    <h3 data-i18n="title_table_equipment">Table Senarai Peralatan</h3>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Kategori</th>
-                                    <th>Model</th>
-                                    <th>No. PC</th>
-                                    <th>No. Siri</th>
-                                    <th>No. Pendaftaran UMS</th>
-                                    <th>Tindakan</th>
+                                    <th data-i18n="btn_category">Kategori</th>
+                                    <th data-i18n="btn_model">Model</th>
+                                    <th data-i18n="th_pc_no">No. PC</th>
+                                    <th data-i18n="th_serial_no">No. Siri</th>
+                                    <th data-i18n="th_ums_reg_no">No. Pendaftaran UMS</th>
+                                    <th data-i18n="th_action">Tindakan</th>
                                 </tr>
                             </thead>
                             <tbody id="computerTableBody"></tbody>
@@ -353,81 +358,76 @@
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="border-left-color: var(--primary);">
-                    <span class="label">Jumlah Permohonan</span>
+                    <span class="label" data-i18n="rpt_total">Jumlah Permohonan</span>
                     <span class="value" id="rptTotal">0</span>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--warning);">
-                    <span class="label">Menunggu</span>
+                    <span class="label" data-i18n="rpt_pending">Menunggu</span>
                     <span class="value" id="rptMenunggu" style="color: var(--warning);">0</span>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--success);">
-                    <span class="label">Lulus</span>
+                    <span class="label" data-i18n="dash_approved">Lulus</span>
                     <span class="value" id="rptLulus" style="color: var(--success);">0</span>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--danger);">
-                    <span class="label">Ditolak</span>
+                    <span class="label" data-i18n="dash_rejected">Ditolak</span>
                     <span class="value" id="rptTolak" style="color: var(--danger);">0</span>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--primary);">
-                    <span class="label">Dipulangkan</span>
+                    <span class="label" data-i18n="dash_returned">Dipulangkan</span>
                     <span class="value" id="rptPulang" style="color: var(--primary);">0</span>
                 </div>
                 <div class="stat-card" style="border-left-color: #ef4444;">
-                    <span class="label">Lewat</span>
+                    <span class="label" data-i18n="dash_late">Lewat</span>
                     <span class="value" id="rptLewat" style="color: #ef4444;">0</span>
                 </div>
             </div>
 
             <!-- Tapis & Carian -->
             <div class="settings-card" style="margin-bottom: 1.5rem;">
-                <h3><i class="fas fa-filter" style="color: var(--primary);"></i> Tapis Laporan</h3>
+                <h3><i class="fas fa-filter" style="color: var(--primary);"></i> <span data-i18n="title_filter_report">Tapis Laporan</span></h3>
                 <div
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Tarikh Mula</label>
+                        <label data-i18n="lbl_start_date">Tarikh Mula</label>
                         <input type="date" id="rptDateFrom">
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Tarikh Akhir</label>
+                        <label data-i18n="lbl_end_date">Tarikh Akhir</label>
                         <input type="date" id="rptDateTo">
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Status</label>
+                        <label data-i18n="th_status">Status</label>
                         <select id="rptStatus">
-                            <option value="semua">Semua Status</option>
-                            <option value="Menunggu">Menunggu</option>
-                            <option value="Lulus">Lulus</option>
-                            <option value="Tolak">Ditolak</option>
-                            <option value="Dipulangkan">Dipulangkan</option>
-                            <option value="Lewat">Lewat</option>
+                            <option value="semua" data-i18n="opt_all_status">Semua Status</option>
+                            <option value="Menunggu" data-i18n="rpt_pending">Menunggu</option>
+                            <option value="Lulus" data-i18n="dash_approved">Lulus</option>
+                            <option value="Tolak" data-i18n="dash_rejected">Ditolak</option>
+                            <option value="Dipulangkan" data-i18n="dash_returned">Dipulangkan</option>
+                            <option value="Lewat" data-i18n="dash_late">Lewat</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Carian</label>
+                        <label data-i18n="lbl_search">Carian</label>
                         <input type="text" id="rptSearch" placeholder="Cari nama, no. permohonan...">
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
                     <button class="btn btn-primary" onclick="applyReportFilter()">
-                        <i class="fas fa-search"></i> Tapis
-                    </button>
+                        <i class="fas fa-search"></i> <span data-i18n="btn_filter">Tapis</span></button>
                     <button class="btn btn-outline" onclick="resetReportFilter()">
-                        <i class="fas fa-redo"></i> Set Semula
-                    </button>
+                        <i class="fas fa-redo"></i> <span data-i18n="btn_reset">Set Semula</span></button>
                 </div>
             </div>
 
             <!-- Butang Export -->
             <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                 <button class="btn btn-primary" onclick="printReport()" style="background: #1e40af;">
-                    <i class="fas fa-print"></i> Cetak / PDF
-                </button>
+                    <i class="fas fa-print"></i> <span data-i18n="btn_print">Cetak / PDF</span></button>
                 <button class="btn btn-primary" onclick="exportExcel()" style="background: #16a34a;">
-                    <i class="fas fa-file-excel"></i> Export Excel
-                </button>
+                    <i class="fas fa-file-excel"></i> <span data-i18n="btn_export_excel">Export Excel</span></button>
                 <button class="btn btn-outline" onclick="exportCSV()">
-                    <i class="fas fa-file-csv"></i> Export CSV
-                </button>
+                    <i class="fas fa-file-csv"></i> <span data-i18n="btn_export_csv">Export CSV</span></button>
             </div>
 
             <!-- Table Laporan -->
@@ -436,11 +436,11 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>No. Permohonan</th>
-                            <th>Maklumat Pemohon</th>
-                            <th>Maklumat Pinjaman</th>
+                            <th data-i18n="th_app_no">No. Permohonan</th>
+                            <th data-i18n="th_applicant_info">Maklumat Pemohon</th>
+                            <th data-i18n="th_loan_info">Maklumat Pinjaman</th>
                             <th>Tempoh</th>
-                            <th>Status</th>
+                            <th data-i18n="th_status">Status</th>
                         </tr>
                     </thead>
                     <tbody id="reportTableBody">
@@ -459,7 +459,7 @@
 
             <!-- Statistik Penggunaan Komputer -->
             <div class="settings-card" style="margin-top: 2rem;">
-                <h3><i class="fas fa-desktop" style="color: var(--primary);"></i> Statistik Penggunaan Komputer</h3>
+                <h3><i class="fas fa-desktop" style="color: var(--primary);"></i> <span data-i18n="title_computer_stats">Statistik Penggunaan Komputer</span></h3>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
                     Menunjukkan jumlah penggunaan setiap komputer berdasarkan rekod permohonan.
                 </p>
@@ -468,12 +468,12 @@
                         <thead>
                             <tr>
                                 <th>Bil</th>
-                                <th>Model</th>
-                                <th>No. PC</th>
-                                <th>No. Siri</th>
-                                <th>No. Pendaftaran UMS</th>
-                                <th>Jumlah Penggunaan</th>
-                                <th>Status Terkini</th>
+                                <th data-i18n="btn_model">Model</th>
+                                <th data-i18n="th_pc_no">No. PC</th>
+                                <th data-i18n="th_serial_no">No. Siri</th>
+                                <th data-i18n="th_ums_reg_no">No. Pendaftaran UMS</th>
+                                <th data-i18n="th_total_usage">Jumlah Penggunaan</th>
+                                <th data-i18n="th_current_status">Status Terkini</th>
                             </tr>
                         </thead>
                         <tbody id="computerUsageTableBody">
@@ -498,12 +498,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Nama</th>
+                            <th data-i18n="th_name">Nama</th>
                             <th>Username</th>
                             <th>Email</th>
-                            <th>Jawatan</th>
+                            <th data-i18n="th_position">Jawatan</th>
                             <th>Role</th>
-                            <th>Tindakan</th>
+                            <th data-i18n="th_action">Tindakan</th>
                         </tr>
                     </thead>
                     <tbody id="adminTableBody"></tbody>
@@ -516,7 +516,7 @@
             <div class="settings-grid">
                 <!-- Idle Settings -->
                 <div class="settings-card">
-                    <h3>Tetapan Keselamatan</h3>
+                    <h3 data-i18n="title_security_settings">Tetapan Keselamatan</h3>
                     <div class="form-group">
                         <label>Auto Logout / Idle Time</label>
                         <select id="idleTime">
@@ -531,9 +531,9 @@
 
                 <!-- Sound Settings -->
                 <div class="settings-card">
-                    <h3>Tetapan Bunyi & Notifikasi</h3>
+                    <h3 data-i18n="title_sound_settings">Tetapan Bunyi & Notifikasi</h3>
                     <div class="form-group">
-                        <label>Pilihan Bunyi</label>
+                        <label data-i18n="lbl_sound_choice">Pilihan Bunyi</label>
                         <select id="soundChoice">
                             <option value="bell">Loceng (Default)</option>
                             <option value="chime">Chime</option>
@@ -541,7 +541,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Kelantangan Bunyi</label>
+                        <label data-i18n="lbl_sound_volume">Kelantangan Bunyi</label>
                         <input type="range" id="soundVolume" min="0" max="100" value="80">
                     </div>
                     <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
@@ -550,27 +550,26 @@
                     </div>
                     <button class="btn btn-outline" onclick="testSound()"
                         style="width: 100%; margin-top: 0.5rem; justify-content: center; border-color: var(--primary); color: var(--primary);">
-                        <i class="fas fa-volume-up"></i> Uji Bunyi
-                    </button>
+                        <i class="fas fa-volume-up"></i> <span data-i18n="btn_test_sound">Uji Bunyi</span></button>
                 </div>
 
                 <!-- Theme Settings -->
                 <div class="settings-card">
-                    <h3>Tema Paparan</h3>
+                    <h3 data-i18n="title_theme_settings">Tema Paparan</h3>
                     <div class="form-group">
-                        <label>Pilihan Tema</label>
+                        <label data-i18n="lbl_theme_choice">Pilihan Tema</label>
                         <select id="themeChoice" onchange="handleThemeSelect(this.value)">
-                            <option value="light">Terang (Default)</option>
-                            <option value="dark">Gelap (Dark Mode)</option>
+                            <option value="light" data-i18n="opt_light">Terang (Default)</option>
+                            <option value="dark" data-i18n="opt_dark">Gelap (Dark Mode)</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Image Settings -->
                 <div class="settings-card">
-                    <h3>Imej & Identiti</h3>
+                    <h3 data-i18n="title_image_identity">Imej & Identiti</h3>
                     <div class="form-group">
-                        <label>Logo Sistem</label>
+                        <label data-i18n="lbl_system_logo">Logo Sistem</label>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <input type="file" id="logoUpload" accept="image/*" style="flex: 1;">
                             <button class="btn btn-outline" onclick="clearImage('logo')"
@@ -581,7 +580,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Background Laman</label>
+                        <label data-i18n="lbl_page_bg">Background Laman</label>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <input type="file" id="bgUpload" accept="image/*" style="flex: 1;">
                             <button class="btn btn-outline" onclick="clearImage('bg')"
@@ -595,7 +594,7 @@
 
                 <!-- Integrasi Google Sheets (GAS) - URL Hardcoded -->
                 <div class="settings-card" style="grid-column: span 2;">
-                    <h3><i class="fas fa-database"></i> Integrasi Google Sheets (GAS)</h3>
+                    <h3><i class="fas fa-database"></i> <span data-i18n="title_gas">Integrasi Google Sheets (GAS)</span></h3>
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
                         Sistem sedang berhubung ke Google Sheets menggunakan pautan yang telah ditetapkan secara
                         selamat. Data akan ditarik secara automatik setiap kali dashboard dibuka.
@@ -611,12 +610,10 @@
                     <div style="display: flex; gap: 1rem; grid-column: span 2; margin-top: 1rem;">
                         <button class="btn btn-primary" onclick="saveSettings()"
                             style="flex: 1; justify-content: center;">
-                            <i class="fas fa-save"></i> Simpan & Selaras
-                        </button>
+                            <i class="fas fa-save"></i> <span data-i18n="btn_save_sync">Simpan & Selaras</span></button>
                         <button class="btn btn-outline" onclick="testGasConnection()"
                             style="flex: 1; justify-content: center; border-color: var(--primary); color: var(--primary);">
-                            <i class="fas fa-plug"></i> Uji Sambungan
-                        </button>
+                            <i class="fas fa-plug"></i> <span data-i18n="btn_test_conn">Uji Sambungan</span></button>
                     </div>
                 </div>
             </div>
@@ -634,10 +631,10 @@
         <div class="modal-content">
             <h3>Tambah Admin Baru</h3>
             <form id="addAdminForm" style="margin-top: 1.5rem;">
-                <div class="form-group"><label>Nama</label><input type="text" required></div>
+                <div class="form-group"><label data-i18n="th_name">Nama</label><input type="text" required></div>
                 <div class="form-group"><label>Username</label><input type="text" required></div>
                 <div class="form-group"><label>Email</label><input type="email" required></div>
-                <div class="form-group"><label>Jawatan</label><input type="text" required></div>
+                <div class="form-group"><label data-i18n="th_position">Jawatan</label><input type="text" required></div>
                 <div class="form-group"><label>Password</label><input type="password" required></div>
                 <div class="form-group"><label>Role</label><input type="text" value="Admin" readonly></div>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
@@ -680,7 +677,7 @@
                 <div class="form-group"><label>Nama Model</label><input type="text" required></div>
                 <div class="form-group"><label>Nombor PC</label><input type="text" required></div>
                 <div class="form-group"><label>Nombor Siri</label><input type="text" required></div>
-                <div class="form-group"><label>No. Pendaftaran UMS</label><input type="text" required></div>
+                <div class="form-group"><label data-i18n="th_ums_reg_no">No. Pendaftaran UMS</label><input type="text" required></div>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('computerModal')">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan</button>
@@ -689,6 +686,7 @@
         </div>
     </div>
 
+    <script src="../lang.js"></script>
     <script src="script.js"></script>
 </body>
 

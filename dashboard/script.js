@@ -3443,3 +3443,52 @@ async function logout() {
         window.location.href = '../index.html';
     }
 }
+
+
+function searchPemohon() {
+    const input = document.getElementById('pemohonSearch').value.toLowerCase();
+    const tables = ['applicantTableBody', 'delayedTableBody', 'completedTableBody', 'rejectedTableBody'];
+    
+    let totalMatches = 0;
+    
+    tables.forEach(tableId => {
+        const tbody = document.getElementById(tableId);
+        if (!tbody) return;
+        const rows = tbody.querySelectorAll('tr');
+        
+        let hasDataRows = false;
+        
+        rows.forEach(row => {
+            // Skip empty/loading placeholder rows
+            if (row.cells.length === 1 && row.cells[0].colSpan > 1) {
+                if (input.length > 0) row.style.display = 'none';
+                else row.style.display = ''; 
+                return;
+            }
+            
+            hasDataRows = true;
+            const textContent = row.textContent.toLowerCase();
+            if (textContent.includes(input)) {
+                row.style.display = '';
+                totalMatches++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Handle showing placeholder if table is originally empty and we are not searching
+        if (!hasDataRows && input.length === 0) {
+            const placeholder = tbody.querySelector('tr td[colspan]');
+            if (placeholder) placeholder.parentElement.style.display = '';
+        }
+    });
+    
+    const errorMsg = document.getElementById('searchError');
+    if (errorMsg) {
+        if (input.length > 0 && totalMatches === 0) {
+            errorMsg.style.display = 'block';
+        } else {
+            errorMsg.style.display = 'none';
+        }
+    }
+}

@@ -197,6 +197,141 @@ document.getElementById('forgotBtn').addEventListener('click', () => {
     window.location.href = 'forgot/forget.html';
 });
 
+
+// Microsoft Sign-In Logic
+const msBtn = document.getElementById('msBtn');
+if (msBtn) {
+    msBtn.addEventListener('click', async () => {
+        const btnMs = document.getElementById('msBtn');
+        const originalText = '<img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft Logo" style="width:20px; height:20px; margin-right:10px;"> Log Masuk dengan Microsoft';
+
+        try {
+            btnMs.disabled = true;
+            btnMs.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> Memproses...';
+
+            const resetBtnOnFocus = () => {
+                setTimeout(() => {
+                    btnMs.disabled = false;
+                    btnMs.innerHTML = originalText;
+                    window.removeEventListener('focus', resetBtnOnFocus);
+                }, 800);
+            };
+            window.addEventListener('focus', resetBtnOnFocus);
+
+            const provider = new firebase.auth.OAuthProvider('microsoft.com');
+            // Minta akses untuk mendapatkan emel
+            provider.addScope('email');
+            provider.addScope('User.Read');
+            
+            const result = await auth.signInWithPopup(provider);
+            const user = result.user;
+            
+            // Kadangkala Microsoft tidak memberikan 'user.email' secara terus. Kita ambil dari profil UPN.
+            let email = user.email;
+            if (!email && result.additionalUserInfo && result.additionalUserInfo.profile) {
+                email = result.additionalUserInfo.profile.mail || result.additionalUserInfo.profile.userPrincipalName;
+            }
+            if (!email && user.providerData && user.providerData.length > 0) {
+                email = user.providerData[0].email;
+            }
+            
+            if (!email) {
+                await auth.signOut();
+                throw new Error("Gagal membaca emel dari akaun Microsoft anda.");
+            }
+
+            // 1. Check if user is in Admin Sheet using their email
+            const finalAdmin = await findAdmin(email);
+
+            if (!finalAdmin) {
+                await auth.signOut();
+                throw new Error(`${email} tidak didaftarkan. Sila masukkan email yang telah didaftarkan oleh Admin.`);
+            }
+
+            // 2. Setup Session
+            const usernameKey = (getVal(finalAdmin, 'username') || email.split('@')[0]).toLowerCase().trim();
+            const userDocRef = db.collection('admins').doc(usernameKey);
+
+            const userDoc = await userDocRef.get();
+            const existingSession = userDoc.exists ? userDoc.data().sessionId : null;
+            const newSessionId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+
+            const localSession = localStorage.getItem('loggedInAdmin');
+            let isSameDevice = false;
+            if (localSession) {
+                try {
+                    const localData = JSON.parse(localSession);
+                    if (localData.username && localData.username.toLowerCase().trim() === usernameKey && localData.sessionId === existingSession) {
+                        isSameDevice = true;
+                    }
+                } catch (e) { }
+            }
+
+            if (existingSession && !isSameDevice) {
+                const confirmResult = await Swal.fire({
+                    title: 'Akaun Sedang Digunakan',
+                    text: `ID "${usernameKey}" dikesan sedang aktif di peranti lain. Teruskan dan log keluar peranti tersebut?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Teruskan',
+                    cancelButtonText: 'Batal'
+                });
+
+                if (!confirmResult.isConfirmed) {
+                    await auth.signOut();
+                    btnMs.disabled = false;
+                    btnMs.innerHTML = originalText;
+                    return;
+                }
+            }
+
+            btnMs.innerHTML = '<i class="fas fa-check" style="margin-right:8px;color:green;"></i> Berjaya!';
+
+            await userDocRef.set({
+                uid: user.uid,
+                nama: getVal(finalAdmin, 'nama') || user.displayName || '',
+                email: email,
+                username: getVal(finalAdmin, 'username') || email.split('@')[0],
+                jawatan: getVal(finalAdmin, 'jawatan') || '',
+                peranan: getVal(finalAdmin, 'peranan') || 'Admin',
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                sessionId: newSessionId
+            }, { merge: true });
+
+            localStorage.setItem('loggedInAdmin', JSON.stringify({
+                id: getVal(finalAdmin, 'id') || 99,
+                uid: user.uid,
+                nama: getVal(finalAdmin, 'nama') || user.displayName || '',
+                username: getVal(finalAdmin, 'username') || email.split('@')[0],
+                email: email,
+                peranan: getVal(finalAdmin, 'peranan') || 'Admin',
+                loginTime: new Date().toISOString(),
+                sessionId: newSessionId
+            }));
+
+            localStorage.removeItem('activeDashboardSection');
+
+            setTimeout(() => {
+                window.location.href = 'dashboard/main.html';
+            }, 1200);
+
+        } catch (err) {
+            btnMs.disabled = false;
+            btnMs.innerHTML = originalText;
+            console.error(err);
+            if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Log Masuk Gagal',
+                    text: err.message || 'Ralat semasa log masuk dengan Microsoft.'
+                });
+            }
+        }
+    });
+}
+
 document.getElementById('borrowBtn').addEventListener('click', () => {
     window.location.href = 'formuser/index.html';
 });

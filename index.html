@@ -15,27 +15,38 @@
             <form id="loginForm" novalidate>
                 <img src="Pictrure/Logo Digital UMS.png" alt="Logo Digital UMS"
                     class="logo" />
-                <h2>Portal Peminjaman Komputer</h2>
+                <h2 data-i18n="portal_title">Portal Peminjaman Komputer</h2>
                 <div class="input-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter username" />
+                    <label for="username" data-i18n="username_label">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter username" data-i18n="username_placeholder" />
                     <span class="error-message" id="usernameError"></span>
                 </div>
                 <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter password" />
+                    <label for="password" data-i18n="password_label">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter password" data-i18n="password_placeholder" />
                     <span class="error-message" id="passwordError"></span>
                 </div>
-                <button type="submit">Log In</button>
-                <button type="button" id="forgotBtn" class="link-button">Lupa Kata Laluan?</button>
+                <button type="submit" data-i18n="login_btn">Log In</button>
 
-                <button type="button" id="borrowBtn" class="btn-secondary">
+                <div class="divider">
+                    <span data-i18n="or_divider">ATAU</span>
+                </div>
+
+
+                <button type="button" id="msBtn" class="btn-ms">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft Logo">
+                    <span data-i18n="ms_login">Log Masuk dengan Microsoft</span>
+                </button>
+
+                <button type="button" id="forgotBtn" class="link-button" data-i18n="forgot_pass">Lupa Kata Laluan?</button>
+
+                <button type="button" id="borrowBtn" class="btn-secondary" data-i18n="borrow_form_btn">
                     <i class="fas fa-file-signature"></i> BORANG PERMOHONAN PEMINJAMAN
                 </button>
             </form>
         </div>
 
-        <footer class="login-footer">
+        <footer class="login-footer" data-i18n="footer_text">
             © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
         </footer>
     </div>
@@ -43,8 +54,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    
+    <!-- MSAL.js for Microsoft Single-Tenant Support -->
+    <script src="https://alcdn.msauth.net/browser/2.37.1/js/msal-browser.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="lang.js"></script>
     <script src="login.js?v=1.1"></script>
 </body>
 

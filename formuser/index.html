@@ -6,152 +6,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Borang Permohonan Peminjaman Peralatan ICT</title>
     <link rel="stylesheet" href="userform.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 
-<body>
+<body style="margin:0; padding:0;">
 
-    <div id="page1">
-        <img src="../Pictrure/Logo Digital UMS.png" class="logo" />
-        <h2>JABATAN DIGITAL</h2>
-        <h2>UNIVERSITI MALAYSIA SABAH</h2>
-        <p class="address">
-            JALAN UMS, 88400 KOTA KINABALU, SABAH, MALAYSIA<br />
-            Tel: 088 320000 Samb. 613100/613031/613040
-        </p>
-        <h3 class="form-title"><span style="text-decoration: underline;">BORANG PERMOHONAN PEMINJAMAN PERALATAN ICT
-                SEKTOR PUSAT DATA & PERKOMPUTERAN DIGITAL UMS</h3>
-
-        <div class="terms-box">
-            <h4><em>SYARAT-SYARAT PEMINJAMAN:</em></h4>
-            <ul>
-                <li><em> Tempahan hendaklah dibuat <strong>TUJUH (7)</strong> hari sebelum tarikh peminjaman.</em></li>
-                <li><em> Tempahan hanya untuk <strong>AKTIVITI RASMI UNIVERSITI</strong> sahaja.</em></li>
-                <li><em> Tempahan adalah <strong>TERTAKLUK KEPADA KEUTAMAAN DIGITAL UMS</strong>.</em></li>
-                <li><em> Peralatan hendaklah dikembalikan pada <strong>TARIKH</strong> yang ditetapkan.</em></li>
-                <li><em> Peminjam <strong>BERTANGGUNGJAWAB</strong> diatas sebarang kerosakan peralatan yang
-                        dipinjam.</em></li>
-                <li><em> Pihak <strong>DIGITAL</strong> berhak menuntut sebarang <strong>KOS/GANTIRUGI</strong>
-                        sekiranya berlaku sebarang <strong>KEROSAKAN</strong> atau <strong>KEHILANGAN</strong>
-                        pada peralatan yang dipinjam.</em></li>
-            </ul>
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay"
+        style="min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 20px;">
+        <div
+            style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding:40px 30px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.6); width:100%; max-width:340px; text-align:center;">
+            <img src="../Pictrure/Logo Digital UMS.png" alt="Logo Digital UMS"
+                style="max-width:140px; margin:0 auto 20px; display:block;" />
+            <h3 data-i18n="auth_title" style="margin-bottom:12px; color:#2a3eb1; font-family:'Poppins', sans-serif; font-weight:700;">
+                Pengesahan UMS</h3>
+            <p data-i18n="auth_desc" style="font-size:0.85rem; color:#555; margin-bottom:25px; font-family:'Poppins', sans-serif;">Sila log
+                masuk menggunakan emel rasmi UMS (@ums.edu.my) untuk mengakses borang.</p>
+            <button id="userMsLoginBtn"
+                style="width:100%; background:#fff; color:#444; border:1px solid #ddd; border-radius:10px; padding:12px 0; font-size:16px; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.05); transition:all 0.3s ease;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft Logo"
+                    style="width:22px; height:22px; margin-right:12px;">
+                <span id="userMsLoginText">Log Masuk Microsoft</span>
+            </button>
         </div>
 
-
-
-
-        <div class="btn-container">
-            <button id="agreeBtn">SAYA BERSETUJU</button>
-        </div>
     </div>
 
-    <div id="page2" style="display:none;">
-        <h2>MAKLUMAT PEMOHON</h2>
+    <!-- MAIN CONTENT (BORANG) -->
+    <div id="mainContent" style="display:none;">
+        <div id="page1">
+            <img src="../Pictrure/Logo Digital UMS.png" class="logo" />
+            <h2 data-i18n="form_header_1">JABATAN DIGITAL</h2>
+            <h2 data-i18n="form_header_2">UNIVERSITI MALAYSIA SABAH</h2>
+            <p class="address" data-i18n="form_address">
+                JALAN UMS, 88400 KOTA KINABALU, SABAH, MALAYSIA<br />
+                Tel: 088 320000 Samb. 613100/613031/613040
+            </p>
+            <h3 class="form-title" data-i18n="form_main_title"><span style="text-decoration: underline;">BORANG PERMOHONAN PEMINJAMAN PERALATAN ICT
+                    SEKTOR PUSAT DATA & PERKOMPUTERAN DIGITAL UMS</span></h3>
 
-        <form id="applicationForm">
-            <div class="form-group">
-                <label for="name">1. Nama Pemohon :</label>
-                <input type="text" id="name" name="name" required />
+            <div class="terms-box">
+                <h4 data-i18n="terms_title"><em>SYARAT-SYARAT PEMINJAMAN:</em></h4>
+                <ul>
+                    <li data-i18n="term_1"><em> Tempahan hendaklah dibuat <strong>TUJUH (7)</strong> hari sebelum tarikh peminjaman.</em>
+                    </li>
+                    <li data-i18n="term_2"><em> Tempahan hanya untuk <strong>AKTIVITI RASMI UNIVERSITI</strong> sahaja.</em></li>
+                    <li data-i18n="term_3"><em> Tempahan adalah <strong>TERTAKLUK KEPADA KEUTAMAAN DIGITAL UMS</strong>.</em></li>
+                    <li data-i18n="term_4"><em> Peralatan hendaklah dikembalikan pada <strong>TARIKH</strong> yang ditetapkan.</em></li>
+                    <li data-i18n="term_5"><em> Peminjam <strong>BERTANGGUNGJAWAB</strong> diatas sebarang kerosakan peralatan yang
+                            dipinjam.</em></li>
+                    <li data-i18n="term_6"><em> Pihak <strong>DIGITAL</strong> berhak menuntut sebarang <strong>KOS/GANTIRUGI</strong>
+                            sekiranya berlaku sebarang <strong>KEROSAKAN</strong> atau <strong>KEHILANGAN</strong>
+                            pada peralatan yang dipinjam.</em></li>
+                </ul>
             </div>
 
-            <div class="form-group">
-                <label for="noPekerja">2. No. Pekerja :</label>
-                <input type="text" id="noPekerja" name="noPekerja" required />
-            </div>
 
-            <div class="form-group">
-                <label for="email">3. Email UMS :</label>
-                <input type="email" id="email" name="email" required />
-            </div>
 
-            <div class="form-group">
-                <label for="phone">4. No. Telefon :</label>
-                <input type="tel" id="phone" name="phone" required />
-            </div>
 
-            <div class="form-group">
-                <label for="jabatan">5. J/A/F/P/I/B :</label>
-                <input type="text" id="jabatan" name="jabatan" required />
-            </div>
-
-            <div class="form-group">
-                <label for="jenisPermohonan">6. Jenis Permohonan :</label>
-                <select id="jenisPermohonan" name="jenisPermohonan" required>
-                    <option value="">-- Sila Pilih --</option>
-                    <option value="Email">Email</option>
-                    <option value="Surat">Surat</option>
-                    <option value="Lain-lain">Lain-lain</option>
-                </select>
-                <div id="jenisLainContainer" class="conditional-field">
-                    <label for="jenisLain" style="font-size: 0.85em; color: #1e3a8a; margin-top: 8px;">Nyatakan Jenis
-                        Lain :</label>
-                    <input type="text" id="jenisLain" name="jenisLain" placeholder="Contoh: Memo Pelantikan"
-                        style="border-color: #2a3eb1; background: #f0f4ff;" />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="lokasi">7. Lokasi Penggunaan :</label>
-                <input type="text" id="lokasi" name="lokasi" required />
-            </div>
-
-            <div class="form-group">
-                <!-- Spacing filler to keep 8 full width if needed, but grid manages this -->
-            </div>
-
-            <div class="form-group full-width">
-                <label for="tujuan">8. Tujuan Penggunaan :</label>
-                <textarea id="tujuan" name="tujuan" rows="3" required></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="tarikhMasaPinjam">9. Tarikh dan Masa Peminjaman :</label>
-                <input type="datetime-local" id="tarikhMasaPinjam" name="tarikhMasaPinjam" required />
-            </div>
-
-            <div class="form-group">
-                <label for="tarikhMasaPulangan">10. Tarikh dan Masa Pemulangan :</label>
-                <input type="datetime-local" id="tarikhMasaPulangan" name="tarikhMasaPulangan" required />
-            </div>
-
-            <fieldset class="multi-choice full-width">
-                <legend>11. Model dan Kuantiti Peminjaman:</legend>
-                <div id="modelContainer">
-                    <!-- Dinamik: diisi oleh JS dari db_computers -->
-                    <p style="color:#999; font-size:0.9em;">Memuatkan senarai komputer...</p>
-                </div>
-            </fieldset>
-
-            <div class="btn-container full-width">
-                <button type="submit">Hantar Borang</button>
-                <button type="reset" style="background-color: #64748b;">Set Semula</button>
-            </div>
-        </form>
-    </div>
-
-    <div id="successModal" class="modal">
-        <canvas id="confettiCanvas"></canvas>
-        <div class="modal-content">
-            <span id="closeModal" class="close-btn">&times;</span>
-            <div id="modalLoading" style="display:none; padding: 20px;">
-                <p>Menghantar borang...</p>
-            </div>
-            <div id="modalSuccess">
-                <h3>Borang Berjaya Dihantar!</h3>
-                <p id="refNumber">Nombor Rujukan: Digital-0001/2026</p>
-                <div style="margin-top: 20px;">
-                    <button id="okBtn" type="button" style="padding: 8px 25px; font-size: 16px;">OK</button>
-                </div>
+            <div class="btn-container">
+                <button id="agreeBtn" data-i18n="agree_btn">SAYA BERSETUJU</button>
             </div>
         </div>
+
+        <div id="page2" style="display:none;">
+            <h2 data-i18n="applicant_info_title">MAKLUMAT PEMOHON</h2>
+
+            <form id="applicationForm">
+                <div class="form-group">
+                    <label for="name" data-i18n="label_name">1. Nama Pemohon :</label>
+                    <input type="text" id="name" name="name" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="noPekerja" data-i18n="label_staff_no">2. No. Pekerja :</label>
+                    <input type="text" id="noPekerja" name="noPekerja" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="email" data-i18n="label_email">3. Email UMS :</label>
+                    <input type="email" id="email" name="email" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" data-i18n="label_phone">4. No. Telefon :</label>
+                    <input type="tel" id="phone" name="phone" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="jabatan" data-i18n="label_dept">5. J/A/F/P/I/B :</label>
+                    <input type="text" id="jabatan" name="jabatan" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="jenisPermohonan" data-i18n="label_app_type">6. Jenis Permohonan :</label>
+                    <select id="jenisPermohonan" name="jenisPermohonan" required>
+                        <option value="" data-i18n="select_default">-- Sila Pilih --</option>
+                        <option value="Email" data-i18n="opt_email">Email</option>
+                        <option value="Surat" data-i18n="opt_letter">Surat</option>
+                        <option value="Lain-lain" data-i18n="opt_other">Lain-lain</option>
+                    </select>
+                    <div id="jenisLainContainer" class="conditional-field">
+                        <label for="jenisLain" data-i18n="label_other_desc" style="font-size: 0.85em; color: #1e3a8a; margin-top: 8px;">Nyatakan
+                            Jenis
+                            Lain :</label>
+                        <input type="text" id="jenisLain" name="jenisLain" placeholder="Contoh: Memo Pelantikan" data-i18n="placeholder_other"
+                            style="border-color: #2a3eb1; background: #f0f4ff;" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="lokasi" data-i18n="label_location">7. Lokasi Penggunaan :</label>
+                    <input type="text" id="lokasi" name="lokasi" required />
+                </div>
+
+                <div class="form-group">
+                    <!-- Spacing filler to keep 8 full width if needed, but grid manages this -->
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="tujuan" data-i18n="label_purpose">8. Tujuan Penggunaan :</label>
+                    <textarea id="tujuan" name="tujuan" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="tarikhMasaPinjam" data-i18n="label_borrow_date">9. Tarikh dan Masa Peminjaman :</label>
+                    <input type="datetime-local" id="tarikhMasaPinjam" name="tarikhMasaPinjam" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="tarikhMasaPulangan" data-i18n="label_return_date">10. Tarikh dan Masa Pemulangan :</label>
+                    <input type="datetime-local" id="tarikhMasaPulangan" name="tarikhMasaPulangan" required />
+                </div>
+
+                <fieldset class="multi-choice full-width">
+                    <legend data-i18n="label_model_qty">11. Model dan Kuantiti Peminjaman:</legend>
+                    <div id="modelContainer">
+                        <!-- Dinamik: diisi oleh JS dari db_computers -->
+                        <p style="color:#999; font-size:0.9em;" data-i18n="loading_computers">Memuatkan senarai komputer...</p>
+                    </div>
+                </fieldset>
+
+                <div class="btn-container full-width">
+                    <button type="submit" data-i18n="submit_form_btn">Hantar Borang</button>
+                    <button type="reset" style="background-color: #64748b;" data-i18n="reset_form_btn">Set Semula</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="successModal" class="modal">
+            <canvas id="confettiCanvas"></canvas>
+            <div class="modal-content">
+                <span id="closeModal" class="close-btn">&times;</span>
+                <div id="modalLoading" style="display:none; padding: 20px;">
+                    <p data-i18n="sending_form">Menghantar borang...</p>
+                </div>
+                <div id="modalSuccess">
+                    <h3 data-i18n="success_title">Borang Berjaya Dihantar!</h3>
+                    <p id="refNumber">Nombor Rujukan: Digital-0001/2026</p>
+                    <div style="margin-top: 20px;">
+                        <button id="okBtn" type="button" style="padding: 8px 25px; font-size: 16px;">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer id="userFooter" data-i18n="footer_text"
+            style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; padding: 2rem 0; border-top: 1px solid #e2e8f0; margin-top: 2rem;">
+            © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
+        </footer>
     </div>
 
-    <footer id="userFooter"
-        style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; padding: 2rem 0; border-top: 1px solid #e2e8f0; margin-top: 2rem;">
-        © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
-    </footer>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../lang.js"></script>
     <script src="userform.js"></script>
-    </script>
 </body>
 
 </html>

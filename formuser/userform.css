@@ -1,20 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-image: url('https://storage.pixteller.com/designs/designs-images/2019-03-27/05/simple-background-backgrounds-passion-simple-1-5c9b95c3a34f9.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    padding: 30px;
-    max-width: 720px;
-    margin: 0 auto;
+    background-attachment: fixed;
+    margin: 0;
+    padding: 0;
     color: #222;
     min-height: 100vh;
-
-    /* overlay putih transparan */
     position: relative;
 }
 
-/* Buat layer overlay putih dengan opacity */
 body::before {
     content: "";
     position: fixed;
@@ -22,10 +21,27 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(255, 255, 255, 0.70);
-    /* % putih */
+    background-color: rgba(230, 235, 245, 0.6);
     z-index: -1;
-    /* di belakang konten */
+}
+
+#mainContent {
+    max-width: 760px;
+    margin: 40px auto;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 768px) {
+    #mainContent {
+        margin: 20px;
+        padding: 25px;
+    }
 }
 
 .logo {
@@ -93,19 +109,22 @@ ul li strong {
 }
 
 button {
-    background-color: #2a3eb1;
+    background: linear-gradient(135deg, #2a3eb1, #1e2a81);
     color: white;
     border: none;
     padding: 12px 36px;
     cursor: pointer;
-    font-size: 18px;
-    border-radius: 5px;
-    transition: background-color 0.25s ease;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
     font-weight: 600;
+    box-shadow: 0 4px 10px rgba(42, 62, 177, 0.3);
 }
 
 button:hover {
-    background-color: #1e2a81;
+    background: linear-gradient(135deg, #1e2a81, #141c5c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(42, 62, 177, 0.4);
 }
 
 label {
@@ -313,13 +332,15 @@ fieldset.multi-choice legend {
 /* Modal content box */
 .modal-content {
     background-color: #fff;
-    margin: 15% auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.7);
     padding: 30px 40px;
     border-radius: 12px;
     width: 90%;
     max-width: 400px;
     text-align: center;
-    transform: scale(0.7);
     opacity: 0;
     animation: scaleIn 0.4s forwards;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
@@ -364,12 +385,12 @@ fieldset.multi-choice legend {
 
 @keyframes scaleIn {
     from {
-        transform: scale(0.7);
+        transform: translate(-50%, -50%) scale(0.7);
         opacity: 0;
     }
 
     to {
-        transform: scale(1);
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
     }
 }
