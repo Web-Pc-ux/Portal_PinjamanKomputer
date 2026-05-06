@@ -3796,6 +3796,18 @@ window.viewUserApp = function(appId) {
         `;
     }
     
+    // Butang Cetak Borang (Hanya jika sudah diluluskan/proses)
+    const isProcessed = (app.status === 'Lulus' || app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan' || app.status === 'Selesai');
+    if (isProcessed) {
+        html += `
+            <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                <button class="btn btn-primary" onclick="window.open('../printfile/print.html?id=${app.id}', '_blank')" style="width: 100%; padding: 0.8rem; background: #4f46e5; border-radius: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);">
+                    <i class="fas fa-print"></i> Cetak Borang Permohonan
+                </button>
+            </div>
+        `;
+    }
+    
     html += '</div>';
 
     Swal.fire({
