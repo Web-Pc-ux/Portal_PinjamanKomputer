@@ -193,7 +193,7 @@ loginForm.addEventListener('submit', async function (e) {
             if (userRole === 'admin') {
                 window.location.href = 'dashboard/main.html';
             } else {
-                window.location.href = 'UserS/user';
+                window.location.href = 'UserS/user.html';
             }
         }, 1200);
 
@@ -335,7 +335,7 @@ if (msBtn) {
                 if (userRole === 'admin') {
                     window.location.href = 'dashboard/main.html';
                 } else {
-                    window.location.href = 'UserS/user';
+                    window.location.href = 'UserS/user.html';
                 }
             }, 1200);
 

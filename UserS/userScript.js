@@ -370,7 +370,7 @@ function closeModal(modalId) {
 // Section-specific functions
 function showShareModal(activeTab = 'tab1') {
     const currentPath = window.location.pathname;
-    const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/dashboard'));
+    const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/UserS'));
     const url = window.location.origin + directoryPath + '/formuser/index.html';
 
     const tab1Active = activeTab === 'tab1';
@@ -542,7 +542,7 @@ function downloadQR() {
 
 function shareQR() {
     const currentPath = window.location.pathname;
-    const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/dashboard'));
+    const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/UserS'));
     const url = window.location.origin + directoryPath + '/formuser/index.html';
 
     // Try Web Share API first
@@ -2186,7 +2186,7 @@ function toggleAdminModel(catId) {
 
 function generateActionQR(id, type) {
     const currentPath = window.location.pathname;
-    const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/dashboard'));
+    const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/UserS'));
     const verifyUrl = window.location.origin + directoryPath + `/dashboard/qrcode.html?id=${id}&type=${type}`;
 
     const title = type === 'pinjam' ? 'QR Pengesahan Pinjam' : 'QR Pengesahan Pulang';
