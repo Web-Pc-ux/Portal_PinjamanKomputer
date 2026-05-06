@@ -71,11 +71,16 @@ loginForm.addEventListener('submit', async function (e) {
 
     try {
         // 1. Dapatkan rekod admin / Kenal pasti identiti (Server-side search)
-        const finalAdmin = await findAdmin(username);
+        let finalAdmin = await findAdmin(username);
 
         if (!finalAdmin) {
-            console.log("❌ Tiada padanan di Excel untuk:", username);
-            throw new Error("ID Pengguna tidak dijumpai. Sila hubungi pentadbir.");
+            console.log("ℹ️ Tiada padanan di Excel. Melog masuk sebagai Pengguna Biasa.");
+            finalAdmin = {
+                nama: username,
+                username: username,
+                peranan: 'User',
+                email: username.includes('@') ? username : username + "@ums.edu.my"
+            };
         }
 
         const validEmail = getVal(finalAdmin, 'email') || (username.includes('@') ? username : (getVal(finalAdmin, 'username') || username) + "@ums.edu.my");
@@ -182,8 +187,14 @@ loginForm.addEventListener('submit', async function (e) {
         // Reset dashboard view to 'dashboard' for every fresh login
         localStorage.removeItem('activeDashboardSection');
 
+        const userRole = (getVal(finalAdmin, 'peranan') || 'Admin').toString().toLowerCase();
+
         setTimeout(() => {
-            window.location.href = 'dashboard/main.html';
+            if (userRole === 'admin') {
+                window.location.href = 'dashboard/main.html';
+            } else {
+                window.location.href = 'UserS/user';
+            }
         }, 1200);
 
     } catch (err) {
@@ -240,12 +251,17 @@ if (msBtn) {
                 throw new Error("Gagal membaca emel dari akaun Microsoft anda.");
             }
 
-            // 1. Check if user is in Admin Sheet using their email
-            const finalAdmin = await findAdmin(email);
+            let finalAdmin = await findAdmin(email);
+            const msName = user.displayName || (result.additionalUserInfo && result.additionalUserInfo.profile && result.additionalUserInfo.profile.displayName) || email.split('@')[0];
 
             if (!finalAdmin) {
-                await auth.signOut();
-                throw new Error(`${email} tidak didaftarkan. Sila masukkan email yang telah didaftarkan oleh Admin.`);
+                console.log("ℹ️ Tiada padanan di Excel. Melog masuk sebagai Pengguna Biasa.");
+                finalAdmin = {
+                    nama: msName,
+                    username: email.split('@')[0],
+                    peranan: 'User',
+                    email: email
+                };
             }
 
             // 2. Setup Session
@@ -291,11 +307,11 @@ if (msBtn) {
 
             await userDocRef.set({
                 uid: user.uid,
-                nama: getVal(finalAdmin, 'nama') || user.displayName || '',
+                nama: msName || getVal(finalAdmin, 'nama') || '',
                 email: email,
                 username: getVal(finalAdmin, 'username') || email.split('@')[0],
                 jawatan: getVal(finalAdmin, 'jawatan') || '',
-                peranan: getVal(finalAdmin, 'peranan') || 'Admin',
+                peranan: getVal(finalAdmin, 'peranan') || 'User',
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
                 sessionId: newSessionId
             }, { merge: true });
@@ -303,18 +319,24 @@ if (msBtn) {
             localStorage.setItem('loggedInAdmin', JSON.stringify({
                 id: getVal(finalAdmin, 'id') || 99,
                 uid: user.uid,
-                nama: getVal(finalAdmin, 'nama') || user.displayName || '',
+                nama: msName || getVal(finalAdmin, 'nama') || '',
                 username: getVal(finalAdmin, 'username') || email.split('@')[0],
                 email: email,
-                peranan: getVal(finalAdmin, 'peranan') || 'Admin',
+                peranan: getVal(finalAdmin, 'peranan') || 'User',
                 loginTime: new Date().toISOString(),
                 sessionId: newSessionId
             }));
 
             localStorage.removeItem('activeDashboardSection');
 
+            const userRole = (getVal(finalAdmin, 'peranan') || 'Admin').toString().toLowerCase();
+
             setTimeout(() => {
-                window.location.href = 'dashboard/main.html';
+                if (userRole === 'admin') {
+                    window.location.href = 'dashboard/main.html';
+                } else {
+                    window.location.href = 'UserS/user';
+                }
             }, 1200);
 
         } catch (err) {

@@ -50,6 +50,7 @@ agreeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     page1.style.display = 'none';
     page2.style.display = 'block';
+    window.scrollTo(0, 0);
 });
 
 // Toggle Lain-lain field
@@ -202,6 +203,8 @@ function buildModelSection() {
             });
         }
     });
+
+    restoreDynamicFormState();
 }
 
 /* ==============================
@@ -317,9 +320,9 @@ function formatDateTime(dtString) {
 }
 
 /* ==============================
-   FORM SUBMIT — SAVE TO LOCALSTORAGE
+   FORM SUBMIT — SAVE TO LOCALSTORAGE & FIREBASE
 ============================== */
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const container = document.getElementById('modelContainer');
@@ -374,6 +377,44 @@ form.addEventListener('submit', (e) => {
     const now = new Date();
     const timestamp = now.toLocaleDateString('ms-MY') + ' ' + now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
 
+    // Handle File Upload
+    const fileInput = document.getElementById('failPermohonan');
+    let failUrl = '-';
+    
+    if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const sizeMB = file.size / (1024 * 1024);
+        if (sizeMB > 2) {
+            Swal.fire('Fail Terlalu Besar', 'Sila muat naik fail bersaiz bawah 2MB.', 'error');
+            return;
+        }
+        
+        // Upload to Firebase Storage
+        if (typeof firebase !== 'undefined' && firebase.storage) {
+            Swal.fire({
+                title: 'Memuat naik lampiran...',
+                text: 'Sila tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            try {
+                const storage = firebase.storage();
+                // Clean filename to prevent issues
+                const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                const fileRef = storage.ref(`lampiran_permohonan/${Date.now()}_${safeName}`);
+                
+                await fileRef.put(file);
+                failUrl = await fileRef.getDownloadURL();
+                Swal.close();
+            } catch (error) {
+                console.error("Storage upload error:", error);
+                Swal.fire('Ralat Muat Naik', 'Gagal memuat naik fail. Pastikan storan Firebase dikonfigurasi.', 'error');
+                return;
+            }
+        }
+    }
+
     // Build new application object
     const newApp = {
         id: newId,
@@ -398,6 +439,7 @@ form.addEventListener('submit', (e) => {
         scanPulang: '-',
         catatanAdmin: '',
         status: 'Menunggu',
+        failBorang: failUrl, // Link URL fail lampiran
         timestamp: timestamp,
         // Kolum tersembunyi khas untuk perekodan Google Login (Audit)
         authName: window.loggedInGoogleName || '',
@@ -515,6 +557,10 @@ function finishSubmission() {
     page2.style.display = 'none';
     page1.style.display = 'block';
 
+    // Buang memori draf borang supaya ia kosong untuk permohonan seterusnya
+    // Buang memori draf borang supaya ia kosong untuk permohonan seterusnya
+    sessionStorage.removeItem('userFormDraft');
+
     // Scroll to top of page 1
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -551,6 +597,12 @@ const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
    INIT
 ============================== */
 document.addEventListener('DOMContentLoaded', () => {
+    // Paksa browser sentiasa bermula di atas (scroll ke atas) setiap kali refresh
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+
     const loginOverlay = document.getElementById('loginOverlay');
     const mainContent = document.getElementById('mainContent');
     const btnLogin = document.getElementById('userGoogleLoginBtn');
@@ -578,7 +630,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Sembunyikan login, tunjuk borang
                     if (loginOverlay) loginOverlay.style.display = 'none';
                     if (mainContent) mainContent.style.display = 'block';
+
+                    // Auto-isi maklumat pengguna dan lock
+                    const nameInput = document.getElementById('name');
+                    const emailInput = document.getElementById('email');
                     
+                    if (nameInput) {
+                        nameInput.value = window.loggedInGoogleName.toUpperCase();
+                        nameInput.readOnly = true;
+                        nameInput.style.backgroundColor = '#f1f5f9';
+                        nameInput.style.color = '#475569';
+                    }
+                    if (emailInput) {
+                        emailInput.value = window.loggedInGoogleEmail;
+                        emailInput.readOnly = true;
+                        emailInput.style.backgroundColor = '#f1f5f9';
+                        emailInput.style.color = '#475569';
+                    }
+                    
+                    restoreFormState();
                     fetchInitialData();
                 } else {
                     auth.signOut();
@@ -593,9 +663,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } else {
-                // Tiada user log masuk - pastikan borang disembunyikan
-                if (loginOverlay) loginOverlay.style.display = 'flex';
-                if (mainContent) mainContent.style.display = 'none';
+                // Tiada user log masuk - redirect ke portal utama
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesi Tamat',
+                    text: 'Anda perlu log masuk di halaman utama untuk mengakses borang ini.',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    window.location.href = '../index.html';
+                });
             }
         });
     } else {
@@ -658,8 +735,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 provider.addScope('User.Read');
                 provider.setCustomParameters({ prompt: 'select_account' });
 
-                await auth.signInWithPopup(provider);
-                // onAuthStateChanged akan uruskan validasi emel
+                const result = await auth.signInWithPopup(provider);
+                
+                // Ekstrak nama Microsoft sebenar dari profil
+                if (result && result.user) {
+                    const profileName = (result.additionalUserInfo && result.additionalUserInfo.profile && result.additionalUserInfo.profile.displayName) 
+                        || result.user.displayName || "Peminjam UMS";
+                        
+                    // Pastikan displayName dalam Firebase diupdate supaya onAuthStateChanged dapat detect
+                    if (!result.user.displayName || result.user.displayName !== profileName) {
+                        await result.user.updateProfile({ displayName: profileName });
+                        window.loggedInGoogleName = profileName;
+                    }
+                }
+                
+                // onAuthStateChanged akan uruskan validasi emel dan auto-isi borang
             } catch (error) {
                 btnMsLogin.disabled = false;
                 btnMsText.innerHTML = 'Log Masuk Microsoft';
@@ -677,4 +767,108 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '../index.html';
         });
     }
+
+    // Auto-save form draft on input/change
+    if (form) {
+        form.addEventListener('input', saveFormState);
+        form.addEventListener('change', saveFormState);
+        
+        // Buang draf sekiranya pengguna menekan butang "Set Semula"
+        form.addEventListener('reset', () => {
+            sessionStorage.removeItem('userFormDraft');
+        });
+    }
+
+    // Valdiasi saiz fail secara langsung bila dipilih
+    const fileInput = document.getElementById('failPermohonan');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const sizeMB = this.files[0].size / (1024 * 1024);
+                if (sizeMB > 2) {
+                    Swal.fire('Fail Terlalu Besar', 'Maksimum saiz dibenarkan adalah 2MB.', 'warning');
+                    this.value = ''; // Kosongkan
+                }
+            }
+        });
+    }
 });
+
+/* ==============================
+   FORM DRAFT AUTO-SAVE
+============================== */
+function saveFormState() {
+    const formData = {
+        noPekerja: document.getElementById('noPekerja')?.value || '',
+        phone: document.getElementById('phone')?.value || '',
+        jabatan: document.getElementById('jabatan')?.value || '',
+        jenisPermohonan: document.getElementById('jenisPermohonan')?.value || '',
+        jenisLain: document.getElementById('jenisLain')?.value || '',
+        lokasi: document.getElementById('lokasi')?.value || '',
+        tujuan: document.getElementById('tujuan')?.value || '',
+        tarikhMasaPinjam: document.getElementById('tarikhMasaPinjam')?.value || '',
+        tarikhMasaPulangan: document.getElementById('tarikhMasaPulangan')?.value || ''
+    };
+
+    // Save dynamic fields
+    const dynamicData = {};
+    document.querySelectorAll('.cat-check').forEach(check => {
+        if (check.checked) {
+            const catId = check.dataset.cat;
+            const qtyInput = document.getElementById('qty-' + catId);
+            dynamicData[catId] = { checked: true, qty: qtyInput ? qtyInput.value : '' };
+        }
+    });
+    formData.dynamic = dynamicData;
+
+    sessionStorage.setItem('userFormDraft', JSON.stringify(formData));
+}
+
+function restoreFormState() {
+    const draft = sessionStorage.getItem('userFormDraft');
+    if (!draft) return;
+    
+    try {
+        const formData = JSON.parse(draft);
+        
+        // Restore static fields
+        ['noPekerja', 'phone', 'jabatan', 'jenisPermohonan', 'jenisLain', 'lokasi', 'tujuan', 'tarikhMasaPinjam', 'tarikhMasaPulangan'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && formData[id]) {
+                el.value = formData[id];
+            }
+        });
+
+        // Trigger change for jenisPermohonan to show/hide jenisLain
+        const jenisSelect = document.getElementById('jenisPermohonan');
+        if (jenisSelect) {
+            jenisSelect.dispatchEvent(new Event('change'));
+        }
+    } catch (e) {
+        console.error("Error restoring form draft", e);
+    }
+}
+
+function restoreDynamicFormState() {
+    const draft = sessionStorage.getItem('userFormDraft');
+    if (!draft) return;
+    try {
+        const formData = JSON.parse(draft);
+        if (formData.dynamic) {
+            Object.keys(formData.dynamic).forEach(catId => {
+                const check = document.querySelector(`.cat-check[data-cat="${catId}"]`);
+                if (check && !check.disabled) {
+                    check.checked = true;
+                    check.dispatchEvent(new Event('change'));
+                    
+                    const qtyInput = document.getElementById('qty-' + catId);
+                    if (qtyInput) {
+                        qtyInput.value = formData.dynamic[catId].qty;
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error restoring dynamic form draft", e);
+    }
+}

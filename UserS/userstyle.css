@@ -435,16 +435,6 @@ body.dark-mode .calendar-day:hover:not(.empty) {
     color: #166534;
 }
 
-.status-warning {
-    background-color: #ffedd5;
-    color: #9a3412;
-}
-
-.status-danger {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
 /* Table Styling */
 .table-container {
     background: var(--bg-card);

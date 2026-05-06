@@ -18,6 +18,7 @@ const db = firebase.firestore();
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Monitor Sesi Firebase Secara Real-time (Lebih Selamat)
     firebase.auth().onAuthStateChanged(async (user) => {
+
         if (!user) {
             console.warn("⚠️ Sesi tidak sah. Kembali ke Login.");
             window.location.href = '../index.html';
@@ -78,11 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeDashboard(adminData) {
     // Display logged-in admin name
-    const adminNameEl = document.querySelector('.user-profile span');
+    const adminNameEl = document.getElementById('userNameDisplay');
     const profileIconEl = document.getElementById('userProfileIcon');
+    const welcomeNameEl = document.getElementById('welcomeName');
 
-    if (adminNameEl && adminData.nama) {
-        adminNameEl.textContent = adminData.nama;
+    if (adminData.nama) {
+        if (adminNameEl) adminNameEl.textContent = adminData.nama;
+        if (welcomeNameEl) welcomeNameEl.textContent = adminData.nama.toUpperCase();
     }
 
     // Set Profile Picture (Cari gambar sebenar dari emel melalui Unavatar)
@@ -199,7 +202,7 @@ function initializeDashboard(adminData) {
     };
 
     // Navigation logic
-    const navItems = document.querySelectorAll('.nav-item[data-section]');
+    const navItems = document.querySelectorAll('.nav-item[data-section], .bottom-nav-item[data-section]');
     const sections = document.querySelectorAll('.section-content');
     const sectionTitle = document.getElementById('sectionTitle');
     const burgerBtn = document.getElementById('burgerBtn');
@@ -212,7 +215,7 @@ function initializeDashboard(adminData) {
 
         // Update active nav
         navItems.forEach(nav => nav.classList.remove('active'));
-        targetItem.classList.add('active');
+        document.querySelectorAll(`.nav-item[data-section="${sectionId}"], .bottom-nav-item[data-section="${sectionId}"]`).forEach(el => el.classList.add('active'));
 
         // Update visible section
         sections.forEach(sec => sec.classList.remove('active'));
@@ -298,7 +301,7 @@ function initIdleMonitor() {
 
         if (elapsedSeconds >= idleLimitSeconds) {
             isWarningShown = true;
-
+            
             let timerInterval;
             Swal.fire({
                 title: 'Amboii Senyap Je..',
@@ -329,7 +332,7 @@ function initIdleMonitor() {
                 }
             });
         }
-    }, 5000); // Check every 5 seconds
+    }, 5000); // Semak setiap 5 saat
 }
 
 async function performAutoLogout() {
@@ -1585,8 +1588,7 @@ function renderApplicationTable() {
                     <td data-label="Tempoh Penggunaan">
                         <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
                             <i class="fas fa-calendar-alt" style="color: var(--success); font-size: 0.7rem;"></i>
-                            <span><strong>Tarikh Pinjam:</strong> ${app.mula}</span>
-                            
+                            <span><strong>Mula:</strong> ${app.mula}</span>
                         </div>
                         ${app.scanPinjam ? `
                             <div style="font-size: 0.7rem; color: #059669; padding-left: 1.1rem; line-height: 1.2;">
@@ -1594,9 +1596,9 @@ function renderApplicationTable() {
                                 <span style="font-style: italic; opacity: 0.8;">Oleh: ${app.authNamaPinjam || '-'}</span>
                             </div>` : ''}
                         
-                        <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; margin-top: 6px;">
+                        <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; margin-top: 4px;">
                             <i class="fas fa-calendar-check" style="color: var(--danger); font-size: 0.7rem;"></i>
-                            <span><strong>Tarikh Pemulangan:</strong> ${app.tamat}</span>
+                            <span><strong>Tamat:</strong> ${app.tamat}</span>
                         </div>
                         ${app.scanPulang ? `
                             <div style="font-size: 0.7rem; color: #dc2626; padding-left: 1.1rem; line-height: 1.2;">
@@ -1763,8 +1765,7 @@ function getStatusClass(status) {
     if (status === 'Menunggu' || status === 'Baru') return 'waiting';
     if (status === 'Lulus') return 'approved';
     if (status === 'Ditolak' || status === 'Tolak') return 'danger';
-    if (status === 'Dipulangkan' || status === 'Selesai') return 'info';
-    if (status === 'Sedang Digunakan') return 'warning';
+    if (status === 'Dipulangkan') return 'info';
     if (status === 'Lewat') return 'danger';
     return 'info';
 }
@@ -1831,8 +1832,8 @@ function urusApp(id) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${app.scanPinjam ? `<tr><td style="color:#f59e0b;font-weight:600;"><a href="qrcode.html?id=${app.id}&type=pinjam" target="_blank" style="color:inherit; text-decoration:underline; cursor:pointer;" title="Klik untuk lihat borang pengesahan"><i class="fas fa-sign-out-alt"></i> Pinjam</a></td><td style="font-family:monospace;">${app.scanPinjam}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPinjam || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPinjam || '-'}</span></td></tr>` : ''}
-                            ${app.scanPulang ? `<tr><td style="color:#10b981;font-weight:600;"><a href="qrcode.html?id=${app.id}&type=pulang" target="_blank" style="color:inherit; text-decoration:underline; cursor:pointer;" title="Klik untuk lihat borang pengesahan"><i class="fas fa-sign-in-alt"></i> Pulang</a></td><td style="font-family:monospace;">${app.scanPulang}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPulang || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPulang || '-'}</span></td></tr>` : ''}
+                            ${app.scanPinjam ? `<tr><td style="color:#f59e0b;font-weight:600;"><i class="fas fa-sign-out-alt"></i> Pinjam</td><td style="font-family:monospace;">${app.scanPinjam}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPinjam || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPinjam || '-'}</span></td></tr>` : ''}
+                            ${app.scanPulang ? `<tr><td style="color:#10b981;font-weight:600;"><i class="fas fa-sign-in-alt"></i> Pulang</td><td style="font-family:monospace;">${app.scanPulang}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPulang || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPulang || '-'}</span></td></tr>` : ''}
                             ${(!app.scanPinjam && !app.scanPulang) ? `<tr><td colspan="3" style="text-align:center;color:#94a3b8;">Tiada rekod imbasan lagi.</td></tr>` : ''}
                         </tbody>
                     </table>
@@ -1894,13 +1895,10 @@ function urusApp(id) {
                         
                         <div class="form-group" style="margin-bottom:1.25rem;">
                             <label style="font-size:0.8rem; margin-bottom:0.4rem;">Status Semasa</label>
-                            <select id="admin_status" onchange="toggleUpdateButton(this.value)" 
-                                ${(app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan') ? 'disabled' : ''}
-                                style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid #cbd5e1; font-weight:600; font-size:0.9rem; color:var(--primary); ${(app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan') ? 'background:#f1f5f9; cursor:not-allowed;' : ''}">
+                            <select id="admin_status" style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid #cbd5e1; font-weight:600; font-size:0.9rem; color:var(--primary);">
                                 <option value="Baru" ${app.status === 'Baru' ? 'selected' : ''}>Baru</option>
                                 <option value="Menunggu" ${app.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
                                 <option value="Lulus" ${app.status === 'Lulus' ? 'selected' : ''}>Lulus</option>
-                                <option value="Sedang Digunakan" ${app.status === 'Sedang Digunakan' ? 'selected' : ''}>Sedang Digunakan</option>
                                 <option value="Tolak" ${app.status === 'Tolak' || app.status === 'Ditolak' ? 'selected' : ''}>Tolak</option>
                                 <option value="Dipulangkan" ${app.status === 'Dipulangkan' ? 'selected' : ''}>Dipulangkan</option>
                                 <option value="Lewat" ${app.status === 'Lewat' ? 'selected' : ''}>Lewat</option>
@@ -1909,9 +1907,7 @@ function urusApp(id) {
 
                         <div class="form-group">
                             <label style="font-size:0.8rem; margin-bottom:0.4rem;">Catatan Admin</label>
-                            <textarea id="admin_catatan" placeholder="Masukkan nota di sini..." 
-                                ${(app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan') ? 'readonly' : ''}
-                                style="width: 100%; height: 120px; padding: 0.75rem; border-radius: 8px; border: 1px solid #cbd5e1; font-size:0.85rem; resize:none; ${(app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan') ? 'background:#f1f5f9; cursor:not-allowed;' : ''}">${app.catatanAdmin || ''}</textarea>
+                            <textarea id="admin_catatan" placeholder="Masukkan nota di sini..." style="width: 100%; height: 120px; padding: 0.75rem; border-radius: 8px; border: 1px solid #cbd5e1; font-size:0.85rem; resize:none;">${app.catatanAdmin || ''}</textarea>
                         </div>
                     </div>
                 </div>
@@ -1952,9 +1948,7 @@ function urusApp(id) {
         <button class="btn btn-outline" onclick="closeModal('urusModal')" style="padding: 0.75rem 1.5rem;">
             <i class="fas fa-times"></i> Tutup
         </button>
-        <button class="btn btn-primary" id="btnUpdateRecord" onclick="updateAppManagement(${app.id})" 
-            style="padding: 0.75rem 2rem; background: #2563eb; box-shadow: 0 4px 6px rgba(37,99,235,0.2); 
-            ${(app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan') ? 'display: none;' : ''}">
+        <button class="btn btn-primary" onclick="updateAppManagement(${app.id})" style="padding: 0.75rem 2rem; background: #2563eb; box-shadow: 0 4px 6px rgba(37,99,235,0.2);">
             <i class="fas fa-save"></i> Kemaskini Rekod
         </button>
     `;
@@ -1962,17 +1956,6 @@ function urusApp(id) {
     openModal('urusModal');
     // Build dynamic model section after modal is rendered
     setTimeout(() => buildAdminModelHTML(app.id), 0);
-}
-
-// Fungsi pembantu untuk sembunyi/papar butang kemaskini secara dinamik
-window.toggleUpdateButton = function(status) {
-    const btn = document.getElementById('btnUpdateRecord');
-    if (!btn) return;
-    if (status === 'Sedang Digunakan' || status === 'Dipulangkan') {
-        btn.style.display = 'none';
-    } else {
-        btn.style.display = 'inline-flex';
-    }
 }
 
 function buildAdminModelHTML(currentAppId) {
@@ -2004,8 +1987,6 @@ function buildAdminModelHTML(currentAppId) {
             requestedCounts[match[1].trim().toLowerCase()] = parseInt(match[2], 10);
         }
     });
-
-    const isViewOnly = (app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan');
 
     const borrowedIds = new Set();
     const borrowedByOthersPerCat = {};
@@ -2088,8 +2069,8 @@ function buildAdminModelHTML(currentAppId) {
         });
 
         html += `<div style="margin-bottom:1.5rem;" class="admin-cat-group" data-catname="${origCatName}" data-requested="${requested}">`;
-        html += `<label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; cursor:${isViewOnly ? 'not-allowed' : 'pointer'};">`;
-        html += `<input type="checkbox" class="admin-cat-check" data-cat="${catId}" onchange="toggleAdminModel('${catId}')" ${catHasPreSelected ? 'checked' : ''} ${isViewOnly ? 'disabled' : ''}> `;
+        html += `<label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; cursor:pointer;">`;
+        html += `<input type="checkbox" class="admin-cat-check" data-cat="${catId}" onchange="toggleAdminModel('${catId}')" ${catHasPreSelected ? 'checked' : ''}> `;
         html += `<i class="fas fa-${iconClass}" style="color:var(--primary)"></i> <span class="cat-label-text">${origCatName} (Dipohon: ${requested} | Stok: ${totalInPool} Unit)</span>`;
         if (totalInPool === 0) html += ' <span style="color:#ef4444; font-size:0.75rem; font-weight:700; margin-left:0.5rem;">HABIS</span>';
         html += `</label>`;
@@ -2100,8 +2081,8 @@ function buildAdminModelHTML(currentAppId) {
             const siriId = (comp.noSiri || '').toLowerCase().trim();
             const isSelected = currentBorrowedSiri.has(pcId) || currentBorrowedSiri.has(siriId);
 
-            html += `<label style="font-size:0.8rem; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 4px; border: 1px solid transparent; transition: all 0.2s; cursor:${isViewOnly ? 'not-allowed' : 'pointer'};">`;
-            html += `<input type="checkbox" name="admin_model_item" value="${comp.model}" data-cat="${origCatName}" data-nopc="${comp.noPC || ''}" data-nosiri="${comp.noSiri || ''}" onchange="updateAdminSelectDisplay()" ${isSelected ? 'checked' : ''} ${isViewOnly ? 'disabled' : ''}> `;
+            html += `<label style="font-size:0.8rem; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 4px; border: 1px solid transparent; transition: all 0.2s;">`;
+            html += `<input type="checkbox" name="admin_model_item" value="${comp.model}" data-cat="${origCatName}" data-nopc="${comp.noPC || ''}" data-nosiri="${comp.noSiri || ''}" onchange="updateAdminSelectDisplay()" ${isSelected ? 'checked' : ''}> `;
             html += `${comp.model} ${comp.noPC ? '(' + comp.noPC + ')' : ''}</label>`;
         });
         html += '</div></div></div>';
@@ -2128,7 +2109,6 @@ function updateAdminSelectDisplay() {
         listContainer.innerHTML = '<div style="color:#94a3b8; font-style:italic; font-size:0.85rem;">Tiada item dipilih. Perlu dipilih semula dalam Senarai Model di bawah.</div>';
         summaryContainer.innerHTML = 'Kuantiti: 0 Unit';
     } else {
-        const isLocked = document.getElementById('admin_status').disabled;
         listContainer.innerHTML = checkedItems.map(cb => {
             const label = cb.parentElement.innerText.trim();
             const noPC = cb.dataset.nopc;
@@ -2139,7 +2119,7 @@ function updateAdminSelectDisplay() {
                 <div class="borrowed-item-pill" style="display:inline-flex; align-items:center; background:white; border:1px solid #bfdbfe; padding:6px 12px; border-radius:30px; font-size:0.85rem; color:#1e40af; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     <i class="fas fa-desktop" style="margin-right:8px; font-size:0.75rem;"></i>
                     ${label}
-                    ${!isLocked ? `<i class="fas fa-times-circle" title="Keluarkan Item" onclick="removeItemFromLoan('${uniqueId}')" style="margin-left:8px; color:#ef4444; cursor:pointer; font-size:1.1rem; transition: transform 0.2s;"></i>` : ''}
+                    <i class="fas fa-times-circle" title="Keluarkan Item" onclick="removeItemFromLoan('${uniqueId}')" style="margin-left:8px; color:#ef4444; cursor:pointer; font-size:1.1rem; transition: transform 0.2s;"></i>
                 </div>
             `;
         }).join('');
@@ -3505,24 +3485,24 @@ async function logout() {
 function searchPemohon() {
     const input = document.getElementById('pemohonSearch').value.toLowerCase();
     const tables = ['applicantTableBody', 'delayedTableBody', 'completedTableBody', 'rejectedTableBody'];
-
+    
     let totalMatches = 0;
-
+    
     tables.forEach(tableId => {
         const tbody = document.getElementById(tableId);
         if (!tbody) return;
         const rows = tbody.querySelectorAll('tr');
-
+        
         let hasDataRows = false;
-
+        
         rows.forEach(row => {
             // Skip empty/loading placeholder rows
             if (row.cells.length === 1 && row.cells[0].colSpan > 1) {
                 if (input.length > 0) row.style.display = 'none';
-                else row.style.display = '';
+                else row.style.display = ''; 
                 return;
             }
-
+            
             hasDataRows = true;
             const textContent = row.textContent.toLowerCase();
             if (textContent.includes(input)) {
@@ -3532,14 +3512,14 @@ function searchPemohon() {
                 row.style.display = 'none';
             }
         });
-
+        
         // Handle showing placeholder if table is originally empty and we are not searching
         if (!hasDataRows && input.length === 0) {
             const placeholder = tbody.querySelector('tr td[colspan]');
             if (placeholder) placeholder.parentElement.style.display = '';
         }
     });
-
+    
     const errorMsg = document.getElementById('searchError');
     if (errorMsg) {
         if (input.length > 0 && totalMatches === 0) {
@@ -3549,3 +3529,322 @@ function searchPemohon() {
         }
     }
 }
+
+// ============================================
+// LOGIK PERMOHONAN UNTUK PENGGUNA BIASA (USER) & GOOGLE SHEETS
+// ============================================
+let isFetchingApps = false;
+
+async function fetchUserApplicationsFromGAS() {
+    if (isFetchingApps) return;
+    isFetchingApps = true;
+    
+    const tbody = document.getElementById('userApplicationList');
+    if (tbody && (!window.userAppsCache || window.userAppsCache.length === 0)) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Memuat turun data dari pelayan...</td></tr>';
+    }
+
+    try {
+        const response = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=all`);
+        const result = await response.json();
+        
+        if (result && result.status === 'success' && result.data && result.data.permohonan) {
+            const apps = result.data.permohonan;
+            
+            // Filter apps untuk user ini berdasarkan email ATAU id pemohon
+            const session = localStorage.getItem('loggedInAdmin');
+            let email = "test@ums.edu.my";
+            let username = "testuser";
+            if (session) {
+                const userData = JSON.parse(session);
+                email = (userData.email || "").toLowerCase();
+                username = (userData.username || "").toLowerCase();
+            }
+            
+
+            
+            let userApps = apps.filter(a => {
+                const aEmail = String(a.email || "").toLowerCase();
+                const aUsername = String(a.username || "").toLowerCase();
+                const aNoPekerja = String(a.noPekerja || "").toLowerCase(); 
+                // Semak extra untuk authEmail dari hidden field (Google Login)
+                const aAuthEmail = String(a.authEmail || "").toLowerCase();
+                
+                return (aEmail && aEmail === email) || 
+                       (aUsername && aUsername === username) || 
+                       (aNoPekerja && aNoPekerja === username) ||
+                       (aAuthEmail && aAuthEmail === email);
+            });
+            
+            // Cache data
+            window.userAppsCache = userApps;
+            renderUserApplicationsUI();
+        }
+    } catch (e) {
+        console.error("Ralat menyambung ke Google Sheets:", e);
+        
+        // Cubaan terakhir: gunakan data lokal jika pelayan gagal (offline fallback)
+        const localApps = getDB('db_applicants') || [];
+        if (localApps.length > 0) {
+            window.userAppsCache = localApps;
+            renderUserApplicationsUI();
+            return;
+        }
+
+        if (tbody && (!window.userAppsCache || window.userAppsCache.length === 0)) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--danger);">Gagal memuat turun data permohonan. Ralat: ${e.message}</td></tr>`;
+        }
+    } finally {
+        isFetchingApps = false;
+    }
+}
+
+function renderUserApplicationsUI() {
+    let userApps = window.userAppsCache || [];
+    
+
+    // Sorting: Baru/Menunggu di atas, Selesai/Dipulangkan/Lulus/Tolak di bawah
+    userApps.sort((a, b) => {
+        const isPendingA = (a.status === 'Baru' || a.status === 'Menunggu') ? 0 : 1;
+        const isPendingB = (b.status === 'Baru' || b.status === 'Menunggu') ? 0 : 1;
+        
+        if (isPendingA !== isPendingB) {
+            return isPendingA - isPendingB; // 0 (pending) goes first
+        }
+        
+        // Secondary sort: id descending (newest first)
+        return b.id - a.id;
+    });
+
+    const tbody = document.getElementById('userApplicationList');
+    const mobileContainer = document.getElementById('userApplicationListMobile');
+    
+    if (userApps.length === 0) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tiada rekod permohonan dijumpai.</td></tr>';
+        if (mobileContainer) mobileContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted); background: #fff; border-radius: 10px;">Tiada rekod permohonan dijumpai.</div>';
+        
+        const statusText = document.getElementById('statusPermohonanText');
+        const notifBox = document.getElementById('userNotifications');
+        if (statusText) statusText.textContent = "Sila klik 'Buat Permohonan' untuk memulakan peminjaman baru.";
+        if (notifBox) notifBox.style.display = 'none';
+        return;
+    }
+
+    let htmlTable = '';
+    let htmlMobile = '';
+    
+    userApps.forEach(app => {
+        let statusClass = 'status-waiting';
+        if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan') statusClass = 'status-approved';
+        if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') statusClass = 'status-danger';
+
+        // Table Row (Desktop)
+        htmlTable += '<tr>' +
+                '<td><strong>' + (app.noPermohonan || '-') + '</strong></td>' +
+                '<td>' + (app.mula || '-') + ' - ' + (app.tamat || '-') + '</td>' +
+                '<td>' + (app.model || '-') + ' (Qty: ' + (app.kuantiti || 1) + ')</td>' +
+                '<td><span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></td>' +
+                '<td>' +
+                    '<button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="viewUserApp(' + app.id + ')">' +
+                        '<i class="fas fa-eye"></i> Lihat' +
+                    '</button>' +
+                '</td>' +
+            '</tr>';
+            
+        // Card (Mobile)
+        htmlMobile += `
+            <div class="mobile-app-card">
+                <div class="mobile-app-card-header">
+                    <strong>${app.noPermohonan || '-'}</strong>
+                    <span class="badge ${statusClass}">${app.status || 'Menunggu'}</span>
+                </div>
+                <div class="mobile-app-card-body">
+                    <p><i class="far fa-calendar-alt" style="color:var(--primary); width:16px;"></i> <strong>Tarikh:</strong> ${app.mula || '-'}</p>
+                    <p><i class="fas fa-laptop" style="color:var(--primary); width:16px;"></i> <strong>Model:</strong> ${app.model || '-'} (Qty: ${app.kuantiti || 1})</p>
+                </div>
+                <div class="mobile-app-card-footer">
+                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width:100%;" onclick="viewUserApp(${app.id})">
+                        <i class="fas fa-eye"></i> Lihat Butiran
+                    </button>
+                </div>
+            </div>`;
+    });
+    
+    if (tbody) tbody.innerHTML = htmlTable;
+    if (mobileContainer) mobileContainer.innerHTML = htmlMobile;
+
+    // Update Dashboard Utama (Status & Notifikasi)
+    const latestApp = userApps[0]; // because it's sorted, newest/pending is at top
+    const statusText = document.getElementById('statusPermohonanText');
+    const notifBox = document.getElementById('userNotifications');
+    
+    if (statusText) {
+        let msg = 'Status Terkini: ' + latestApp.status + ' (No. Permohonan: ' + latestApp.noPermohonan + ')';
+        
+        if ((latestApp.status === 'Dipinjam' || latestApp.status === 'Sedang Digunakan') && latestApp.authNamaPinjam) {
+            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah diambil oleh ${latestApp.authNamaPinjam} pada ${latestApp.scanPinjam}`;
+        } else if ((latestApp.status === 'Selesai' || latestApp.status === 'Dipulangkan') && latestApp.authNamaPulang) {
+            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah dipulangkan oleh ${latestApp.authNamaPulang} pada ${latestApp.scanPulang}`;
+        } else if (latestApp.status === 'Lulus') {
+            msg = `Status Terkini: Permohonan Lulus (No: ${latestApp.noPermohonan}). Sila hadir untuk pengambilan peralatan ICT.`;
+        } else if (latestApp.status === 'Baru' || latestApp.status === 'Menunggu') {
+            msg = `Status Terkini: Permohonan anda sedang dalam proses semakan (No: ${latestApp.noPermohonan})`;
+        } else if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
+            msg = `Status Terkini: Permohonan Tidak Diluluskan (No: ${latestApp.noPermohonan})`;
+        }
+        
+        statusText.textContent = msg;
+    }
+    
+    if (notifBox) {
+        if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
+            notifBox.style.display = 'flex';
+            notifBox.className = 'alert alert-danger';
+            notifBox.style.background = '#fee2e2';
+            notifBox.style.borderLeftColor = 'var(--danger)';
+            notifBox.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger); font-size: 1.5rem;"></i>' +
+                '<div>' +
+                    '<strong style="display: block; color: #991b1b; margin-bottom: 0.25rem;">Notifikasi Terkini</strong>' +
+                    '<span style="color: #b91c1c;">Permohonan anda (No: ' + latestApp.noPermohonan + ') tidak diluluskan. ' + (latestApp.catatanAdmin ? '<br>Catatan: ' + latestApp.catatanAdmin : '') + '</span>' +
+                '</div>';
+        } else if (latestApp.status === 'Lulus') {
+            notifBox.style.display = 'flex';
+            notifBox.className = 'alert alert-success';
+            notifBox.style.background = '#dcfce7';
+            notifBox.style.borderLeftColor = '#22c55e';
+            notifBox.innerHTML = '<i class="fas fa-check-circle" style="color: #166534; font-size: 1.5rem;"></i>' +
+                '<div>' +
+                    '<strong style="display: block; color: #166534; margin-bottom: 0.25rem;">Tahniah!</strong>' +
+                    '<span style="color: #166534;">Permohonan anda (No: ' + latestApp.noPermohonan + ') telah diluluskan. Sila ambil peralatan anda. ' + (latestApp.catatanAdmin ? '<br>Catatan: ' + latestApp.catatanAdmin : '') + '</span>' +
+                '</div>';
+        } else if (latestApp.status === 'Dipulangkan' || latestApp.status === 'Selesai') {
+            notifBox.style.display = 'flex';
+            notifBox.className = 'alert alert-info';
+            notifBox.style.background = '#e0f2fe';
+            notifBox.style.borderLeftColor = '#0ea5e9';
+            notifBox.innerHTML = '<i class="fas fa-info-circle" style="color: #0369a1; font-size: 1.5rem;"></i>' +
+                '<div>' +
+                    '<strong style="display: block; color: #0369a1; margin-bottom: 0.25rem;">Makluman</strong>' +
+                    '<span style="color: #0369a1;">Peralatan untuk permohonan (No: ' + latestApp.noPermohonan + ') telah dipulangkan / selesai. Terima kasih.</span>' +
+                '</div>';
+        } else {
+            notifBox.style.display = 'none';
+        }
+    }
+}
+
+window.viewUserApp = function(appId) {
+    const apps = window.userAppsCache || [];
+    // Dalam GAS, id mungkin string, jadi kita guna == berbanding ===
+    const app = apps.find(a => a.id == appId);
+    if (!app) return;
+    
+    let statusClass = 'status-waiting';
+    if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan') statusClass = 'status-approved';
+    if (app.status === 'Sedang Digunakan') statusClass = 'status-warning';
+    if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') statusClass = 'status-danger';
+
+    let html = '<div style="text-align: left; font-size: 0.9rem;">' +
+            '<div style="background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary);">' +
+                '<p style="margin: 0;"><strong>No. Permohonan:</strong> ' + (app.noPermohonan || '-') + '</p>' +
+                '<p style="margin: 0; font-size: 0.8rem; color: #64748b;">Status: <span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></p>' +
+            '</div>' +
+            '<p><strong>Tarikh Mohon:</strong> ' + (app.mula || '-') + ' hingga ' + (app.tamat || '-') + '</p>' +
+            '<p><strong>Model:</strong> ' + (app.model || '-') + '</p>' +
+            (app.siri && app.siri !== '-' ? '<p><strong>No. Siri/PC:</strong> <span style="font-family: monospace; background: #fef9c3; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #854d0e;">' + app.siri + '</span></p>' : '') +
+            '<p><strong>Tujuan:</strong> ' + (app.tujuan || '-') + '</p>' +
+            '<p><strong>Lokasi:</strong> ' + (app.lokasi || '-') + '</p>' +
+            '<p><strong>Catatan Admin:</strong> ' + (app.catatanAdmin || '-') + '</p>';
+            
+    // Maklumat Ambil/Pulang (Jika sudah di-scan)
+    if (app.scanPinjam || app.scanPulang) {
+        html += '<div style="margin-top: 15px; padding: 12px; background: #fdf2f2; border-radius: 8px; border: 1px solid #fee2e2;">';
+        html += '<h4 style="font-size: 0.85rem; color: #b91c1c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><i class="fas fa-clipboard-check"></i> Maklumat Pengesahan Ambil/Pulang</h4>';
+        
+        if (app.scanPinjam) {
+            html += `<div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #fecaca;">`;
+            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Nama Pengambil:</strong> ${app.authNamaPinjam || '-'}</p>`;
+            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Ambil:</strong> ${app.scanPinjam}</p>`;
+            html += `</div>`;
+        }
+        
+        if (app.scanPulang) {
+            html += `<div>`;
+            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Nama Pemulang:</strong> ${app.authNamaPulang || '-'}</p>`;
+            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Pulang:</strong> ${app.scanPulang}</p>`;
+            html += `</div>`;
+        }
+        html += '</div>';
+    }
+
+    if (app.failBorang && app.failBorang !== '-') {
+        html += '<p style="margin-top: 15px;"><a href="' + app.failBorang + '" target="_blank" class="btn btn-outline" style="display:inline-block; width: 100%; text-align: center;"><i class="fas fa-file-download"></i> Muat Turun Bukti Permohonan</a></p>';
+    }
+
+    // Butang Edit & Padam (Hanya jika status belum diproses/Baru/Menunggu)
+    const canEdit = (app.status === 'Baru' || app.status === 'Menunggu');
+    if (canEdit) {
+        html += `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="editUserApp(${app.id})" style="padding: 0.6rem; font-size: 0.85rem; background: #2563eb;">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-outline" onclick="cancelUserApp(${app.id})" style="padding: 0.6rem; font-size: 0.85rem; color: #ef4444; border-color: #ef4444;">
+                    <i class="fas fa-trash"></i> Padam
+                </button>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+
+    Swal.fire({
+        title: 'Butiran Permohonan',
+        html: html,
+        confirmButtonText: 'Tutup',
+        confirmButtonColor: 'var(--primary)'
+    });
+}
+
+window.cancelUserApp = function(id) {
+    Swal.fire({
+        title: 'Batal Permohonan?',
+        text: "Adakah anda pasti mahu membatalkan permohonan ini? Data akan dibuang dari sistem secara kekal.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Batalkan',
+        cancelButtonText: 'Kembali'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Sync to GAS (Delete)
+            syncToGAS({ id: id }, 'delete', 'permohonan');
+            
+            Swal.fire({
+                title: 'Berjaya!',
+                text: 'Permohonan anda telah dibatalkan.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            // Refresh data
+            setTimeout(fetchUserApplicationsFromGAS, 1000);
+        }
+    });
+}
+
+window.editUserApp = function(id) {
+    Swal.fire({
+        title: 'Edit Permohonan',
+        text: 'Ciri kemaskini sedang dalam penambahbaikan. Sila batalkan permohonan sedia ada dan buat permohonan baharu jika terdapat kesilapan maklumat.',
+        icon: 'info',
+        confirmButtonText: 'Faham'
+    });
+}
+
+
+// Panggil secara berterusan supaya senarai update secara automatik (auto-refresh)
+setInterval(fetchUserApplicationsFromGAS, 15000); // Sinkronisasi setiap 15 saat dengan pelayan
+setTimeout(fetchUserApplicationsFromGAS, 500); // Panggilan pertama
+
