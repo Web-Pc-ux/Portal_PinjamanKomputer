@@ -36,10 +36,7 @@ const translations = {
         "BM": "Lupa Kata Laluan?",
         "EN": "Forgot Password?"
     },
-    "borrow_form_btn": {
-        "BM": "<i class=\"fas fa-file-signature\"></i> BORANG PERMOHONAN PEMINJAMAN",
-        "EN": "<i class=\"fas fa-file-signature\"></i> BORROWING APPLICATION FORM"
-    },
+
     "footer_text": {
         "BM": "© 2026 Jabatan Digital UMS , Unit Perkomputeran. Hak Cipta Terpelihara.",
         "EN": "© 2026 Digital Department UMS, Computing Unit. All Rights Reserved."

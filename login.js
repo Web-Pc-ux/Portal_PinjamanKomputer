@@ -354,8 +354,6 @@ if (msBtn) {
     });
 }
 
-document.getElementById('borrowBtn').addEventListener('click', () => {
-    window.location.href = 'formuser/index.html';
-});
+
 
 // Copyright load removed for static fallback

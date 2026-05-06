@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Halang Google daripada index folder admin atau dashboard yang sensitif
+Disallow: /formadmin/
+Disallow: /dashboard/
+Disallow: /formuser/
+
+Sitemap: https://web-pc-ux.github.io/Portal_PinjamanKomputer/sitemap.xml

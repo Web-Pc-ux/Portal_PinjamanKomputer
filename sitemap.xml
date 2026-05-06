@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Halaman Utama (Login/Landing) -->
+  <url>
+    <loc>https://web-pc-ux.github.io/Portal_PinjamanKomputer/index.html</loc>
+    <lastmod>2026-05-07</lastmod>
+    <priority>1.0</priority>
+  </url>
+  
+
+
+  <!-- Halaman Lupa Kata Laluan -->
+  <url>
+    <loc>https://web-pc-ux.github.io/Portal_PinjamanKomputer/forgot/forget.html</loc>
+    <lastmod>2026-05-07</lastmod>
+    <priority>0.5</priority>
+  </url>
+</urlset>

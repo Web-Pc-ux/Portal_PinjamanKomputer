@@ -4,18 +4,23 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Portal Peminjaman Komputer UMS - Log Masuk</title>
-    
+    <title>Portal Pinjaman Komputer UMS - Log Masuk</title>
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Portal rasmi peminjaman komputer dan peralatan ICT untuk staf dan pelajar Universiti Malaysia Sabah (UMS). Log masuk untuk mula memohon." />
-    <meta name="keywords" content="pinjam komputer ums, peminjaman ict ums, portal pinjam laptop, jabatan digital ums, universiti malaysia sabah" />
+    <meta name="description"
+        content="Portal rasmi peminjaman komputer dan peralatan ICT untuk staf dan pelajar Universiti Malaysia Sabah (UMS). Log masuk untuk mula memohon." />
+    <meta name="keywords"
+        content="pinjam komputer ums, peminjaman ict ums, portal pinjam laptop, jabatan digital ums, universiti malaysia sabah" />
     <meta name="author" content="Jabatan Digital UMS" />
     <meta name="robots" content="index, follow" />
-    
+
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:title" content="Portal Peminjaman Komputer UMS" />
-    <meta property="og:description" content="Sistem tempahan dan peminjaman peralatan komputer secara dalam talian untuk warga UMS." />
+    <meta property="og:description"
+        content="Sistem tempahan dan peminjaman peralatan komputer secara dalam talian untuk warga UMS." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://web-pc-ux.github.io/Portal_PinjamanKomputer/" />
+    <link rel="canonical" href="https://web-pc-ux.github.io/Portal_PinjamanKomputer/" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="login.css?v=1.1" />
 </head>
@@ -24,17 +29,18 @@
     <div class="login-wrapper">
         <div class="login-container">
             <form id="loginForm" novalidate>
-                <img src="Pictrure/Logo Digital UMS.png" alt="Logo Digital UMS"
-                    class="logo" />
+                <img src="Pictrure/Logo Digital UMS.png" alt="Logo Digital UMS" class="logo" />
                 <h2 data-i18n="portal_title">Portal Peminjaman Komputer</h2>
                 <div class="input-group">
                     <label for="username" data-i18n="username_label">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter username" data-i18n="username_placeholder" />
+                    <input type="text" id="username" name="username" required placeholder="Enter username"
+                        data-i18n="username_placeholder" />
                     <span class="error-message" id="usernameError"></span>
                 </div>
                 <div class="input-group">
                     <label for="password" data-i18n="password_label">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter password" data-i18n="password_placeholder" />
+                    <input type="password" id="password" name="password" required placeholder="Enter password"
+                        data-i18n="password_placeholder" />
                     <span class="error-message" id="passwordError"></span>
                 </div>
                 <button type="submit" data-i18n="login_btn">Log In</button>
@@ -45,15 +51,15 @@
 
 
                 <button type="button" id="msBtn" class="btn-ms">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft Logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+                        alt="Microsoft Logo">
                     <span data-i18n="ms_login">Log Masuk dengan Microsoft</span>
                 </button>
 
-                <button type="button" id="forgotBtn" class="link-button" data-i18n="forgot_pass">Lupa Kata Laluan?</button>
+                <button type="button" id="forgotBtn" class="link-button" data-i18n="forgot_pass">Lupa Kata
+                    Laluan?</button>
 
-                <button type="button" id="borrowBtn" class="btn-secondary" data-i18n="borrow_form_btn">
-                    <i class="fas fa-file-signature"></i> BORANG PERMOHONAN PEMINJAMAN
-                </button>
+
             </form>
         </div>
 
@@ -65,7 +71,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
-    
+
     <!-- MSAL.js for Microsoft Single-Tenant Support -->
     <script src="https://alcdn.msauth.net/browser/2.37.1/js/msal-browser.min.js"></script>
 
