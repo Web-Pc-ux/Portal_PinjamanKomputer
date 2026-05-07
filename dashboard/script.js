@@ -4,7 +4,7 @@ const firebaseConfig = {
     authDomain: "loginpage-38cbb.firebaseapp.com",
     databaseURL: "https://loginpage-38cbb-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "loginpage-38cbb",
-    storageBucket: "loginpage-38cbb.firebasestorage.app",
+    storageBucket: "loginpage-38cbb.appspot.com",
     messagingSenderId: "330112161697",
     appId: "1:330112161697:web:0b687c4e5db4d0c40d1de0",
     measurementId: "G-LC3Q7E8BSH"
@@ -35,6 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const adminData = JSON.parse(session);
 
+        // 2.5 Security: Pastikan hanya admin boleh berada di sini
+        const role = (adminData.peranan || 'User').toLowerCase().trim();
+        if (role !== 'admin' && role !== 'pemilik' && role !== 'pentadbir') {
+            console.warn("🚫 Akses dinafikan: Pengguna biasa tidak dibenarkan di Dashboard Admin.");
+            window.location.href = '../UserS/user.html';
+            return;
+        }
+
         // 3. Semakan Sesi Ganda & Real-time Session Monitoring
         try {
             // Kita guna Username sebagai kunci dokumen supaya unik walaupun kongsi emel/UID
@@ -42,25 +50,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             db.collection('admins').doc(usernameKey).onSnapshot(async (doc) => {
                 if (doc.exists) {
-                    const cloudSessionId = doc.data().sessionId;
-                    // Ambil semula adminData terbaru dari localStorage untuk dipadankan
+                    const data = doc.data();
+                    const cloudSessionId = data.sessionId;
+                    const cloudRole = (data.peranan || 'User').toLowerCase().trim();
+
+                    // 1. Semakan Peranan Terkini (Real-time Security)
+                    if (cloudRole !== 'admin' && cloudRole !== 'pemilik' && cloudRole !== 'pentadbir') {
+                        console.warn("🚫 Akses dibatalkan secara real-time: Peranan ditukar ke User.");
+                        localStorage.removeItem('loggedInAdmin');
+                        await firebase.auth().signOut();
+                        window.location.href = '../UserS/user.html';
+                        return;
+                    }
+
+                    // 2. Semakan Sesi Ganda
                     const latestSession = localStorage.getItem('loggedInAdmin');
                     if (!latestSession) return;
-
                     const latestAdminData = JSON.parse(latestSession);
 
                     if (cloudSessionId && latestAdminData.sessionId !== cloudSessionId) {
-                        console.warn("⚠️ Sesi ditamatkan secara real-time: Login dikesan dari peranti lain.");
+                        console.warn("⚠️ Sesi ditamatkan: Login dikesan dari peranti lain.");
                         localStorage.removeItem('loggedInAdmin');
-
                         await Swal.fire({
                             title: 'Sesi Bertindih',
-                            text: 'Akaun anda baru sahaja log masuk di peranti lain. Sesi ini ditamatkan.',
+                            text: 'Akaun anda log masuk di peranti lain. Sesi ini ditamatkan.',
                             icon: 'error',
                             confirmButtonText: 'OK',
                             allowOutsideClick: false
                         });
-
                         await firebase.auth().signOut();
                         window.location.href = '../index.html';
                     }
@@ -1006,7 +1023,7 @@ async function saveSettingsSilently() {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
 
 function updateConnectionStatus(isConnected) {
     const statusBox = document.getElementById('connectionStatus');
@@ -1387,11 +1404,10 @@ function renderAdminTable() {
 
     table.innerHTML = data.map(admin => {
         // Pengecaman "SAYA" yang lebih unik (Guna Email/Username dahulu)
-        const isMe = currentUser && (
-            (admin.email && admin.email === currentUser.email) ||
-            (admin.username && admin.username === currentUser.username) ||
-            (admin.id && admin.id === currentUser.id && admin.email === currentUser.email)
-        );
+        const isAdminMatch = (admin.email && currentUser.email && admin.email.toLowerCase().trim() === currentUser.email.toLowerCase().trim()) ||
+                            (admin.username && currentUser.username && admin.username.toLowerCase().trim() === currentUser.username.toLowerCase().trim());
+        
+        const isMe = currentUser && isAdminMatch;
 
         return `
             <tr class="${isMe ? 'row-me' : ''}">
@@ -1615,6 +1631,10 @@ function renderApplicationTable() {
                             <button class="btn btn-primary" onclick="window.open('../printfile/print.html?id=${app.id}', '_blank')" title="Cetak Borang" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; background-color: #6366f1;">
                                 <i class="fas fa-print"></i>
                             </button>
+                            ${(app.failBorang && app.failBorang !== '-') ? `
+                            <button class="btn btn-primary" onclick="window.open('${app.failBorang}', '_blank')" title="Lihat Lampiran" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; background-color: #10b981;">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>` : ''}
                             <button class="btn btn-outline" onclick="deleteApplication(this, ${app.id})" title="Padam" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; color: var(--danger); border-color: #fee2e2;">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -1818,6 +1838,16 @@ function urusApp(id) {
             <div class="form-group" style="grid-column: span 2;">
                 <label>Tujuan Penggunaan</label>
                 <div class="info-box">${app.tujuan}</div>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Fail Lampiran (Sokongan)</label>
+                <div class="info-box" style="display: flex; align-items: center; justify-content: space-between;">
+                    <span>${(app.failBorang && app.failBorang !== '-') ? 'Fail Dijumpai' : 'Tiada Lampiran'}</span>
+                    ${(app.failBorang && app.failBorang !== '-') ? `
+                    <button class="btn btn-primary" onclick="window.open('${app.failBorang}', '_blank')" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #10b981; border: none;">
+                        <i class="fas fa-external-link-alt"></i> Buka Fail (New Tab)
+                    </button>` : ''}
+                </div>
             </div>
             <div class="form-group" style="grid-column: span 2;">
                 <label>Tarikh & Masa Scan (Rekod Sistem)</label>

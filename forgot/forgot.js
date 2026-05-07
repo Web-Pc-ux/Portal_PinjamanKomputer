@@ -1,5 +1,5 @@
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
 
 /* ==============================
    FORGOT PASSWORD — SEARCH FROM CLOUD
@@ -15,7 +15,7 @@ const firebaseConfig = {
     authDomain: "loginpage-38cbb.firebaseapp.com",
     databaseURL: "https://loginpage-38cbb-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "loginpage-38cbb",
-    storageBucket: "loginpage-38cbb.firebasestorage.app",
+    storageBucket: "loginpage-38cbb.appspot.com",
     messagingSenderId: "330112161697",
     appId: "1:330112161697:web:0b687c4e5db4d0c40d1de0",
     measurementId: "G-LC3Q7E8BSH"

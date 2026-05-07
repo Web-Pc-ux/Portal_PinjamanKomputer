@@ -138,9 +138,18 @@
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="failPermohonan" style="margin-bottom: 5px;">11. Upload Permohonan :</label>
+                    <label style="margin-bottom: 5px;">11. Upload Permohonan :</label>
                     <p style="font-size: 0.8rem; color: #64748b; margin-top: 0; margin-bottom: 8px;">Sila muat naik fail permohonan bagi tujuan bukti permohonan. Contoh : Surat Permohonan (Max 2MB)</p>
                     <input type="file" id="failPermohonan" name="failPermohonan" accept=".pdf,image/*,.doc,.docx" style="padding: 10px; border: 1px dashed var(--primary); background: #f8fafc;" />
+                    
+                    <!-- Ruang untuk paparan fail sedia ada semasa EDIT -->
+                    <div id="existingFileContainer" style="display: none; margin-top: 10px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; align-items: center; gap: 10px;">
+                        <i class="fas fa-file-alt" style="color: #64748b;"></i>
+                        <a id="existingFileLink" href="#" target="_blank" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; text-decoration: none; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Lihat Fail Sedia Ada</a>
+                        <button type="button" onclick="removeExistingFile()" style="background: #fee2e2; color: #ef4444; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                            <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <fieldset class="multi-choice full-width">

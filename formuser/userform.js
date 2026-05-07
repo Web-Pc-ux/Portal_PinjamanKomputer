@@ -1,4 +1,4 @@
-/* ==============================
+﻿/* ==============================
    LOCAL STORAGE HELPERS
 ============================== */
 const DB_KEYS = {
@@ -13,6 +13,11 @@ let CORE_DATA = {
     [DB_KEYS.COMPS]: [],
     'db_categories': []
 };
+
+// Mod Edit Global
+let isEditMode = false;
+let editId = null;
+let currentEditData = null;
 
 function getDB(key) {
     // Only settings stay in localStorage
@@ -53,6 +58,25 @@ agreeBtn.addEventListener('click', (e) => {
     window.scrollTo(0, 0);
 });
 
+// Semak Mod Edit dari URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('id')) {
+    isEditMode = true;
+    editId = urlParams.get('id');
+    console.log("🛠️ Masuk ke MOD EDIT untuk ID:", editId);
+    
+    // Tukar tajuk & butang
+    const mainTitle = document.querySelector('.form-header h2');
+    if (mainTitle) mainTitle.innerHTML = '<i class="fas fa-edit"></i> Kemaskini Permohonan';
+    
+    const submitBtn = document.querySelector('button[type="submit"] span');
+    if (submitBtn) submitBtn.textContent = 'Kemaskini Permohonan';
+
+    // Langkau Page 1 (Terus ke Page 2)
+    page1.style.display = 'none';
+    page2.style.display = 'block';
+}
+
 // Toggle Lain-lain field
 const jenisSelect = document.getElementById('jenisPermohonan');
 const jenisLainContainer = document.getElementById('jenisLainContainer');
@@ -70,6 +94,56 @@ if (jenisSelect) {
         }
     });
 }
+
+// Kemaskini had tarikh secara real-time
+function updateDateRestrictions() { 
+    const now = new Date();
+    // Format: YYYY-MM-DDTHH:MM
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    const pinjamInput = document.getElementById('tarikhMasaPinjam');
+    const pulangInput = document.getElementById('tarikhMasaPulangan');
+    
+    if (pinjamInput) {
+        // Jika bukan mod edit, baru kita sekat tarikh lepas
+        if (!isEditMode) {
+            pinjamInput.min = minDateTime; 
+        }
+    }
+    
+    if (pulangInput) {
+        // Masa pulang mesti selepas masa sekarang
+        pulangInput.min = minDateTime; 
+        
+        // Dan mesti selepas masa pinjam yang dipilih
+        if (pinjamInput && pinjamInput.value) {
+            if (pinjamInput.value > minDateTime) {
+                pulangInput.min = pinjamInput.value;
+            }
+        }
+    }
+}
+
+// Jalankan sekatan tarikh
+document.addEventListener('DOMContentLoaded', () => {
+    updateDateRestrictions();
+    
+    const pinjamInput = document.getElementById('tarikhMasaPinjam');
+    const pulangInput = document.getElementById('tarikhMasaPulangan');
+
+    if (pinjamInput) {
+        pinjamInput.addEventListener('change', updateDateRestrictions);
+    }
+    if (pulangInput) {
+        pulangInput.addEventListener('change', updateDateRestrictions);
+    }
+});
 
 /* ==============================
    DYNAMIC MODEL BUILDER
@@ -355,8 +429,8 @@ form.addEventListener('submit', async (e) => {
     if (!valid) return;
 
     // Generate ref number and ID
-    const refNumber = generateRefNumber();
-    const newId = generateId();
+    const refNumber = isEditMode ? currentEditData.noPermohonan : generateRefNumber();
+    const finalId = isEditMode ? editId : generateId();
 
     // Collect model & quantity
     let models = [];
@@ -377,10 +451,11 @@ form.addEventListener('submit', async (e) => {
     const now = new Date();
     const timestamp = now.toLocaleDateString('ms-MY') + ' ' + now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
 
-    // Handle File Upload
+    // Handle File Upload (Google Drive Alternative)
     const fileInput = document.getElementById('failPermohonan');
-    let failUrl = '-';
-    
+    let fileData = null;
+    let fileName = null;
+
     if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const sizeMB = file.size / (1024 * 1024);
@@ -388,36 +463,30 @@ form.addEventListener('submit', async (e) => {
             Swal.fire('Fail Terlalu Besar', 'Sila muat naik fail bersaiz bawah 2MB.', 'error');
             return;
         }
-        
-        // Upload to Firebase Storage
-        if (typeof firebase !== 'undefined' && firebase.storage) {
-            Swal.fire({
-                title: 'Memuat naik lampiran...',
-                text: 'Sila tunggu sebentar',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-            
-            try {
-                const storage = firebase.storage();
-                // Clean filename to prevent issues
-                const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-                const fileRef = storage.ref(`lampiran_permohonan/${Date.now()}_${safeName}`);
-                
-                await fileRef.put(file);
-                failUrl = await fileRef.getDownloadURL();
-                Swal.close();
-            } catch (error) {
-                console.error("Storage upload error:", error);
-                Swal.fire('Ralat Muat Naik', 'Gagal memuat naik fail. Pastikan storan Firebase dikonfigurasi.', 'error');
-                return;
-            }
-        }
+
+        Swal.fire({
+            title: 'Memproses lampiran...',
+            text: 'Sila tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        // Baca fail sebagai Base64
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+
+        fileData = base64;
+        fileName = file.name;
+        Swal.close();
     }
 
     // Build new application object
     const newApp = {
-        id: newId,
+        id: finalId,
         noPermohonan: refNumber,
         nama: document.getElementById('name').value,
         noPekerja: document.getElementById('noPekerja').value,
@@ -439,53 +508,92 @@ form.addEventListener('submit', async (e) => {
         scanPulang: '-',
         catatanAdmin: '',
         status: 'Menunggu',
-        failBorang: failUrl, // Link URL fail lampiran
+        failBorang: isEditMode ? currentEditData.failBorang : '-', // Kekalkan fail lama jika dalam mod edit
         timestamp: timestamp,
+        // Kolum tambahan untuk muat naik fail ke GAS
+        fileData: fileData,
+        fileName: fileName,
         // Kolum tersembunyi khas untuk perekodan Google Login (Audit)
         authName: window.loggedInGoogleName || '',
         authEmail: window.loggedInGoogleEmail || '',
         authTimestamp: new Date().toISOString()
     };
 
-    // Kirim ke Google Sheets (GAS)
-    syncToGAS(newApp);
+    // Kirim ke Google Sheets (GAS) - Mod Update atau Create
+    const result = await syncToGAS(newApp, isEditMode ? 'update' : 'create');
+    
+    // TUTUP LOADING SEBELUM TUNJUK MODAL BERJAYA
+    Swal.close();
 
-    // Update Local Data Serta-merta (Untuk update baki tanpa refresh)
-    const apps = getDB(DB_KEYS.APPS);
-    apps.push(newApp);
-    saveDB(DB_KEYS.APPS, apps);
-    buildModelSection();
+    if (result.status === 'success') {
+        // Update Local Data Serta-merta (Untuk update baki tanpa refresh)
+        const apps = getDB(DB_KEYS.APPS);
+        apps.push(newApp);
+        saveDB(DB_KEYS.APPS, apps);
+        buildModelSection(); if (window.isEditMode && window.currentEditData) { restoreEditPeralatan(window.currentEditData.peralatan || window.currentEditData.kuantiti); }
 
-    console.log('✅ Data dihantar dan baki dikemaskini');
+        console.log('✅ Data dihantar dan baki dikemaskini');
 
-    // Update modal content
-    refNumberEl.textContent = `Nombor Rujukan: ${refNumber}`;
+        // Mainkan Bunyi Kejayaan
+        playSuccessSound();
 
-    // Show modal and trigger confetti
-    successModal.style.display = 'block';
-    createConfetti();
+        // Paparan Berjaya Terapung (Premium)
+        Swal.fire({
+            icon: 'success',
+            title: 'Borang Berjaya Dihantar!',
+            html: `Nombor Rujukan: <strong>${refNumber}</strong><br><br>Permohonan anda telah berjaya direkodkan. Sila tunggu pengesahan daripada pihak pentadbir.`,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#2563eb',
+            allowOutsideClick: false,
+            backdrop: `rgba(0,0,123,0.4)`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '../UserS/user.html';
+            }
+        });
 
-    // Reset form fields
-    form.reset();
-    container.querySelectorAll('.cat-qty').forEach(q => { q.disabled = true; q.value = ''; q.classList.remove('error-input'); });
-    container.querySelectorAll('.cat-check').forEach(c => c.checked = false);
-    if (jenisLainContainer) jenisLainContainer.style.display = 'none';
+        createConfetti();
+
+        // Reset borang
+        form.reset();
+        container.querySelectorAll('.cat-qty').forEach(q => { q.disabled = true; q.value = ''; });
+        container.querySelectorAll('.cat-check').forEach(c => c.checked = false);
+        if (jenisLainContainer) jenisLainContainer.style.display = 'none';
+    } else {
+        Swal.fire('Ralat', 'Gagal menyimpan data: ' + result.message, 'error');
+    }
+
+    // Handle Redirect after success
+    const handleSuccessRedirect = () => {
+        successModal.style.display = 'none';
+        window.location.href = '../UserS/user.html';
+    };
+
+    if (okBtn) okBtn.addEventListener('click', handleSuccessRedirect);
+    if (closeModal) closeModal.addEventListener('click', handleSuccessRedirect);
 });
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec"; // <-- Masukkan URL yang sama di sini juga
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
 
 // Fungsi untuk sync ke Google Sheets
-async function syncToGAS(data) {
-    if (!GAS_URL) return;
+async function syncToGAS(data, action = 'create') {
+    if (!GAS_URL) return { status: 'error', message: 'URL GAS tidak sah' };
 
     try {
-        await fetch(GAS_URL, {
+        // Papar loading
+        Swal.fire({
+            title: 'Menghantar Borang...',
+            text: action === 'update' ? 'Sedang mengemaskini permohonan' : 'Sedang memproses fail ke Google Drive',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const response = await fetch(GAS_URL, {
             method: 'POST',
-            mode: 'no-cors',
             body: JSON.stringify({
-                action: 'create',
+                action: action, 
                 token: GAS_TOKEN,
                 data: {
                     ...data,
@@ -493,18 +601,20 @@ async function syncToGAS(data) {
                 }
             })
         });
-        console.log('✅ Permohonan berjaya dihantar ke Cloud');
-    } catch (error) {
-        console.error('❌ Ralat penghantaran GAS:', error);
+        return await response.json();
+    } catch (e) {
+        console.error("Sync Error:", e);
+        return { status: 'error', message: e.toString() };
     }
 }
+
 
 // Fungsi menarik data peralatan dari Google Sheets (Turbo Sync Bulk)
 async function fetchInitialData() {
     if (!GAS_URL) return;
 
     // 1. Instant Load: Papar data sedia ada dulu
-    buildModelSection();
+    buildModelSection(); if (window.isEditMode && window.currentEditData) { restoreEditPeralatan(window.currentEditData.peralatan || window.currentEditData.kuantiti); }
 
     try {
         console.log('🚀 Mula Turbo Sync (User Form - Bulk Mode)...');
@@ -513,7 +623,7 @@ async function fetchInitialData() {
         const resData = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=all`);
         const result = await resData.json();
 
-        if (result && result.status === 'success' && result.data) {
+        if (result.status === 'success') {
             const allData = result.data;
             let hasChanges = false;
 
@@ -542,7 +652,7 @@ async function fetchInitialData() {
 
             if (hasChanges) {
                 console.log('✨ Data peralatan dikemaskini.');
-                buildModelSection();
+                buildModelSection(); if (window.isEditMode && window.currentEditData) { restoreEditPeralatan(window.currentEditData.peralatan || window.currentEditData.kuantiti); }
             }
         }
 
@@ -582,7 +692,7 @@ const firebaseConfig = {
     authDomain: "loginpage-38cbb.firebaseapp.com",
     databaseURL: "https://loginpage-38cbb-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "loginpage-38cbb",
-    storageBucket: "loginpage-38cbb.firebasestorage.app",
+    storageBucket: "loginpage-38cbb.appspot.com",
     messagingSenderId: "330112161697",
     appId: "1:330112161697:web:0b687c4e5db4d0c40d1de0",
     measurementId: "G-LC3Q7E8BSH"
@@ -612,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (auth) {
         // Check if user is already logged in
-        auth.onAuthStateChanged(user => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 let email = user.email || "";
                 if (!email && user.providerData) {
@@ -648,8 +758,78 @@ document.addEventListener('DOMContentLoaded', () => {
                         emailInput.style.color = '#475569';
                     }
                     
-                    restoreFormState();
-                    fetchInitialData();
+                    if (!isEditMode) {
+                        restoreFormState();
+                    }
+                    await fetchInitialData();
+
+                    // --- PENGISIAN MOD EDIT (BACKGROUND) ---
+                    if (isEditMode) {
+                        (async () => {
+                            try {
+                                const res = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=permohonan&search=${editId}`);
+                                const result = await res.json();
+                                
+                                if (result.status === 'success' && result.data && result.data.length > 0) {
+                                    currentEditData = result.data[0];
+                                    
+                                    // Isi borang (Pastikan id sedia ada sepadan)
+                                    document.getElementById('noPekerja').value = currentEditData.noPekerja || '';
+                                    document.getElementById('phone').value = currentEditData.telefon || '';
+                                    document.getElementById('jabatan').value = currentEditData.jabatan || '';
+                                    document.getElementById('lokasi').value = currentEditData.lokasi || '';
+                                    document.getElementById('tujuan').value = currentEditData.tujuan || '';
+                                    
+                                    // Isi Tarikh & Masa (Perlu tukar format ke ISO)
+                                    setTimeout(() => {
+                                        if (currentEditData.mula) {
+                                            const isoMula = convertToISODate(currentEditData.mula);
+                                            document.getElementById('tarikhMasaPinjam').value = isoMula;
+                                        }
+                                        if (currentEditData.tamat) {
+                                            const isoTamat = convertToISODate(currentEditData.tamat);
+                                            document.getElementById('tarikhMasaPulangan').value = isoTamat;
+                                        }
+                                    }, 1000); // Beri masa untuk DOM sedia
+
+                                    // Handle Jenis Permohonan
+                                    const selectJenis = document.getElementById('jenisPermohonan');
+                                    const knownTypes = Array.from(selectJenis.options).map(o => o.value);
+                                    if (knownTypes.includes(currentEditData.jenis)) {
+                                        selectJenis.value = currentEditData.jenis;
+                                    } else {
+                                        selectJenis.value = 'Lain-lain';
+                                        document.getElementById('jenisLainContainer').style.display = 'block';
+                                        document.getElementById('jenisLain').value = currentEditData.jenis;
+                                    }
+
+                                    // --- PAPAR FAIL SEDIA ADA ---
+                                    if (currentEditData.failBorang && currentEditData.failBorang !== '-') {
+                                        const fileContainer = document.getElementById('existingFileContainer');
+                                        const fileLink = document.getElementById('existingFileLink');
+                                        if (fileContainer && fileLink) {
+                                            fileContainer.style.display = 'flex';
+                                            fileLink.href = currentEditData.failBorang;
+                                            fileLink.textContent = "Lihat Lampiran Sedia Ada (" + (currentEditData.noPermohonan) + ")";
+                                            
+                                            // Jadikan input fail tidak wajib jika sudah ada fail
+                                            const fileInput = document.getElementById('failPermohonan');
+                                            if (fileInput) fileInput.required = false;
+                                        }
+                                    }
+
+                                    // Tunggu baki peralatan sedia (fetchInitialData) baru restore peralatan
+                                    // Kami gunakan selang masa sedikit lebih lama untuk pastikan buildModelSection selesai
+                                    setTimeout(() => {
+                                        console.log("🔄 Memulihkan pilihan peralatan...");
+                                        restoreEditPeralatan(currentEditData.peralatan || currentEditData.kuantiti);
+                                    }, 2000);
+                                }
+                            } catch (e) {
+                                console.error("Edit fetch error:", e);
+                            }
+                        })();
+                    }
                 } else {
                     auth.signOut();
                     Swal.fire({
@@ -768,6 +948,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+// Fungsi untuk buang rujukan fail sedia ada semasa EDIT
+window.removeExistingFile = function() {
+    Swal.fire({
+        title: 'Padam Fail?',
+        text: "Pautan fail sedia ada akan dikeluarkan dari permohonan ini. Sila muat naik fail baru jika perlu.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Padam'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (currentEditData) currentEditData.failBorang = '-';
+            const fileContainer = document.getElementById('existingFileContainer');
+            if (fileContainer) fileContainer.style.display = 'none';
+            
+            // Jika asal fail adalah wajib, kita boleh minta user upload baru
+            // document.getElementById('failPermohonan').required = true;
+            
+            Swal.fire('Dipadam', 'Rujukan fail telah dikeluarkan.', 'success');
+        }
+    });
+}
+
     // Auto-save form draft on input/change
     if (form) {
         form.addEventListener('input', saveFormState);
@@ -870,5 +1073,133 @@ function restoreDynamicFormState() {
         }
     } catch (e) {
         console.error("Error restoring dynamic form draft", e);
+    }
+}
+
+// Fungsi tambahan untuk memulihkan pilihan peralatan semasa EDIT
+function restoreEditPeralatan(kuantitiStr) { console.log("🔍 Memulihkan:", kuantitiStr);
+    if (!kuantitiStr || kuantitiStr === "-") return;
+    
+    const lines = kuantitiStr.replace(/<br\s*\/?>/gi, "\n").replace(/&bull;/g, "�").split("\n");
+    lines.forEach(line => {
+        const match = line.match(/�?\s*(.+?)\s*[-��]\s*(\d+)/i);
+        if (match) {
+            const catName = match[1].trim();
+            const qty = match[2].trim();
+            
+            // Cari checkbox yang sepadan dengan nama kategori
+            const check = Array.from(document.querySelectorAll(".cat-check")).find(c => (c.dataset.catname || "").toLowerCase().trim() === catName.toLowerCase().trim());
+            if (check) {
+                check.checked = true;
+                check.dispatchEvent(new Event("change"));
+                const qtyInput = document.getElementById("qty-" + check.dataset.cat);
+                if (qtyInput) qtyInput.value = qty;
+            }
+        }
+    });
+}
+
+// Fungsi bantu untuk menukar format dd/mm/yyyy hh:mm ke YYYY-MM-DDTHH:MM (untuk input datetime-local)
+function convertToISODate(str) {
+    if (!str || str === '-') return '';
+    try {
+        // Jika sudah format ISO (mengandungi T)
+        if (str.includes('T')) return str;
+
+        // Dijangka format: dd/mm/yyyy HH:mm
+        const parts = str.trim().split(/\s+/);
+        const datePart = parts[0]; 
+        const timePart = parts[1] || '08:00'; 
+        
+        const dParts = datePart.split('/');
+        if (dParts.length < 3) {
+            // Cuba split guna '-' jika ada
+            const dPartsAlt = datePart.split('-');
+            if (dPartsAlt.length === 3) {
+                // Jika format YYYY-MM-DD
+                if (dPartsAlt[0].length === 4) return datePart + 'T' + timePart;
+                // Jika format DD-MM-YYYY
+                return `${dPartsAlt[2]}-${dPartsAlt[1]}-${dPartsAlt[0]}T${timePart}`;
+            }
+            return '';
+        }
+        
+        const day = dParts[0].padStart(2, '0');
+        const month = dParts[1].padStart(2, '0');
+        const year = dParts[2];
+        
+        const result = `${year}-${month}-${day}T${timePart}`;
+        console.log("Converted date:", str, "to", result);
+        return result;
+    } catch (e) {
+        console.warn("Gagal menukar format tarikh:", str, e);
+        return '';
+    }
+}
+
+// Fungsi Pemulihan Peralatan Versi Stabil
+window.restoreEditPeralatan = function(kuantitiStr) {
+    if (!kuantitiStr || kuantitiStr === '-') return;
+    
+    // Bersihkan HTML dan tukar ke baris baru
+    let cleanText = kuantitiStr.replace(/<br\s*\/?>/gi, '\n').replace(/&bull;/g, '');
+    let lines = cleanText.split('\n');
+    
+    lines.forEach(line => {
+        if (!line.trim()) return;
+        
+        // Cari pembahagi (biasanya ' - ')
+        let parts = line.split(/[-–—]/);
+        if (parts.length >= 2) {
+            let catName = parts[0].replace(/[•]/g, '').trim().toLowerCase();
+            let qtyPart = parts[1].trim();
+            let qtyMatch = qtyPart.match(/(\d+)/);
+            
+            if (qtyMatch) {
+                let qty = qtyMatch[1];
+                let allChecks = document.querySelectorAll('.cat-check');
+                let check = Array.from(allChecks).find(c => (c.dataset.catname || '').toLowerCase().trim() === catName);
+                
+                if (check) {
+                    check.checked = true;
+                    check.dispatchEvent(new Event('change'));
+                    let qtyInput = document.getElementById('qty-' + check.dataset.cat);
+                    if (qtyInput) qtyInput.value = qty;
+                }
+            }
+        }
+    });
+};
+
+
+// Fungsi untuk memainkan bunyi kejayaan
+function playSuccessSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log('Audio play blocked by browser:', e));
+}
+
+function convertToISODate(str) {
+    if (!str || str === '-') return '';
+    try {
+        let s = str.toString().trim();
+        // Handle ISO (YYYY-MM-DDTHH:mm)
+        if (s.includes('T')) return s.substring(0, 16);
+        
+        // Handle dd/mm/yyyy HH:mm
+        const parts = s.split(/\s+/);
+        const datePart = parts[0];
+        const timePart = (parts[1] || '08:00').substring(0, 5);
+        const dParts = datePart.split('/');
+        if (dParts.length === 3) {
+            const day = dParts[0].padStart(2, '0');
+            const month = dParts[1].padStart(2, '0');
+            const year = dParts[2];
+            return year + '-' + month + '-' + day + 'T' + timePart;
+        }
+        return '';
+    } catch (e) {
+        console.error('Error converting date:', e);
+        return '';
     }
 }

@@ -1,10 +1,26 @@
+function formatDate(str) {
+    if (!str || str === '-') return '-';
+    try {
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return str;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (e) {
+        return str;
+    }
+}
+
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCkXpGW5uQRWos4J8Bnsctdshs6hf3Wti0",
     authDomain: "loginpage-38cbb.firebaseapp.com",
     databaseURL: "https://loginpage-38cbb-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "loginpage-38cbb",
-    storageBucket: "loginpage-38cbb.firebasestorage.app",
+    storageBucket: "loginpage-38cbb.appspot.com",
     messagingSenderId: "330112161697",
     appId: "1:330112161697:web:0b687c4e5db4d0c40d1de0",
     measurementId: "G-LC3Q7E8BSH"
@@ -1009,7 +1025,7 @@ async function saveSettingsSilently() {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
 
 function updateConnectionStatus(isConnected) {
     const statusBox = document.getElementById('connectionStatus');
@@ -3641,7 +3657,7 @@ function renderUserApplicationsUI() {
         // Table Row (Desktop)
         htmlTable += '<tr>' +
                 '<td><strong>' + (app.noPermohonan || '-') + '</strong></td>' +
-                '<td>' + (app.mula || '-') + ' - ' + (app.tamat || '-') + '</td>' +
+                '<td>' + formatDate(app.mula) + ' - ' + formatDate(app.tamat) + '</td>' +
                 '<td>' + (app.model || '-') + ' (Qty: ' + (app.kuantiti || 1) + ')</td>' +
                 '<td><span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></td>' +
                 '<td>' +
@@ -3659,7 +3675,7 @@ function renderUserApplicationsUI() {
                     <span class="badge ${statusClass}">${app.status || 'Menunggu'}</span>
                 </div>
                 <div class="mobile-app-card-body">
-                    <p><i class="far fa-calendar-alt" style="color:var(--primary); width:16px;"></i> <strong>Tarikh:</strong> ${app.mula || '-'}</p>
+                    <p><i class="far fa-calendar-alt" style="color:var(--primary); width:16px;"></i> <strong>Tarikh:</strong> ${formatDate(app.mula)}</p>
                     <p><i class="fas fa-laptop" style="color:var(--primary); width:16px;"></i> <strong>Model:</strong> ${app.model || '-'} (Qty: ${app.kuantiti || 1})</p>
                 </div>
                 <div class="mobile-app-card-footer">
@@ -3682,9 +3698,9 @@ function renderUserApplicationsUI() {
         let msg = 'Status Terkini: ' + latestApp.status + ' (No. Permohonan: ' + latestApp.noPermohonan + ')';
         
         if ((latestApp.status === 'Dipinjam' || latestApp.status === 'Sedang Digunakan') && latestApp.authNamaPinjam) {
-            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah diambil oleh ${latestApp.authNamaPinjam} pada ${latestApp.scanPinjam}`;
+            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah diambil oleh ${latestApp.authNamaPinjam} pada ${formatDate(latestApp.scanPinjam)}`;
         } else if ((latestApp.status === 'Selesai' || latestApp.status === 'Dipulangkan') && latestApp.authNamaPulang) {
-            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah dipulangkan oleh ${latestApp.authNamaPulang} pada ${latestApp.scanPulang}`;
+            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah dipulangkan oleh ${latestApp.authNamaPulang} pada ${formatDate(latestApp.scanPulang)}`;
         } else if (latestApp.status === 'Lulus') {
             msg = `Status Terkini: Permohonan Lulus (No: ${latestApp.noPermohonan}). Sila hadir untuk pengambilan peralatan ICT.`;
         } else if (latestApp.status === 'Baru' || latestApp.status === 'Menunggu') {
@@ -3749,8 +3765,9 @@ window.viewUserApp = function(appId) {
                 '<p style="margin: 0;"><strong>No. Permohonan:</strong> ' + (app.noPermohonan || '-') + '</p>' +
                 '<p style="margin: 0; font-size: 0.8rem; color: #64748b;">Status: <span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></p>' +
             '</div>' +
-            '<p><strong>Tarikh Mohon:</strong> ' + (app.mula || '-') + ' hingga ' + (app.tamat || '-') + '</p>' +
+            '<p><strong>Tarikh Mohon:</strong> ' + formatDate(app.mula) + ' hingga ' + formatDate(app.tamat) + '</p>' +
             '<p><strong>Model:</strong> ' + (app.model || '-') + '</p>' +
+            '<p><strong>Kuantiti:</strong> ' + (app.kuantiti ? app.kuantiti.replace(/<br\s*\/?>/gi, ', ').replace(/&bull;/g, '•') : '-') + '</p>' +
             (app.siri && app.siri !== '-' ? '<p><strong>No. Siri/PC:</strong> <span style="font-family: monospace; background: #fef9c3; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #854d0e;">' + app.siri + '</span></p>' : '') +
             '<p><strong>Tujuan:</strong> ' + (app.tujuan || '-') + '</p>' +
             '<p><strong>Lokasi:</strong> ' + (app.lokasi || '-') + '</p>' +
@@ -3764,14 +3781,14 @@ window.viewUserApp = function(appId) {
         if (app.scanPinjam) {
             html += `<div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #fecaca;">`;
             html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Nama Pengambil:</strong> ${app.authNamaPinjam || '-'}</p>`;
-            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Ambil:</strong> ${app.scanPinjam}</p>`;
+            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Ambil:</strong> ${formatDate(app.scanPinjam)}</p>`;
             html += `</div>`;
         }
         
         if (app.scanPulang) {
             html += `<div>`;
             html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Nama Pemulang:</strong> ${app.authNamaPulang || '-'}</p>`;
-            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Pulang:</strong> ${app.scanPulang}</p>`;
+            html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Pulang:</strong> ${formatDate(app.scanPulang)}</p>`;
             html += `</div>`;
         }
         html += '</div>';
@@ -3847,12 +3864,8 @@ window.cancelUserApp = function(id) {
 }
 
 window.editUserApp = function(id) {
-    Swal.fire({
-        title: 'Edit Permohonan',
-        text: 'Ciri kemaskini sedang dalam penambahbaikan. Sila batalkan permohonan sedia ada dan buat permohonan baharu jika terdapat kesilapan maklumat.',
-        icon: 'info',
-        confirmButtonText: 'Faham'
-    });
+    // Redirect ke borang dengan ID untuk mod edit
+    window.location.href = `../formuser/index.html?id=${id}`;
 }
 
 

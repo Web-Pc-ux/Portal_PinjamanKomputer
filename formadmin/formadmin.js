@@ -388,7 +388,7 @@ if (form) {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
 
 async function syncToGAS(data) {
     if (!GAS_URL) return;

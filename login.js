@@ -7,7 +7,7 @@ const firebaseConfig = {
     authDomain: "loginpage-38cbb.firebaseapp.com",
     databaseURL: "https://loginpage-38cbb-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "loginpage-38cbb",
-    storageBucket: "loginpage-38cbb.firebasestorage.app",
+    storageBucket: "loginpage-38cbb.appspot.com",
     messagingSenderId: "330112161697",
     appId: "1:330112161697:web:0b687c4e5db4d0c40d1de0",
     measurementId: "G-LC3Q7E8BSH"
@@ -21,7 +21,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZrFtrkH0r8p1BaPyGxQT1Tscb9jHyTtnHjm1eh8jv3Kys1vQ6xuHiPINXpRSSJ53NZg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
 
 // Helper function for case-insensitive property access
 const getVal = (obj, key) => {
@@ -159,40 +159,44 @@ loginForm.addEventListener('submit', async function (e) {
 
         btn.textContent = 'Finalizing...';
         await userDocRef.set({
-            uid: user.uid, // Simpan UID untuk rujukan sahaja
+            uid: user.uid,
             nama: getVal(finalAdmin, 'nama'),
             email: validEmail,
             username: getVal(finalAdmin, 'username') || username,
             jawatan: getVal(finalAdmin, 'jawatan') || '',
-            peranan: getVal(finalAdmin, 'peranan') || 'Admin',
+            peranan: getVal(finalAdmin, 'peranan') || 'User', // Tukar default ke User
             lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             sessionId: newSessionId
         }, { merge: true });
 
         // 5. Simpan Session
-        localStorage.setItem('loggedInAdmin', JSON.stringify({
+        const sessionData = {
             id: getVal(finalAdmin, 'id') || 99,
             uid: user.uid,
             nama: getVal(finalAdmin, 'nama'),
-            username: getVal(finalAdmin, 'username') || username,
+            username: usernameKey,
             email: validEmail,
-            peranan: getVal(finalAdmin, 'peranan'),
+            peranan: (getVal(finalAdmin, 'peranan') || 'User').toString().trim(),
             loginTime: new Date().toISOString(),
             sessionId: newSessionId
-        }));
+        };
+
+        localStorage.setItem('loggedInAdmin', JSON.stringify(sessionData));
+        localStorage.removeItem('activeDashboardSection');
 
         btn.textContent = '✓ Berjaya Log Masuk!';
         btn.style.backgroundColor = '#28a745';
 
-        // Reset dashboard view to 'dashboard' for every fresh login
-        localStorage.removeItem('activeDashboardSection');
-
-        const userRole = (getVal(finalAdmin, 'peranan') || 'Admin').toString().toLowerCase();
+        // 6. REDIRECTION FLOW (STRICT)
+        const userRole = sessionData.peranan.toLowerCase();
+        console.log("🚀 Redirection Flow for Role:", userRole);
 
         setTimeout(() => {
-            if (userRole === 'admin') {
+            if (userRole === 'admin' || userRole === 'pemilik' || userRole === 'pentadbir') {
+                console.log("➡️ Redirecting to ADMIN Dashboard");
                 window.location.href = 'dashboard/main.html';
             } else {
+                console.log("➡️ Redirecting to USER Portal");
                 window.location.href = 'UserS/user.html';
             }
         }, 1200);
@@ -233,10 +237,10 @@ if (msBtn) {
             // Minta akses untuk mendapatkan emel
             provider.addScope('email');
             provider.addScope('User.Read');
-            
+
             const result = await auth.signInWithPopup(provider);
             const user = result.user;
-            
+
             // Kadangkala Microsoft tidak memberikan 'user.email' secara terus. Kita ambil dari profil UPN.
             let email = user.email;
             if (!email && result.additionalUserInfo && result.additionalUserInfo.profile) {
@@ -245,7 +249,7 @@ if (msBtn) {
             if (!email && user.providerData && user.providerData.length > 0) {
                 email = user.providerData[0].email;
             }
-            
+
             if (!email) {
                 await auth.signOut();
                 throw new Error("Gagal membaca emel dari akaun Microsoft anda.");
@@ -259,10 +263,14 @@ if (msBtn) {
                 finalAdmin = {
                     nama: msName,
                     username: email.split('@')[0],
-                    peranan: 'User',
+                    peranan: 'User', // Wajib User
                     email: email
                 };
             }
+
+            // Pastikan peranan adalah string dan bersih
+            const rawRole = (getVal(finalAdmin, 'peranan') || 'User').toString().toLowerCase().trim();
+            const isAdmin = (rawRole === 'admin' || rawRole === 'pemilik' || rawRole === 'pentadbir');
 
             // 2. Setup Session
             const usernameKey = (getVal(finalAdmin, 'username') || email.split('@')[0]).toLowerCase().trim();
@@ -316,28 +324,35 @@ if (msBtn) {
                 sessionId: newSessionId
             }, { merge: true });
 
-            localStorage.setItem('loggedInAdmin', JSON.stringify({
+            // 2. Setup Session
+            const sessionData = {
                 id: getVal(finalAdmin, 'id') || 99,
                 uid: user.uid,
                 nama: msName || getVal(finalAdmin, 'nama') || '',
-                username: getVal(finalAdmin, 'username') || email.split('@')[0],
+                username: usernameKey,
                 email: email,
-                peranan: getVal(finalAdmin, 'peranan') || 'User',
+                peranan: (getVal(finalAdmin, 'peranan') || 'User').toString().trim(),
                 loginTime: new Date().toISOString(),
                 sessionId: newSessionId
-            }));
+            };
 
+            localStorage.setItem('loggedInAdmin', JSON.stringify(sessionData));
             localStorage.removeItem('activeDashboardSection');
 
-            const userRole = (getVal(finalAdmin, 'peranan') || 'Admin').toString().toLowerCase();
+            // 3. SUCCESS NOTIFICATION & REDIRECTION
+            const displayName = msName || getVal(finalAdmin, 'nama') || email.split('@')[0];
+            
+            btnMs.innerHTML = `<i class="fas fa-check"></i> Selamat Datang, ${displayName}!`;
 
             setTimeout(() => {
-                if (userRole === 'admin') {
+                if (isAdmin) {
+                    console.log("➡️ Redirecting MS to ADMIN Dashboard");
                     window.location.href = 'dashboard/main.html';
                 } else {
+                    console.log("➡️ Redirecting MS to USER Portal");
                     window.location.href = 'UserS/user.html';
                 }
-            }, 1200);
+            }, 1000);
 
         } catch (err) {
             btnMs.disabled = false;
