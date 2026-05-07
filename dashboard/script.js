@@ -1861,8 +1861,8 @@ function urusApp(id) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${app.scanPinjam ? `<tr><td style="color:#f59e0b;font-weight:600;"><a href="qrcode.html?id=${app.id}&type=pinjam" target="_blank" style="color:inherit; text-decoration:underline; cursor:pointer;" title="Klik untuk lihat borang pengesahan"><i class="fas fa-sign-out-alt"></i> Pinjam</a></td><td style="font-family:monospace;">${app.scanPinjam}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPinjam || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPinjam || '-'}</span></td></tr>` : ''}
-                            ${app.scanPulang ? `<tr><td style="color:#10b981;font-weight:600;"><a href="qrcode.html?id=${app.id}&type=pulang" target="_blank" style="color:inherit; text-decoration:underline; cursor:pointer;" title="Klik untuk lihat borang pengesahan"><i class="fas fa-sign-in-alt"></i> Pulang</a></td><td style="font-family:monospace;">${app.scanPulang}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPulang || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPulang || '-'}</span></td></tr>` : ''}
+                            ${app.scanPinjam ? `<tr><td style="color:#f59e0b;font-weight:600;"><i class="fas fa-sign-out-alt"></i> Pinjam</td><td style="font-family:monospace;">${app.scanPinjam}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPinjam || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPinjam || '-'}</span></td></tr>` : ''}
+                            ${app.scanPulang ? `<tr><td style="color:#10b981;font-weight:600;"><i class="fas fa-sign-in-alt"></i> Pulang</td><td style="font-family:monospace;">${app.scanPulang}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPulang || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPulang || '-'}</span></td></tr>` : ''}
                             ${(!app.scanPinjam && !app.scanPulang) ? `<tr><td colspan="3" style="text-align:center;color:#94a3b8;">Tiada rekod imbasan lagi.</td></tr>` : ''}
                         </tbody>
                     </table>
@@ -1962,11 +1962,14 @@ function urusApp(id) {
                         </button>
                     </div>
 
-                    <div style="text-align:center; padding:1.5rem; background:white; border-radius:12px; border:1px solid #ffedd5;">
-                        <i class="fas fa-sign-in-alt" style="font-size:2rem; color:#10b981; margin-bottom:1rem;"></i>
+                    <div style="text-align:center; padding:1.5rem; background:white; border-radius:12px; border:1px solid #ffedd5; ${(!app.scanPinjam || app.scanPinjam === '-') ? 'opacity:0.7;' : ''}">
+                        <i class="fas fa-sign-in-alt" style="font-size:2rem; color:${(!app.scanPinjam || app.scanPinjam === '-') ? '#94a3b8' : '#10b981'}; margin-bottom:1rem;"></i>
                         <h5 style="margin-bottom:0.5rem; color:#1e293b;">Pengesahan Pulang</h5>
                         <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Scan: <strong style="color:#1e293b;">${app.scanPulang || '-'}</strong></p>
-                        <button class="btn btn-primary" onclick="generateActionQR(${app.id}, 'pulang')" style="width:100%; background:#10b981; border:none;">
+                        <button class="btn btn-primary" 
+                                onclick="generateActionQR(${app.id}, 'pulang')" 
+                                ${(!app.scanPinjam || app.scanPinjam === '-') ? 'disabled title="Sila buat pengesahan Pinjam terlebih dahulu"' : ''}
+                                style="width:100%; background:${(!app.scanPinjam || app.scanPinjam === '-') ? '#94a3b8' : '#10b981'}; border:none; ${(!app.scanPinjam || app.scanPinjam === '-') ? 'cursor:not-allowed;' : ''}">
                             <i class="fas fa-qrcode"></i> QR Pulang
                         </button>
                     </div>
