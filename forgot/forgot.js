@@ -27,7 +27,15 @@ if (!firebase.apps.length) {
 }
 const auth = firebase.auth();
 
+// Initial Routing for Forgot Page
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.location.hash) {
+        window.location.hash = 'forgot';
+    }
+});
+
 let targetEmail = "";
+
 
 searchBtn.addEventListener('click', async () => {
     const val = input.value.trim().toLowerCase();
@@ -119,5 +127,5 @@ requestBtn.addEventListener('click', async () => {
 // ... kode JS yang sudah ada ...
 
 document.getElementById('backBtn').addEventListener('click', () => {
-    window.history.back(); // atau boleh ganti dengan window.location.href = 'page1.html';
+    window.location.href = '../';
 });

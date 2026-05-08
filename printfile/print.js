@@ -46,11 +46,45 @@ async function loadApplicationData(id) {
     setText('print-jabatan', app.jabatan);
     setText('print-noSamb', app.noSamb || '-'); // Jika ada field baru
     setText('print-phone', app.telefon);
-    setText('print-tarikhPinjam', app.mula);
-    setText('print-tarikhPulang', app.tamat);
+    setText('print-tarikhPinjam', formatDate(app.mula));
+    setText('print-tarikhPulang', formatDate(app.tamat));
     setText('print-lokasi', app.lokasi || '-');
     setText('print-jenisPermohonan', app.jenis);
     setText('borang-no', app.noPermohonan || '_____');
+
+    // Populate Digital Audit Info (Jika ada)
+    setText('print-authNamaPinjam', app.authNamaPinjam || '______________________');
+    setText('print-scanPinjam', formatDate(app.scanPinjam) || '______________________');
+    setSignature('print-sigPinjam', app.signaturePinjam);
+    
+    setText('print-authNamaPulang', app.authNamaPulang || '______________________');
+    setText('print-scanPulang', formatDate(app.scanPulang) || '______________________');
+    setSignature('print-sigPulang', app.signaturePulang);
+
+    // Populate Feedback Section D
+    if (app.feedback) {
+        try {
+            const fb = JSON.parse(app.feedback);
+            
+            // Bulatkan Rating
+            if (fb.ratings) {
+                if (fb.ratings.kemudahan) circleElement(`rate-kemudahan-${fb.ratings.kemudahan}`);
+                if (fb.ratings.penyampaian) circleElement(`rate-penyampaian-${fb.ratings.penyampaian}`);
+                if (fb.ratings.keseluruhan) circleElement(`rate-keseluruhan-${fb.ratings.keseluruhan}`);
+            }
+
+            // Nota Cadangan
+            setText('print-feedbackNotes', fb.notes || '');
+
+            // Membantu?
+            if (fb.help) {
+                const helpKey = fb.help.toUpperCase().replace(/\s+/g, '_');
+                circleElement(`help-${helpKey}`);
+            }
+        } catch (e) {
+            console.error("Error parsing feedback:", e);
+        }
+    }
 
     // Populate Equipment Table (Section A)
     const equipmentList = document.getElementById('equipment-list');
@@ -99,11 +133,6 @@ async function loadApplicationData(id) {
             });
         }
 
-        // Add empty rows for visual consistency
-        const currentCount = models.length || 0;
-        for (let i = currentCount; i < 3; i++) {
-            equipmentList.innerHTML += `<tr><td style="text-align:center;">${i + 1}</td><td></td><td></td><td></td></tr>`;
-        }
     }
 }
 
@@ -112,7 +141,34 @@ function setText(id, text) {
     if (el) el.textContent = text || '';
 }
 
+function setSignature(id, dataUrl) {
+    const el = document.getElementById(id);
+    if (el && dataUrl && dataUrl.startsWith('data:image')) {
+        el.src = dataUrl;
+        el.style.display = 'block';
+    }
+}
+
+function circleElement(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('circled');
+}
+
 function formatDate(dateStr) {
-    if (!dateStr) return '';
-    return dateStr; // Gunakan format asal dari DB sedia ada
+    if (!dateStr || dateStr === "-" || dateStr === "undefined") return "-";
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        let hours = d.getHours();
+        const minutes = String(d.getMinutes()).padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        const hourStr = String(hours).padStart(2, "0");
+        return `${day}/${month}/${year} ${hourStr}:${minutes} ${ampm}`;
+    } catch (e) {
+        return dateStr;
+    }
 }

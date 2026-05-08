@@ -17,6 +17,19 @@ const firebaseConfig = {
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
+// Initial Routing & URL Cleaning for Login Page
+document.addEventListener('DOMContentLoaded', () => {
+    // Bersihkan URL: Buang 'index.html' jika ada
+    if (window.location.pathname.endsWith('index.html')) {
+        const cleanPath = window.location.pathname.replace('index.html', '');
+        window.history.replaceState({}, '', cleanPath + (window.location.hash || '#login'));
+    }
+
+    if (!window.location.hash) {
+        window.location.hash = 'login';
+    }
+});
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -68,6 +81,16 @@ loginForm.addEventListener('submit', async function (e) {
 
     btn.disabled = true;
     btn.textContent = 'Loading...';
+
+    // Tunjukkan loading overlay
+    Swal.fire({
+        title: 'Sedang Log Masuk...',
+        text: 'Sila tunggu sebentar, kami sedang mengesahkan identiti anda.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     try {
         // 1. Dapatkan rekod admin / Kenal pasti identiti (Server-side search)
@@ -194,10 +217,10 @@ loginForm.addEventListener('submit', async function (e) {
         setTimeout(() => {
             if (userRole === 'admin' || userRole === 'pemilik' || userRole === 'pentadbir') {
                 console.log("➡️ Redirecting to ADMIN Dashboard");
-                window.location.href = 'dashboard/main.html';
+                window.location.href = 'dashboard/';
             } else {
                 console.log("➡️ Redirecting to USER Portal");
-                window.location.href = 'UserS/user.html';
+                window.location.href = 'UserS/';
             }
         }, 1200);
 
@@ -209,7 +232,7 @@ loginForm.addEventListener('submit', async function (e) {
 });
 
 document.getElementById('forgotBtn').addEventListener('click', () => {
-    window.location.href = 'forgot/forget.html';
+    window.location.href = 'forgot/';
 });
 
 
@@ -239,6 +262,17 @@ if (msBtn) {
             provider.addScope('User.Read');
 
             const result = await auth.signInWithPopup(provider);
+            
+            // Tunjukkan loading overlay selepas popup ditutup (untuk proses pengesahan akaun)
+            Swal.fire({
+                title: 'Mengesahkan Akaun...',
+                text: 'Sila tunggu sebentar, kami sedang menyediakan dashboard anda.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             const user = result.user;
 
             // Kadangkala Microsoft tidak memberikan 'user.email' secara terus. Kita ambil dari profil UPN.
@@ -347,10 +381,10 @@ if (msBtn) {
             setTimeout(() => {
                 if (isAdmin) {
                     console.log("➡️ Redirecting MS to ADMIN Dashboard");
-                    window.location.href = 'dashboard/main.html';
+                    window.location.href = 'dashboard/';
                 } else {
                     console.log("➡️ Redirecting MS to USER Portal");
-                    window.location.href = 'UserS/user.html';
+                    window.location.href = 'UserS/';
                 }
             }, 1000);
 

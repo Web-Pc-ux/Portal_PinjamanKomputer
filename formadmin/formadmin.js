@@ -277,7 +277,7 @@ modalBtn.style.cursor = 'pointer';
 
 modalBtn.addEventListener('click', () => {
     modalDiv.style.display = 'none';
-    window.location.href = '../dashboard/main.html';
+    window.location.href = '../dashboard/';
 });
 
 modalContent.appendChild(modalMessage);

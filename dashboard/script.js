@@ -1,3 +1,19 @@
+function formatDate(str) {
+    if (!str || str === '-' || str === 'undefined') return '-';
+    try {
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return str;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (e) {
+        return str;
+    }
+}
+
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCkXpGW5uQRWos4J8Bnsctdshs6hf3Wti0",
@@ -16,11 +32,17 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Bersihkan URL: Buang 'index.html' jika ada
+    if (window.location.pathname.endsWith('index.html')) {
+        const cleanPath = window.location.pathname.replace('index.html', '');
+        window.history.replaceState({}, '', cleanPath + window.location.hash);
+    }
+
     // 1. Monitor Sesi Firebase Secara Real-time (Lebih Selamat)
     firebase.auth().onAuthStateChanged(async (user) => {
         if (!user) {
             console.warn("⚠️ Sesi tidak sah. Kembali ke Login.");
-            window.location.href = '../index.html';
+            window.location.href = '../';
             return;
         }
 
@@ -28,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const session = localStorage.getItem('loggedInAdmin');
         if (!session) {
             firebase.auth().signOut().then(() => {
-                window.location.href = '../index.html';
+                window.location.href = '../';
             });
             return;
         }
@@ -39,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const role = (adminData.peranan || 'User').toLowerCase().trim();
         if (role !== 'admin' && role !== 'pemilik' && role !== 'pentadbir') {
             console.warn("🚫 Akses dinafikan: Pengguna biasa tidak dibenarkan di Dashboard Admin.");
-            window.location.href = '../UserS/user.html';
+            window.location.href = '../UserS/';
             return;
         }
 
@@ -59,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn("🚫 Akses dibatalkan secara real-time: Peranan ditukar ke User.");
                         localStorage.removeItem('loggedInAdmin');
                         await firebase.auth().signOut();
-                        window.location.href = '../UserS/user.html';
+                        window.location.href = '../UserS/';
                         return;
                     }
 
@@ -238,6 +260,11 @@ function initializeDashboard(adminData) {
         // Update title
         sectionTitle.textContent = targetItem.querySelector('span').textContent;
 
+        // Update URL Hash (Ekor URL)
+        if (updateStorage) {
+            window.location.hash = sectionId;
+        }
+
         // Save to localStorage
         if (updateStorage) {
             localStorage.setItem('activeDashboardSection', sectionId);
@@ -255,6 +282,11 @@ function initializeDashboard(adminData) {
             renderComputerUsage();
             resetReportFilter();
         }
+
+        // Reset applicant tabs only on fresh sidebar click (not hash routing)
+        if (sectionId === 'pemohon' && updateStorage) {
+            if (typeof filterApplicantTab === 'function') filterApplicantTab('all');
+        }
     }
 
     navItems.forEach(item => {
@@ -264,11 +296,44 @@ function initializeDashboard(adminData) {
         });
     });
 
-    // Check for saved section on load
-    const savedSection = localStorage.getItem('activeDashboardSection');
-    if (savedSection) {
-        switchSection(savedSection, false);
+    // Check for saved section on load or URL hash
+    function handleRouting() {
+        const hash = window.location.hash.substring(1); // Remove #
+        if (!hash) {
+            const savedSection = localStorage.getItem('activeDashboardSection') || 'dashboard';
+            switchSection(savedSection, false);
+            return;
+        }
+
+        const parts = hash.split('/');
+        const mainSection = parts[0];
+        const subTab = parts[1];
+
+        // Switch to main section
+        switchSection(mainSection, false);
+
+        // If in pemohon section and has subTab, trigger filter
+        if (mainSection === 'pemohon' && subTab) {
+            if (typeof filterApplicantTab === 'function') {
+                filterApplicantTab(subTab, false);
+            }
+        }
     }
+
+    // Listen for back/forward buttons
+    window.addEventListener('hashchange', handleRouting);
+
+    // Initial Routing on load
+    handleRouting();
+
+    // Hide loader after initial routing is set
+    hideGlobalLoader();
+
+    // 🚀 Auto-Refresh Background Sync (Every 30 seconds)
+    setInterval(() => {
+        console.log('🔄 Background Sync: Mengemaskini data...');
+        fetchAllFromGAS();
+    }, 30000); 
 
     // Burger Menu Logic
     burgerBtn.addEventListener('click', () => {
@@ -288,6 +353,38 @@ function initializeDashboard(adminData) {
 
     // 3. Auto Logout Logic (Idle Monitor)
     initIdleMonitor();
+}
+
+function hideGlobalLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) {
+        setTimeout(() => {
+            loader.classList.add('fade-out');
+            // Remove from DOM after transition to free resources
+            setTimeout(() => loader.remove(), 600);
+        }, 300); // Small delay for smoother feel
+    }
+}
+
+async function triggerManualRefresh() {
+    const btn = document.getElementById('manualRefreshBtn');
+    if (!btn || btn.classList.contains('loading')) return;
+
+    btn.classList.add('loading');
+    btn.querySelector('span').textContent = 'Memuatkan...';
+
+    // Beri visual 'empty' sekejap untuk confirm refresh berlaku
+    const tableBodies = document.querySelectorAll('tbody');
+    tableBodies.forEach(tbody => {
+        tbody.innerHTML = '<tr><td colspan="15" style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin"></i> Sedang mengambil data terbaru...</td></tr>';
+    });
+
+    try {
+        await fetchAllFromGAS();
+    } finally {
+        btn.classList.remove('loading');
+        btn.querySelector('span').textContent = 'Kemaskini';
+    }
 }
 
 let idleTimer;
@@ -1601,22 +1698,22 @@ function renderApplicationTable() {
                     <td data-label="Tempoh Penggunaan">
                         <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
                             <i class="fas fa-calendar-alt" style="color: var(--success); font-size: 0.7rem;"></i>
-                            <span><strong>Tarikh Pinjam:</strong> ${app.mula}</span>
+                            <span><strong>Tarikh Pinjam:</strong> ${formatDate(app.mula)}</span>
                             
                         </div>
                         ${app.scanPinjam ? `
                             <div style="font-size: 0.7rem; color: #059669; padding-left: 1.1rem; line-height: 1.2;">
-                                <strong>Scan:</strong> ${app.scanPinjam}<br>
+                                <strong>Scan:</strong> ${formatDate(app.scanPinjam)}<br>
                                 <span style="font-style: italic; opacity: 0.8;">Oleh: ${app.authNamaPinjam || '-'}</span>
                             </div>` : ''}
                         
                         <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; margin-top: 6px;">
                             <i class="fas fa-calendar-check" style="color: var(--danger); font-size: 0.7rem;"></i>
-                            <span><strong>Tarikh Pemulangan:</strong> ${app.tamat}</span>
+                            <span><strong>Tarikh Pemulangan:</strong> ${formatDate(app.tamat)}</span>
                         </div>
                         ${app.scanPulang ? `
                             <div style="font-size: 0.7rem; color: #dc2626; padding-left: 1.1rem; line-height: 1.2;">
-                                <strong>Scan:</strong> ${app.scanPulang}<br>
+                                <strong>Scan:</strong> ${formatDate(app.scanPulang)}<br>
                                 <span style="font-style: italic; opacity: 0.8;">Oleh: ${app.authNamaPulang || '-'}</span>
                             </div>` : ''}
                     </td>
@@ -1703,6 +1800,17 @@ function renderApplicationTable() {
     renderRows(completedData, completedTable, 'Tiada rekod selesai.');
     renderRows(delayedData, delayedTable, 'Tiada rekod lewat.');
     renderRows(rejectedData, rejectedTable, 'Tiada rekod ditolak.');
+
+    // Kemaskini jumlah pada tab filter
+    const updateCount = (id, count) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = count;
+    };
+    updateCount('count-all', data.length);
+    updateCount('count-aktif', activeData.length);
+    updateCount('count-lewat', delayedData.length);
+    updateCount('count-selesai', completedData.length);
+    updateCount('count-ditolak', rejectedData.length);
 
     // Paparan Amaran Lewat (Tanda Peringatan Merah)
     const lateContainer = document.getElementById('lateAlertContainer');
@@ -1861,8 +1969,8 @@ function urusApp(id) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${app.scanPinjam ? `<tr><td style="color:#f59e0b;font-weight:600;"><i class="fas fa-sign-out-alt"></i> Pinjam</td><td style="font-family:monospace;">${app.scanPinjam}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPinjam || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPinjam || '-'}</span></td></tr>` : ''}
-                            ${app.scanPulang ? `<tr><td style="color:#10b981;font-weight:600;"><i class="fas fa-sign-in-alt"></i> Pulang</td><td style="font-family:monospace;">${app.scanPulang}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPulang || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPulang || '-'}</span></td></tr>` : ''}
+                            ${app.scanPinjam ? `<tr><td style="color:#f59e0b;font-weight:600;"><i class="fas fa-sign-out-alt"></i> Pinjam</td><td style="font-family:monospace;">${formatDate(app.scanPinjam)}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPinjam || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPinjam || '-'}</span></td></tr>` : ''}
+                            ${app.scanPulang ? `<tr><td style="color:#10b981;font-weight:600;"><i class="fas fa-sign-in-alt"></i> Pulang</td><td style="font-family:monospace;">${formatDate(app.scanPulang)}</td><td style="font-size:0.75rem; line-height:1.2;"><strong>${app.authNamaPulang || 'Tiada Nama'}</strong><br><span style="color:#64748b; font-size:0.7rem;">${app.authEmailPulang || '-'}</span></td></tr>` : ''}
                             ${(!app.scanPinjam && !app.scanPulang) ? `<tr><td colspan="3" style="text-align:center;color:#94a3b8;">Tiada rekod imbasan lagi.</td></tr>` : ''}
                         </tbody>
                     </table>
@@ -1870,11 +1978,11 @@ function urusApp(id) {
             </div>
             <div class="form-group">
                 <label>Tarikh Peminjaman</label>
-                <div class="info-box">${app.mula}</div>
+                <div class="info-box">${formatDate(app.mula)}</div>
             </div>
             <div class="form-group">
                 <label>Tarikh Pemulangan</label>
-                <div class="info-box">${app.tamat}</div>
+                <div class="info-box">${formatDate(app.tamat)}</div>
             </div>
         </div>
 
@@ -1956,7 +2064,7 @@ function urusApp(id) {
                     <div style="text-align:center; padding:1.5rem; background:white; border-radius:12px; border:1px solid #ffedd5;">
                         <i class="fas fa-sign-out-alt" style="font-size:2rem; color:#f59e0b; margin-bottom:1rem;"></i>
                         <h5 style="margin-bottom:0.5rem; color:#1e293b;">Pengesahan Pinjam</h5>
-                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Scan: <strong style="color:#1e293b;">${app.scanPinjam || '-'}</strong></p>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Scan: <strong style="color:#1e293b;">${formatDate(app.scanPinjam)}</strong></p>
                         <button class="btn btn-primary" onclick="generateActionQR(${app.id}, 'pinjam')" style="width:100%; background:#f59e0b; border:none;">
                             <i class="fas fa-qrcode"></i> QR Pinjam
                         </button>
@@ -1965,7 +2073,7 @@ function urusApp(id) {
                     <div style="text-align:center; padding:1.5rem; background:white; border-radius:12px; border:1px solid #ffedd5; ${(!app.scanPinjam || app.scanPinjam === '-') ? 'opacity:0.7;' : ''}">
                         <i class="fas fa-sign-in-alt" style="font-size:2rem; color:${(!app.scanPinjam || app.scanPinjam === '-') ? '#94a3b8' : '#10b981'}; margin-bottom:1rem;"></i>
                         <h5 style="margin-bottom:0.5rem; color:#1e293b;">Pengesahan Pulang</h5>
-                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Scan: <strong style="color:#1e293b;">${app.scanPulang || '-'}</strong></p>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Scan: <strong style="color:#1e293b;">${formatDate(app.scanPulang)}</strong></p>
                         <button class="btn btn-primary" 
                                 onclick="generateActionQR(${app.id}, 'pulang')" 
                                 ${(!app.scanPinjam || app.scanPinjam === '-') ? 'disabled title="Sila buat pengesahan Pinjam terlebih dahulu"' : ''}
@@ -3062,8 +3170,8 @@ function renderReportTable(data) {
                 <div style="font-size: 0.75rem; color: var(--text-muted);">${app.model} (${app.kuantiti} Unit)</div>
             </td>
             <td data-label="Tempoh">
-                <div style="font-size: 0.8rem;">${app.mula}</div>
-                <div style="font-size: 0.8rem;">${app.tamat}</div>
+                <div style="font-size: 0.8rem;">${formatDate(app.mula)}</div>
+                <div style="font-size: 0.8rem;">${formatDate(app.tamat)}</div>
             </td>
             <td data-label="Status">
                 <span class="badge status-${getStatusClass(app.status)}">${app.status}</span>
@@ -3181,8 +3289,8 @@ function printReport() {
                             <td>${app.jabatan}</td>
                             <td>${app.jenis}</td>
                             <td>${app.model}</td>
-                            <td>${app.mula}</td>
-                            <td>${app.tamat}</td>
+                            <td>${formatDate(app.mula)}</td>
+                            <td>${formatDate(app.tamat)}</td>
                             <td><span class="badge status-${getStatusClass(app.status)}">${app.status}</span></td>
                             <td>${app.catatanAdmin || '-'}</td>
                         </tr>
@@ -3279,8 +3387,8 @@ function exportExcel() {
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.lokasi)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.tujuan)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.model)}</Data></Cell>
-    <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.mula)}</Data></Cell>
-    <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.tamat)}</Data></Cell>
+    <Cell ss:StyleID="default"><Data ss:Type="String">${esc(formatDate(app.mula))}</Data></Cell>
+    <Cell ss:StyleID="default"><Data ss:Type="String">${esc(formatDate(app.tamat))}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.status)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.catatanAdmin)}</Data></Cell>
    </Row>`;
@@ -3358,8 +3466,8 @@ function exportCSV() {
             `"${app.lokasi}"`,
             `"${app.tujuan}"`,
             `"${app.model}"`,
-            `"${app.mula}"`,
-            `"${app.tamat}"`,
+            `"${formatDate(app.mula)}"`,
+            `"${formatDate(app.tamat)}"`,
             `"${app.status}"`,
             `"${app.catatanAdmin || '-'}"`
         ];
@@ -3515,6 +3623,16 @@ async function logout() {
     });
 
     if (result.isConfirmed) {
+        // Papar Loading Logout
+        Swal.fire({
+            title: 'Log Keluar...',
+            text: 'Sila tunggu sebentar, sesi anda sedang ditamatkan.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         // Clear SessionId in Firestore before logout
         const session = localStorage.getItem('loggedInAdmin');
         if (session) {
@@ -3530,10 +3648,50 @@ async function logout() {
 
         localStorage.removeItem('loggedInAdmin');
         await firebase.auth().signOut();
-        window.location.href = '../index.html';
+        
+        // Sedikit delay untuk visual loading yang lebih smooth
+        setTimeout(() => {
+            window.location.href = '../';
+        }, 800);
     }
 }
 
+
+function filterApplicantTab(tab, updateHash = true) {
+    if (updateHash) {
+        window.location.hash = `pemohon/${tab}`;
+    }
+
+    // Kemaskini butang aktif
+    const buttons = document.querySelectorAll('.applicant-tabs .tab-btn');
+    buttons.forEach(btn => {
+        const onclickAttr = btn.getAttribute('onclick') || '';
+        // Match 'tab' accurately regardless of quotes
+        if (onclickAttr.includes(`'${tab}'`) || onclickAttr.includes(`"${tab}"`)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Tunjuk/Sembunyi kontainer mengikut tab
+    const containers = {
+        'aktif': document.getElementById('container-aktif'),
+        'lewat': document.getElementById('container-lewat'),
+        'selesai': document.getElementById('container-selesai'),
+        'ditolak': document.getElementById('container-ditolak')
+    };
+
+    if (tab === 'all') {
+        Object.values(containers).forEach(c => { if(c) c.style.display = 'block'; });
+    } else {
+        Object.keys(containers).forEach(key => {
+            if (containers[key]) {
+                containers[key].style.display = (key === tab) ? 'block' : 'none';
+            }
+        });
+    }
+}
 
 function searchPemohon() {
     const input = document.getElementById('pemohonSearch').value.toLowerCase();

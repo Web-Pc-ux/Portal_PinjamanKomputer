@@ -130,6 +130,65 @@ body {
     transition: background-image 0.5s ease-in-out;
 }
 
+/* Global Page Loader */
+.global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(var(--bg-rgb, 255, 255, 255), 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+body.dark-mode {
+    --bg-rgb: 15, 23, 42;
+}
+
+body:not(.dark-mode) {
+    --bg-rgb: 248, 250, 252;
+}
+
+.global-loader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-content {
+    text-align: center;
+}
+
+.loader-logo {
+    width: 80px;
+    margin-bottom: 1.5rem;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(59, 130, 246, 0.1);
+    border-left-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
 /* Sidebar Styling */
 .sidebar {
     width: var(--sidebar-width);
@@ -737,6 +796,51 @@ tbody tr:nth-child(even) {
     }
 }
 
+/* Manual Refresh Button Styling */
+.refresh-btn-manual {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.refresh-btn-manual:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.refresh-btn-manual img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.refresh-btn-manual.loading img {
+    animation: spin 1s linear infinite;
+}
+
+.refresh-btn-manual span {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .refresh-btn-manual span {
+        display: none;
+    }
+    .refresh-btn-manual {
+        padding: 0.5rem;
+    }
+}
+
 /* Default styling untuk action-header (Desktop) */
 .action-header {
     display: flex;
@@ -1063,4 +1167,34 @@ tbody tr:nth-child(even) {
 
 body.dark-mode .footer-text {
     border-top-color: var(--border);
+}
+
+/* Applicant Tabs Filter */
+.applicant-tabs .tab-btn:hover {
+    background: rgba(79, 70, 229, 0.1) !important;
+    color: var(--primary) !important;
+}
+
+.applicant-tabs .tab-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.applicant-tabs .tab-btn.active .tab-count {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+.tab-count {
+    transition: all 0.2s;
+}
+
+body.dark-mode .applicant-tabs {
+    background: var(--bg-card);
+    border-color: var(--border);
+}
+
+body.dark-mode .applicant-tabs .tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
 }

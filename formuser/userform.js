@@ -1,4 +1,4 @@
-﻿/* ==============================
+/* ==============================
    LOCAL STORAGE HELPERS
 ============================== */
 const DB_KEYS = {
@@ -851,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showConfirmButton: false,
                     timer: 2000
                 }).then(() => {
-                    window.location.href = '../index.html';
+                    window.location.href = '../';
                 });
             }
         });
@@ -883,6 +883,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 provider.setCustomParameters({ prompt: 'select_account' });
                 
                 await auth.signInWithPopup(provider);
+                
+                // Tunjukkan loading overlay
+                Swal.fire({
+                    title: 'Mengesahkan Akaun...',
+                    text: 'Sila tunggu sebentar, kami sedang menyediakan borang anda.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
                 // onAuthStateChanged akan uruskan validasi emel
             } catch (error) {
                 btnLogin.disabled = false;
@@ -916,6 +926,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 provider.setCustomParameters({ prompt: 'select_account' });
 
                 const result = await auth.signInWithPopup(provider);
+
+                // Tunjukkan loading overlay
+                Swal.fire({
+                    title: 'Mengesahkan Akaun...',
+                    text: 'Sila tunggu sebentar, kami sedang menyediakan borang anda.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
                 
                 // Ekstrak nama Microsoft sebenar dari profil
                 if (result && result.user) {
@@ -944,7 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const backBtn = document.getElementById('backToPortalBtn');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
-            window.location.href = '../index.html';
+            window.location.href = '../';
         });
     }
 

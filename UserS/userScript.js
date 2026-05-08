@@ -32,12 +32,18 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Bersihkan URL: Buang 'index.html' jika ada
+    if (window.location.pathname.endsWith('index.html')) {
+        const cleanPath = window.location.pathname.replace('index.html', '');
+        window.history.replaceState({}, '', cleanPath + window.location.hash);
+    }
+
     // 1. Monitor Sesi Firebase Secara Real-time (Lebih Selamat)
     firebase.auth().onAuthStateChanged(async (user) => {
 
         if (!user) {
             console.warn("⚠️ Sesi tidak sah. Kembali ke Login.");
-            window.location.href = '../index.html';
+            window.location.href = '../';
             return;
         }
 
@@ -45,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const session = localStorage.getItem('loggedInAdmin');
         if (!session) {
             firebase.auth().signOut().then(() => {
-                window.location.href = '../index.html';
+                window.location.href = '../';
             });
             return;
         }
@@ -79,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
 
                         await firebase.auth().signOut();
-                        window.location.href = '../index.html';
+                        window.location.href = '../';
                     }
                 }
             }, (err) => {
@@ -270,7 +276,13 @@ function initializeDashboard(adminData) {
     const savedSection = localStorage.getItem('activeDashboardSection');
     if (savedSection) {
         switchSection(savedSection, false);
+    } else {
+        // Default to utama if no saved section
+        switchSection('utama', false);
     }
+
+    // Hide loader after initial section is set
+    hideGlobalLoader();
 
     // Burger Menu Logic
     burgerBtn.addEventListener('click', () => {
@@ -288,8 +300,24 @@ function initializeDashboard(adminData) {
     loadSettings();
     fetchAllFromGAS(); // Tarik semua data dari Cloud setiap kali buka dashboard
 
+    // 🚀 Auto-Refresh Background Sync (Every 30 seconds)
+    setInterval(() => {
+        console.log('🔄 Background Sync: Mengemaskini data...');
+        fetchAllFromGAS();
+    }, 30000); 
+
     // 3. Auto Logout Logic (Idle Monitor)
     initIdleMonitor();
+}
+
+function hideGlobalLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) {
+        setTimeout(() => {
+            loader.classList.add('fade-out');
+            setTimeout(() => loader.remove(), 600);
+        }, 300);
+    }
 }
 
 let idleTimer;
@@ -370,7 +398,7 @@ async function performAutoLogout() {
 
     // Terus tendang ke halaman login tanpa perlu tunggu user tekan butang OK
     firebase.auth().signOut().then(() => {
-        window.location.href = '../index.html';
+        window.location.href = '../';
     });
 }
 
@@ -3478,6 +3506,16 @@ async function logout() {
     });
 
     if (result.isConfirmed) {
+        // Papar Loading Logout
+        Swal.fire({
+            title: 'Log Keluar...',
+            text: 'Sila tunggu sebentar, sesi anda sedang ditamatkan.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         // Clear SessionId in Firestore before logout
         const session = localStorage.getItem('loggedInAdmin');
         if (session) {
@@ -3493,7 +3531,11 @@ async function logout() {
 
         localStorage.removeItem('loggedInAdmin');
         await firebase.auth().signOut();
-        window.location.href = '../index.html';
+
+        // Sedikit delay untuk visual loading yang lebih smooth
+        setTimeout(() => {
+            window.location.href = '../';
+        }, 800);
     }
 }
 
