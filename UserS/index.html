@@ -152,6 +152,10 @@
                 <i class="fas fa-file-alt"></i>
                 <span>Permohonan</span>
             </div>
+            <div class="nav-item" data-section="sejarah">
+                <i class="fas fa-history"></i>
+                <span>Sejarah</span>
+            </div>
         </nav>
         <div class="nav-item" style="color: var(--danger); margin-top: auto;" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
@@ -168,6 +172,10 @@
         <div class="bottom-nav-item" data-section="permohonan">
             <i class="fas fa-list-ul"></i>
             <span>Permohonan</span>
+        </div>
+        <div class="bottom-nav-item" data-section="sejarah">
+            <i class="fas fa-history"></i>
+            <span>Sejarah</span>
         </div>
         <div class="bottom-nav-item" onclick="logout()">
             <i class="fas fa-user"></i>
@@ -286,6 +294,38 @@
                 </div>
             </div>
         </section>
+
+        <!-- Section: Sejarah -->
+        <section id="sejarah" class="section-content">
+            <div class="settings-card">
+                <h3><i class="fas fa-history"></i> Sejarah Permohonan Anda</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Rekod permohonan yang telah selesai atau tamat tempoh.</p>
+
+                <div class="table-container">
+                    <table class="table-compact">
+                        <thead>
+                            <tr>
+                                <th>No. Permohonan</th>
+                                <th>Tarikh Pinjam</th>
+                                <th>Model & Kuantiti</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userHistoryList">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    Memuatkan sejarah permohonan...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="userHistoryListMobile" class="mobile-cards-container"></div>
+            </div>
+        </section>
+
 
         <!-- Footer -->
         <footer class="footer-text" id="commonFooter"

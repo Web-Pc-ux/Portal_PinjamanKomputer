@@ -3660,76 +3660,143 @@ async function fetchUserApplicationsFromGAS() {
 function renderUserApplicationsUI() {
     let userApps = window.userAppsCache || [];
     
+    // Filter data: Active vs History
+    const activeApps = userApps.filter(a => !['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak'].includes(a.status));
+    const historyApps = userApps.filter(a => ['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak'].includes(a.status));
 
-    // Sorting: Baru/Menunggu di atas, Selesai/Dipulangkan/Lulus/Tolak di bawah
-    userApps.sort((a, b) => {
-        const isPendingA = (a.status === 'Baru' || a.status === 'Menunggu') ? 0 : 1;
-        const isPendingB = (b.status === 'Baru' || b.status === 'Menunggu') ? 0 : 1;
-        
-        if (isPendingA !== isPendingB) {
-            return isPendingA - isPendingB; // 0 (pending) goes first
-        }
-        
-        // Secondary sort: id descending (newest first)
-        return b.id - a.id;
-    });
+    // Sorting: Newest first
+    activeApps.sort((a, b) => b.id - a.id);
+    historyApps.sort((a, b) => b.id - a.id);
 
     const tbody = document.getElementById('userApplicationList');
     const mobileContainer = document.getElementById('userApplicationListMobile');
+    const historyTbody = document.getElementById('userHistoryList');
+    const historyMobileContainer = document.getElementById('userHistoryListMobile');
     
-    if (userApps.length === 0) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tiada rekod permohonan dijumpai.</td></tr>';
-        if (mobileContainer) mobileContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted); background: #fff; border-radius: 10px;">Tiada rekod permohonan dijumpai.</div>';
-        
-        const statusText = document.getElementById('statusPermohonanText');
-        const notifBox = document.getElementById('userNotifications');
-        if (statusText) statusText.textContent = "Sila klik 'Buat Permohonan' untuk memulakan peminjaman baru.";
-        if (notifBox) notifBox.style.display = 'none';
-        return;
-    }
-
-    let htmlTable = '';
-    let htmlMobile = '';
-    
-    userApps.forEach(app => {
+    const generateRowHtml = (app, isHistory = false) => {
         let statusClass = 'status-waiting';
-        if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan') statusClass = 'status-approved';
-        if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') statusClass = 'status-danger';
+        let statusIcon = 'fa-clock';
+        
+        if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan' || app.status === 'Disahkan') {
+            statusClass = 'status-approved';
+            statusIcon = 'fa-check-circle';
+        }
+        if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') {
+            statusClass = 'status-danger';
+            statusIcon = 'fa-exclamation-circle';
+        }
 
-        // Table Row (Desktop)
-        htmlTable += '<tr>' +
-                '<td><strong>' + (app.noPermohonan || '-') + '</strong></td>' +
-                '<td>' + formatDate(app.mula) + ' - ' + formatDate(app.tamat) + '</td>' +
-                '<td>' + (app.model || '-') + ' (Qty: ' + (app.kuantiti || 1) + ')</td>' +
-                '<td><span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></td>' +
-                '<td>' +
-                    '<button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="viewUserApp(' + app.id + ')">' +
-                        '<i class="fas fa-eye"></i> Lihat' +
-                    '</button>' +
-                '</td>' +
-            '</tr>';
-            
-        // Card (Mobile)
-        htmlMobile += `
-            <div class="mobile-app-card">
-                <div class="mobile-app-card-header">
-                    <strong>${app.noPermohonan || '-'}</strong>
-                    <span class="badge ${statusClass}">${app.status || 'Menunggu'}</span>
+        return `
+            <tr style="transition: all 0.2s; border-left: 4px solid ${isHistory ? 'transparent' : 'var(--primary)'};">
+                <td style="padding: 1.2rem 1rem;">
+                    <span style="font-family: monospace; font-weight: 700; color: var(--primary); background: rgba(79, 70, 229, 0.08); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(79, 70, 229, 0.15);">
+                        ${app.noPermohonan || '-'}
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class="far fa-calendar-plus" style="color: var(--success); font-size: 0.75rem;"></i> ${formatDate(app.mula)}
+                        </span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                            <i class="far fa-calendar-check" style="color: var(--danger); font-size: 0.75rem;"></i> ${formatDate(app.tamat)}
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 32px; height: 32px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                            <i class="fas fa-laptop" style="font-size: 0.8rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem;">${app.model || '-'}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${app.kuantiti || 1} Unit</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${statusClass}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 50px; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <i class="fas ${statusIcon}" style="font-size: 0.75rem;"></i> ${app.status || 'Menunggu'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 10px; background: var(--primary); display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;" onclick="viewUserApp(${app.id})">
+                        <i class="fas fa-search-plus"></i> Lihat Butiran
+                    </button>
+                </td>
+            </tr>`;
+    };
+
+    const generateCardHtml = (app) => {
+        let statusClass = 'status-waiting';
+        let statusIcon = 'fa-clock';
+        
+        if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan' || app.status === 'Disahkan') {
+            statusClass = 'status-approved';
+            statusIcon = 'fa-check-circle';
+        }
+        if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') {
+            statusClass = 'status-danger';
+            statusIcon = 'fa-exclamation-circle';
+        }
+
+        return `
+            <div class="mobile-app-card" style="position: relative; border-left: 5px solid var(--primary); overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border-radius: 16px;">
+                <div class="mobile-app-card-header" style="padding: 15px; background: rgba(79, 70, 229, 0.02); border-bottom: 1px dashed var(--border);">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">No. Permohonan</span>
+                        <strong style="color: var(--primary); font-size: 1.1rem; font-family: monospace;">${app.noPermohonan || '-'}</strong>
+                    </div>
+                    <span class="badge ${statusClass}" style="padding: 6px 12px; font-size: 0.7rem; border-radius: 50px; display: flex; align-items: center; gap: 5px;">
+                        <i class="fas ${statusIcon}"></i> ${app.status || 'Menunggu'}
+                    </span>
                 </div>
-                <div class="mobile-app-card-body">
-                    <p><i class="far fa-calendar-alt" style="color:var(--primary); width:16px;"></i> <strong>Tarikh:</strong> ${formatDate(app.mula)}</p>
-                    <p><i class="fas fa-laptop" style="color:var(--primary); width:16px;"></i> <strong>Model:</strong> ${app.model || '-'} (Qty: ${app.kuantiti || 1})</p>
+                <div class="mobile-app-card-body" style="padding: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 18px;">
+                        <div style="background: var(--bg-main); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); border: 1px solid var(--border); font-size: 1.1rem;">
+                            <i class="fas fa-laptop"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">${app.model || '-'}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-layer-group" style="font-size: 0.7rem;"></i> ${app.kuantiti || 1} Unit ICT
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px; background: var(--bg-main); padding: 12px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-muted); display: flex; align-items: center; gap: 6px;"><i class="far fa-calendar-alt"></i> Tarikh Pinjam</span>
+                            <span style="font-weight: 700; color: var(--text-main);">${formatDate(app.mula)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-muted); display: flex; align-items: center; gap: 6px;"><i class="far fa-calendar-check"></i> Tarikh Pulang</span>
+                            <span style="font-weight: 700; color: var(--danger);">${formatDate(app.tamat)}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="mobile-app-card-footer">
-                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width:100%;" onclick="viewUserApp(${app.id})">
-                        <i class="fas fa-eye"></i> Lihat Butiran
+                <div class="mobile-app-card-footer" style="padding: 0 15px 15px 15px;">
+                    <button class="btn btn-outline" style="width: 100%; justify-content: center; border-radius: 12px; font-weight: 700; padding: 10px; background: white; border: 1.5px solid var(--primary); color: var(--primary); transition: all 0.2s;" onclick="viewUserApp(${app.id})">
+                        <i class="fas fa-file-invoice" style="margin-right: 8px;"></i> Lihat Butiran Penuh
                     </button>
                 </div>
             </div>`;
-    });
-    
-    if (tbody) tbody.innerHTML = htmlTable;
-    if (mobileContainer) mobileContainer.innerHTML = htmlMobile;
+    };
+
+    // Render Active Table
+    if (tbody) {
+        tbody.innerHTML = activeApps.length > 0 ? activeApps.map(app => generateRowHtml(app, false)).join('') : '<tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-folder-open"></i></div>Tiada permohonan aktif buat masa ini.</td></tr>';
+    }
+    if (mobileContainer) {
+        mobileContainer.innerHTML = activeApps.length > 0 ? activeApps.map(generateCardHtml).join('') : '<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: #fff; border-radius: 16px; margin-top: 10px; border: 1px dashed var(--border);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-folder-open"></i></div>Tiada permohonan aktif.</div>';
+    }
+
+    // Render History Table
+    if (historyTbody) {
+        historyTbody.innerHTML = historyApps.length > 0 ? historyApps.map(app => generateRowHtml(app, true)).join('') : '<tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-history"></i></div>Tiada sejarah permohonan ditemui.</td></tr>';
+    }
+    if (historyMobileContainer) {
+        historyMobileContainer.innerHTML = historyApps.length > 0 ? historyApps.map(generateCardHtml).join('') : '<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: #fff; border-radius: 16px; margin-top: 10px; border: 1px dashed var(--border);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-history"></i></div>Tiada sejarah permohonan.</div>';
+    }
 
     // Update Dashboard Utama (Status & Notifikasi)
     const latestApp = userApps[0]; // because it's sorted, newest/pending is at top

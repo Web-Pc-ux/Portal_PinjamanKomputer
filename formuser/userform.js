@@ -548,7 +548,7 @@ form.addEventListener('submit', async (e) => {
             backdrop: `rgba(0,0,123,0.4)`
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = '../UserS/user.html';
+                window.location.href = '../UserS/';
             }
         });
 
@@ -566,7 +566,7 @@ form.addEventListener('submit', async (e) => {
     // Handle Redirect after success
     const handleSuccessRedirect = () => {
         successModal.style.display = 'none';
-        window.location.href = '../UserS/user.html';
+        window.location.href = '../UserS/';
     };
 
     if (okBtn) okBtn.addEventListener('click', handleSuccessRedirect);
@@ -707,6 +707,12 @@ const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
    INIT
 ============================== */
 document.addEventListener('DOMContentLoaded', () => {
+    // Bersihkan URL: Buang 'index.html' jika ada
+    if (window.location.pathname.endsWith('index.html')) {
+        const cleanPath = window.location.pathname.replace('index.html', '');
+        window.history.replaceState({}, '', cleanPath + window.location.hash);
+    }
+
     // Paksa browser sentiasa bermula di atas (scroll ke atas) setiap kali refresh
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
