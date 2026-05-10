@@ -14,6 +14,17 @@ function formatDate(str) {
     }
 }
 
+// Security: Prevent XSS by escaping HTML special characters
+function escapeHTML(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCkXpGW5uQRWos4J8Bnsctdshs6hf3Wti0",
@@ -3677,11 +3688,12 @@ function renderUserApplicationsUI() {
         let statusClass = 'status-waiting';
         let statusIcon = 'fa-clock';
         
-        if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan' || app.status === 'Disahkan') {
+        const status = (app.status || 'Menunggu');
+        if (['Lulus', 'Selesai', 'Dipulangkan', 'Disahkan'].includes(status)) {
             statusClass = 'status-approved';
             statusIcon = 'fa-check-circle';
         }
-        if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') {
+        if (['Tolak', 'Ditolak', 'Lewat'].includes(status)) {
             statusClass = 'status-danger';
             statusIcon = 'fa-exclamation-circle';
         }
@@ -3690,7 +3702,7 @@ function renderUserApplicationsUI() {
             <tr style="transition: all 0.2s; border-left: 4px solid ${isHistory ? 'transparent' : 'var(--primary)'};">
                 <td style="padding: 1.2rem 1rem;">
                     <span style="font-family: monospace; font-weight: 700; color: var(--primary); background: rgba(79, 70, 229, 0.08); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(79, 70, 229, 0.15);">
-                        ${app.noPermohonan || '-'}
+                        ${escapeHTML(app.noPermohonan)}
                     </span>
                 </td>
                 <td>
@@ -3709,14 +3721,14 @@ function renderUserApplicationsUI() {
                             <i class="fas fa-laptop" style="font-size: 0.8rem;"></i>
                         </div>
                         <div>
-                            <div style="font-size: 0.9rem;">${app.model || '-'}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${app.kuantiti || 1} Unit</div>
+                            <div style="font-size: 0.9rem;">${escapeHTML(app.model)}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${escapeHTML(app.kuantiti)} Unit</div>
                         </div>
                     </div>
                 </td>
                 <td>
                     <span class="badge ${statusClass}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 50px; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                        <i class="fas ${statusIcon}" style="font-size: 0.75rem;"></i> ${app.status || 'Menunggu'}
+                        <i class="fas ${statusIcon}" style="font-size: 0.75rem;"></i> ${escapeHTML(status)}
                     </span>
                 </td>
                 <td>
@@ -3731,11 +3743,12 @@ function renderUserApplicationsUI() {
         let statusClass = 'status-waiting';
         let statusIcon = 'fa-clock';
         
-        if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan' || app.status === 'Disahkan') {
+        const status = (app.status || 'Menunggu');
+        if (['Lulus', 'Selesai', 'Dipulangkan', 'Disahkan'].includes(status)) {
             statusClass = 'status-approved';
             statusIcon = 'fa-check-circle';
         }
-        if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') {
+        if (['Tolak', 'Ditolak', 'Lewat'].includes(status)) {
             statusClass = 'status-danger';
             statusIcon = 'fa-exclamation-circle';
         }
@@ -3745,10 +3758,10 @@ function renderUserApplicationsUI() {
                 <div class="mobile-app-card-header" style="padding: 15px; background: rgba(79, 70, 229, 0.02); border-bottom: 1px dashed var(--border);">
                     <div style="display: flex; flex-direction: column;">
                         <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">No. Permohonan</span>
-                        <strong style="color: var(--primary); font-size: 1.1rem; font-family: monospace;">${app.noPermohonan || '-'}</strong>
+                        <strong style="color: var(--primary); font-size: 1.1rem; font-family: monospace;">${escapeHTML(app.noPermohonan)}</strong>
                     </div>
                     <span class="badge ${statusClass}" style="padding: 6px 12px; font-size: 0.7rem; border-radius: 50px; display: flex; align-items: center; gap: 5px;">
-                        <i class="fas ${statusIcon}"></i> ${app.status || 'Menunggu'}
+                        <i class="fas ${statusIcon}"></i> ${escapeHTML(status)}
                     </span>
                 </div>
                 <div class="mobile-app-card-body" style="padding: 20px;">
@@ -3757,9 +3770,9 @@ function renderUserApplicationsUI() {
                             <i class="fas fa-laptop"></i>
                         </div>
                         <div>
-                            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">${app.model || '-'}</div>
+                            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">${escapeHTML(app.model)}</div>
                             <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-layer-group" style="font-size: 0.7rem;"></i> ${app.kuantiti || 1} Unit ICT
+                                <i class="fas fa-layer-group" style="font-size: 0.7rem;"></i> ${escapeHTML(app.kuantiti)} Unit ICT
                             </div>
                         </div>
                     </div>

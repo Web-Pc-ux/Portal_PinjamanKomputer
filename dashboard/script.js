@@ -14,6 +14,17 @@ function formatDate(str) {
     }
 }
 
+// Security: Prevent XSS by escaping HTML special characters
+function escapeHTML(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCkXpGW5uQRWos4J8Bnsctdshs6hf3Wti0",
@@ -1703,29 +1714,29 @@ function renderApplicationTable() {
 
             let rows = `
                 <tr>
-                    <td data-label="No. Permohonan"><strong>${app.noPermohonan}</strong></td>
+                    <td data-label="No. Permohonan"><strong>${escapeHTML(app.noPermohonan)}</strong></td>
                     <td data-label="Maklumat Pemohon">
-                        <div style="font-weight: 600; color: var(--primary);">${app.nama}</div>
+                        <div style="font-weight: 600; color: var(--primary);">${escapeHTML(app.nama)}</div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                            <i class="fas fa-id-badge" style="width: 14px;"></i> ${app.noPekerja} | ${app.jabatan}
+                            <i class="fas fa-id-badge" style="width: 14px;"></i> ${escapeHTML(app.noPekerja)} | ${escapeHTML(app.jabatan)}
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; border-top: 1px dashed #e2e8f0; padding-top: 5px;">
                             <span style="font-weight: 600; font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 2px;">Emel Pemohon:</span>
-                            <i class="fas fa-envelope" style="width: 14px; color: var(--primary);"></i> ${app.email}
+                            <i class="fas fa-envelope" style="width: 14px; color: var(--primary);"></i> ${escapeHTML(app.email)}
                         </div>
                     </td>
                     <td data-label="Maklumat Pinjaman">
                         <div style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px;">Tujuan/Jenis:</div>
-                        <div style="font-weight: 500; margin-bottom: 6px;">${app.jenis}</div>
+                        <div style="font-weight: 500; margin-bottom: 6px;">${escapeHTML(app.jenis)}</div>
                         
                         <div style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px; border-top: 1px dashed #e2e8f0; padding-top: 4px;">Peralatan:</div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                            <i class="fas fa-laptop" style="width: 14px;"></i> ${app.model}
+                            <i class="fas fa-laptop" style="width: 14px;"></i> ${escapeHTML(app.model)}
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-muted);">
-                            <i class="fas fa-layer-group" style="width: 14px;"></i> ${app.kuantiti}
+                            <i class="fas fa-layer-group" style="width: 14px;"></i> ${escapeHTML(app.kuantiti)}
                         </div>
-                        ${app.siri ? `<div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; border-top: 1px dotted #e2e8f0; padding-top: 4px;">Siri: ${app.siri}</div>` : ''}
+                        ${app.siri ? `<div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; border-top: 1px dotted #e2e8f0; padding-top: 4px;">Siri: ${escapeHTML(app.siri)}</div>` : ''}
                     </td>
                     <td data-label="Tempoh Penggunaan">
                         <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
@@ -1813,7 +1824,7 @@ function renderApplicationTable() {
                                 <div class="feedback-notes" style="flex: 1; max-width: 400px; position: relative;">
                                     <div style="padding: 10px 15px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; font-style: italic; font-size: 0.75rem; color: #92400e; line-height: 1.5;">
                                         <i class="fas fa-quote-left" style="color: #fbd38d; margin-right: 8px;"></i>
-                                        ${fb.notes || 'Tiada cadangan penambahbaikan dikongsi.'}
+                                        ${escapeHTML(fb.notes) || 'Tiada cadangan penambahbaikan dikongsi.'}
                                     </div>
                                 </div>
                             </div>

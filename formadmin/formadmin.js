@@ -153,16 +153,27 @@ async function searchMicrosoftGraph(query, token, localMatches) {
 
 let lastSearchResults = [];
 
+// Security: Prevent XSS by escaping HTML special characters
+function escapeHTML(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function renderSuggestions(matches) {
     lastSearchResults = matches; // Simpan untuk kegunaan autoFill
     if (matches.length > 0) {
         suggestionsBox.innerHTML = matches.map(m => `
             <div class="suggestion-item" onclick="autoFillApplicant('${m.email.replace(/'/g, "\\'")}', '${m.source}')">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="s-name">${m.nama}</span>
-                    <span style="font-size: 0.6rem; background: ${m.source === 'Microsoft' ? '#0078d4' : '#64748b'}; color: white; padding: 2px 6px; border-radius: 10px; font-weight: 800;">${m.source.toUpperCase()}</span>
+                    <span class="s-name">${escapeHTML(m.nama)}</span>
+                    <span style="font-size: 0.6rem; background: ${m.source === 'Microsoft' ? '#0078d4' : '#64748b'}; color: white; padding: 2px 6px; border-radius: 10px; font-weight: 800;">${escapeHTML(m.source.toUpperCase())}</span>
                 </div>
-                <span class="s-email">${m.email}</span>
+                <span class="s-email">${escapeHTML(m.email)}</span>
             </div>
         `).join('');
         suggestionsBox.style.display = 'block';
@@ -676,6 +687,12 @@ async function fetchInitialData() {
    INIT
 ============================== */
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. CLEAN URL: Remove 'formadmin.html' from browser bar
+    if (window.location.pathname.endsWith('formadmin.html')) {
+        const cleanPath = window.location.pathname.replace('formadmin.html', '');
+        window.history.replaceState({}, '', cleanPath + window.location.hash);
+    }
+
     // --- 1. SET MIN DATE (LOCK PAST DATES) ---
     const now = new Date();
     // Format to YYYY-MM-DDTHH:MM
