@@ -1852,6 +1852,7 @@ function renderApplicationTable() {
     };
     updateCount('count-all', data.length);
     updateCount('count-aktif', activeData.length);
+    updateCount('count-akandatang', futureData.length);
     updateCount('count-lewat', delayedData.length);
     updateCount('count-selesai', completedData.length);
     updateCount('count-ditolak', rejectedData.length);
@@ -1895,6 +1896,9 @@ function renderApplicationTable() {
 
     // Also refresh dashboard stats
     renderDashboardStats();
+
+    // Refresh Calendar
+    renderCalendar();
 }
 
 function deleteApplication(btn, id) {
@@ -3825,7 +3829,8 @@ function filterApplicantTab(tab, updateHash = true) {
 
     // Tunjuk/Sembunyi kontainer mengikut tab
     const containers = {
-        'aktif': [document.getElementById('container-aktif'), document.getElementById('container-akandatang')],
+        'aktif': [document.getElementById('container-aktif')],
+        'akandatang': [document.getElementById('container-akandatang')],
         'lewat': [document.getElementById('container-lewat')],
         'selesai': [document.getElementById('container-selesai')],
         'ditolak': [document.getElementById('container-ditolak')]
@@ -3890,3 +3895,98 @@ function searchPemohon() {
         }
     }
 }
+
+/* ==============================
+   CALENDAR LOGIC
+============================== */
+let currentCalendarDate = new Date();
+
+function renderCalendar() {
+    const calendarMonthYear = document.getElementById('calendarMonthYear');
+    const calendarDays = document.getElementById('calendarDays');
+    if (!calendarMonthYear || !calendarDays) return;
+
+    const apps = getDB(DB_KEYS.APPS) || [];
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    const monthNames = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+    calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
+
+    // First day of month
+    const firstDay = new Date(year, month, 1).getDay();
+    // Days in month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Days in prev month
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    calendarDays.innerHTML = '';
+
+    // Prev month padding
+    for (let i = firstDay; i > 0; i--) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day other-month';
+        dayDiv.textContent = daysInPrevMonth - i + 1;
+        calendarDays.appendChild(dayDiv);
+    }
+
+    const today = new Date();
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.textContent = d;
+
+        // Highlight today
+        if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+            dayDiv.classList.add('today');
+        }
+
+        // Highlight applications (Blue)
+        const appsOnDate = apps.filter(app => {
+            if (!app.mula) return false;
+            const appDate = new Date(app.mula);
+            return appDate.getFullYear() === year && appDate.getMonth() === month && appDate.getDate() === d;
+        });
+
+        if (appsOnDate.length > 0) {
+            dayDiv.classList.add('has-app');
+            dayDiv.title = `${appsOnDate.length} Permohonan`;
+            const badge = document.createElement('span');
+            badge.className = 'app-count';
+            badge.textContent = `${appsOnDate.length} App`;
+            dayDiv.appendChild(badge);
+
+            // Add click event to see apps on that day
+            dayDiv.onclick = (e) => {
+                e.stopPropagation();
+                Swal.fire({
+                    title: `Permohonan pada ${d} ${monthNames[month]}`,
+                    html: `<div style="text-align:left; max-height: 300px; overflow-y: auto;">
+                        ${appsOnDate.map(a => `
+                            <div style="margin-bottom:10px; padding:12px; background:#f8fafc; border-radius:8px; border-left:4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <strong style="color:var(--primary);">${escapeHTML(a.nama)}</strong><br>
+                                <span style="font-size:0.8rem; color:var(--text-muted);"><i class="fas fa-laptop"></i> ${escapeHTML(a.model)} (${a.kuantiti} Unit)</span>
+                            </div>
+                        `).join('')}
+                    </div>`,
+                    icon: 'info'
+                });
+            };
+        }
+
+        calendarDays.appendChild(dayDiv);
+    }
+}
+
+window.prevMonth = function () {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    renderCalendar();
+};
+
+window.nextMonth = function () {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    renderCalendar();
+};

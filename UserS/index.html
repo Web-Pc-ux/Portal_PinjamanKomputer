@@ -152,6 +152,10 @@
                 <i class="fas fa-file-alt"></i>
                 <span>Permohonan</span>
             </div>
+            <div class="nav-item" data-section="akan-datang">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Akan Datang</span>
+            </div>
             <div class="nav-item" data-section="sejarah">
                 <i class="fas fa-history"></i>
                 <span>Sejarah</span>
@@ -172,6 +176,10 @@
         <div class="bottom-nav-item" data-section="permohonan">
             <i class="fas fa-list-ul"></i>
             <span>Permohonan</span>
+        </div>
+        <div class="bottom-nav-item" data-section="akan-datang">
+            <i class="fas fa-calendar-day"></i>
+            <span>Akan Datang</span>
         </div>
         <div class="bottom-nav-item" data-section="sejarah">
             <i class="fas fa-history"></i>
@@ -292,6 +300,35 @@
                         Memuatkan senarai permohonan...
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Section: Akan Datang -->
+        <section id="akan-datang" class="section">
+            <div class="table-container">
+                <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(79, 70, 229, 0.02);">
+                    <h3 style="display: flex; align-items: center; gap: 0.8rem; color: var(--primary);">
+                        <i class="fas fa-calendar-check"></i> Permohonan Akan Datang
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Senarai permohonan yang telah dijadualkan untuk tarikh hadapan.</p>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>No. Permohonan</th>
+                            <th>Tarikh Pinjam/Pulang</th>
+                            <th>Peralatan ICT</th>
+                            <th>Status</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="akanDatangTableBody">
+                        <!-- Data populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mobile-container" id="akanDatangMobileBody">
+                <!-- Mobile cards populated by JS -->
             </div>
         </section>
 

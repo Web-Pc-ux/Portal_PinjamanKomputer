@@ -315,7 +315,7 @@ function initializeDashboard(adminData) {
     setInterval(() => {
         console.log('🔄 Background Sync: Mengemaskini data...');
         fetchAllFromGAS();
-    }, 30000); 
+    }, 30000);
 
     // 3. Auto Logout Logic (Idle Monitor)
     initIdleMonitor();
@@ -356,7 +356,7 @@ function initIdleMonitor() {
 
         if (elapsedSeconds >= idleLimitSeconds) {
             isWarningShown = true;
-            
+
             let timerInterval;
             Swal.fire({
                 title: 'Amboii Senyap Je..',
@@ -3554,24 +3554,24 @@ async function logout() {
 function searchPemohon() {
     const input = document.getElementById('pemohonSearch').value.toLowerCase();
     const tables = ['applicantTableBody', 'delayedTableBody', 'completedTableBody', 'rejectedTableBody'];
-    
+
     let totalMatches = 0;
-    
+
     tables.forEach(tableId => {
         const tbody = document.getElementById(tableId);
         if (!tbody) return;
         const rows = tbody.querySelectorAll('tr');
-        
+
         let hasDataRows = false;
-        
+
         rows.forEach(row => {
             // Skip empty/loading placeholder rows
             if (row.cells.length === 1 && row.cells[0].colSpan > 1) {
                 if (input.length > 0) row.style.display = 'none';
-                else row.style.display = ''; 
+                else row.style.display = '';
                 return;
             }
-            
+
             hasDataRows = true;
             const textContent = row.textContent.toLowerCase();
             if (textContent.includes(input)) {
@@ -3581,14 +3581,14 @@ function searchPemohon() {
                 row.style.display = 'none';
             }
         });
-        
+
         // Handle showing placeholder if table is originally empty and we are not searching
         if (!hasDataRows && input.length === 0) {
             const placeholder = tbody.querySelector('tr td[colspan]');
             if (placeholder) placeholder.parentElement.style.display = '';
         }
     });
-    
+
     const errorMsg = document.getElementById('searchError');
     if (errorMsg) {
         if (input.length > 0 && totalMatches === 0) {
@@ -3607,7 +3607,7 @@ let isFetchingApps = false;
 async function fetchUserApplicationsFromGAS() {
     if (isFetchingApps) return;
     isFetchingApps = true;
-    
+
     const tbody = document.getElementById('userApplicationList');
     if (tbody && (!window.userAppsCache || window.userAppsCache.length === 0)) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Memuat turun data dari pelayan...</td></tr>';
@@ -3616,10 +3616,10 @@ async function fetchUserApplicationsFromGAS() {
     try {
         const response = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=all`);
         const result = await response.json();
-        
+
         if (result && result.status === 'success' && result.data && result.data.permohonan) {
             const apps = result.data.permohonan;
-            
+
             // Filter apps untuk user ini berdasarkan email ATAU id pemohon
             const session = localStorage.getItem('loggedInAdmin');
             let email = "test@ums.edu.my";
@@ -3629,29 +3629,29 @@ async function fetchUserApplicationsFromGAS() {
                 email = (userData.email || "").toLowerCase();
                 username = (userData.username || "").toLowerCase();
             }
-            
 
-            
+
+
             let userApps = apps.filter(a => {
                 const aEmail = String(a.email || "").toLowerCase();
                 const aUsername = String(a.username || "").toLowerCase();
-                const aNoPekerja = String(a.noPekerja || "").toLowerCase(); 
+                const aNoPekerja = String(a.noPekerja || "").toLowerCase();
                 // Semak extra untuk authEmail dari hidden field (Google Login)
                 const aAuthEmail = String(a.authEmail || "").toLowerCase();
-                
-                return (aEmail && aEmail === email) || 
-                       (aUsername && aUsername === username) || 
-                       (aNoPekerja && aNoPekerja === username) ||
-                       (aAuthEmail && aAuthEmail === email);
+
+                return (aEmail && aEmail === email) ||
+                    (aUsername && aUsername === username) ||
+                    (aNoPekerja && aNoPekerja === username) ||
+                    (aAuthEmail && aAuthEmail === email);
             });
-            
+
             // Cache data
             window.userAppsCache = userApps;
             renderUserApplicationsUI();
         }
     } catch (e) {
         console.error("Ralat menyambung ke Google Sheets:", e);
-        
+
         // Cubaan terakhir: gunakan data lokal jika pelayan gagal (offline fallback)
         const localApps = getDB('db_applicants') || [];
         if (localApps.length > 0) {
@@ -3670,24 +3670,30 @@ async function fetchUserApplicationsFromGAS() {
 
 function renderUserApplicationsUI() {
     let userApps = window.userAppsCache || [];
-    
-    // Filter data: Active vs History
-    const activeApps = userApps.filter(a => !['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak'].includes(a.status));
+
+    // Filter data: Active vs Akan Datang vs History
+    const activeApps = userApps.filter(a => !['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak', 'Akan Datang'].includes(a.status));
+    const upcomingApps = userApps.filter(a => a.status === 'Akan Datang');
     const historyApps = userApps.filter(a => ['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak'].includes(a.status));
 
     // Sorting: Newest first
     activeApps.sort((a, b) => b.id - a.id);
+    upcomingApps.sort((a, b) => b.id - a.id);
     historyApps.sort((a, b) => b.id - a.id);
 
     const tbody = document.getElementById('userApplicationList');
     const mobileContainer = document.getElementById('userApplicationListMobile');
+
+    const akanDatangTbody = document.getElementById('akanDatangTableBody');
+    const akanDatangMobile = document.getElementById('akanDatangMobileBody');
+
     const historyTbody = document.getElementById('userHistoryList');
     const historyMobileContainer = document.getElementById('userHistoryListMobile');
-    
+
     const generateRowHtml = (app, isHistory = false) => {
         let statusClass = 'status-waiting';
         let statusIcon = 'fa-clock';
-        
+
         const status = (app.status || 'Menunggu');
         if (['Lulus', 'Selesai', 'Dipulangkan', 'Disahkan'].includes(status)) {
             statusClass = 'status-approved';
@@ -3696,6 +3702,10 @@ function renderUserApplicationsUI() {
         if (['Tolak', 'Ditolak', 'Lewat'].includes(status)) {
             statusClass = 'status-danger';
             statusIcon = 'fa-exclamation-circle';
+        }
+        if (status === 'Akan Datang') {
+            statusClass = 'status-waiting'; // Blue/Default
+            statusIcon = 'fa-calendar-alt';
         }
 
         return `
@@ -3742,7 +3752,7 @@ function renderUserApplicationsUI() {
     const generateCardHtml = (app) => {
         let statusClass = 'status-waiting';
         let statusIcon = 'fa-clock';
-        
+
         const status = (app.status || 'Menunggu');
         if (['Lulus', 'Selesai', 'Dipulangkan', 'Disahkan'].includes(status)) {
             statusClass = 'status-approved';
@@ -3803,6 +3813,14 @@ function renderUserApplicationsUI() {
         mobileContainer.innerHTML = activeApps.length > 0 ? activeApps.map(generateCardHtml).join('') : '<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: #fff; border-radius: 16px; margin-top: 10px; border: 1px dashed var(--border);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-folder-open"></i></div>Tiada permohonan aktif.</div>';
     }
 
+    // Render Akan Datang Table
+    if (akanDatangTbody) {
+        akanDatangTbody.innerHTML = upcomingApps.length > 0 ? upcomingApps.map(app => generateRowHtml(app, false)).join('') : '<tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-calendar-day"></i></div>Tiada permohonan akan datang buat masa ini.</td></tr>';
+    }
+    if (akanDatangMobile) {
+        akanDatangMobile.innerHTML = upcomingApps.length > 0 ? upcomingApps.map(generateCardHtml).join('') : '<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: #fff; border-radius: 16px; margin-top: 10px; border: 1px dashed var(--border);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-calendar-times"></i></div>Tiada jadual akan datang.</div>';
+    }
+
     // Render History Table
     if (historyTbody) {
         historyTbody.innerHTML = historyApps.length > 0 ? historyApps.map(app => generateRowHtml(app, true)).join('') : '<tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-history"></i></div>Tiada sejarah permohonan ditemui.</td></tr>';
@@ -3815,10 +3833,10 @@ function renderUserApplicationsUI() {
     const latestApp = userApps[0]; // because it's sorted, newest/pending is at top
     const statusText = document.getElementById('statusPermohonanText');
     const notifBox = document.getElementById('userNotifications');
-    
+
     if (statusText) {
         let msg = 'Status Terkini: ' + latestApp.status + ' (No. Permohonan: ' + latestApp.noPermohonan + ')';
-        
+
         if ((latestApp.status === 'Dipinjam' || latestApp.status === 'Sedang Digunakan') && latestApp.authNamaPinjam) {
             msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah diambil oleh ${latestApp.authNamaPinjam} pada ${formatDate(latestApp.scanPinjam)}`;
         } else if ((latestApp.status === 'Selesai' || latestApp.status === 'Dipulangkan') && latestApp.authNamaPulang) {
@@ -3830,10 +3848,10 @@ function renderUserApplicationsUI() {
         } else if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
             msg = `Status Terkini: Permohonan Tidak Diluluskan (No: ${latestApp.noPermohonan})`;
         }
-        
+
         statusText.textContent = msg;
     }
-    
+
     if (notifBox) {
         if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
             notifBox.style.display = 'flex';
@@ -3842,8 +3860,8 @@ function renderUserApplicationsUI() {
             notifBox.style.borderLeftColor = 'var(--danger)';
             notifBox.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger); font-size: 1.5rem;"></i>' +
                 '<div>' +
-                    '<strong style="display: block; color: #991b1b; margin-bottom: 0.25rem;">Notifikasi Terkini</strong>' +
-                    '<span style="color: #b91c1c;">Permohonan anda (No: ' + latestApp.noPermohonan + ') tidak diluluskan. ' + (latestApp.catatanAdmin ? '<br>Catatan: ' + latestApp.catatanAdmin : '') + '</span>' +
+                '<strong style="display: block; color: #991b1b; margin-bottom: 0.25rem;">Notifikasi Terkini</strong>' +
+                '<span style="color: #b91c1c;">Permohonan anda (No: ' + latestApp.noPermohonan + ') tidak diluluskan. ' + (latestApp.catatanAdmin ? '<br>Catatan: ' + latestApp.catatanAdmin : '') + '</span>' +
                 '</div>';
         } else if (latestApp.status === 'Lulus') {
             notifBox.style.display = 'flex';
@@ -3852,8 +3870,8 @@ function renderUserApplicationsUI() {
             notifBox.style.borderLeftColor = '#22c55e';
             notifBox.innerHTML = '<i class="fas fa-check-circle" style="color: #166534; font-size: 1.5rem;"></i>' +
                 '<div>' +
-                    '<strong style="display: block; color: #166534; margin-bottom: 0.25rem;">Tahniah!</strong>' +
-                    '<span style="color: #166534;">Permohonan anda (No: ' + latestApp.noPermohonan + ') telah diluluskan. Sila ambil peralatan anda. ' + (latestApp.catatanAdmin ? '<br>Catatan: ' + latestApp.catatanAdmin : '') + '</span>' +
+                '<strong style="display: block; color: #166534; margin-bottom: 0.25rem;">Tahniah!</strong>' +
+                '<span style="color: #166534;">Permohonan anda (No: ' + latestApp.noPermohonan + ') telah diluluskan. Sila ambil peralatan anda. ' + (latestApp.catatanAdmin ? '<br>Catatan: ' + latestApp.catatanAdmin : '') + '</span>' +
                 '</div>';
         } else if (latestApp.status === 'Dipulangkan' || latestApp.status === 'Selesai') {
             notifBox.style.display = 'flex';
@@ -3862,8 +3880,8 @@ function renderUserApplicationsUI() {
             notifBox.style.borderLeftColor = '#0ea5e9';
             notifBox.innerHTML = '<i class="fas fa-info-circle" style="color: #0369a1; font-size: 1.5rem;"></i>' +
                 '<div>' +
-                    '<strong style="display: block; color: #0369a1; margin-bottom: 0.25rem;">Makluman</strong>' +
-                    '<span style="color: #0369a1;">Peralatan untuk permohonan (No: ' + latestApp.noPermohonan + ') telah dipulangkan / selesai. Terima kasih.</span>' +
+                '<strong style="display: block; color: #0369a1; margin-bottom: 0.25rem;">Makluman</strong>' +
+                '<span style="color: #0369a1;">Peralatan untuk permohonan (No: ' + latestApp.noPermohonan + ') telah dipulangkan / selesai. Terima kasih.</span>' +
                 '</div>';
         } else {
             notifBox.style.display = 'none';
@@ -3871,42 +3889,42 @@ function renderUserApplicationsUI() {
     }
 }
 
-window.viewUserApp = function(appId) {
+window.viewUserApp = function (appId) {
     const apps = window.userAppsCache || [];
     // Dalam GAS, id mungkin string, jadi kita guna == berbanding ===
     const app = apps.find(a => a.id == appId);
     if (!app) return;
-    
+
     let statusClass = 'status-waiting';
     if (app.status === 'Lulus' || app.status === 'Selesai' || app.status === 'Dipulangkan') statusClass = 'status-approved';
     if (app.status === 'Sedang Digunakan') statusClass = 'status-warning';
     if (app.status === 'Tolak' || app.status === 'Ditolak' || app.status === 'Lewat') statusClass = 'status-danger';
 
     let html = '<div style="text-align: left; font-size: 0.9rem;">' +
-            '<div style="background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary);">' +
-                '<p style="margin: 0;"><strong>No. Permohonan:</strong> ' + (app.noPermohonan || '-') + '</p>' +
-                '<p style="margin: 0; font-size: 0.8rem; color: #64748b;">Status: <span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></p>' +
-            '</div>' +
-            '<p><strong>Tarikh Mohon:</strong> ' + formatDate(app.mula) + ' hingga ' + formatDate(app.tamat) + '</p>' +
-            '<p><strong>Model:</strong> ' + (app.model || '-') + '</p>' +
-            '<p><strong>Kuantiti:</strong> ' + (app.kuantiti ? app.kuantiti.replace(/<br\s*\/?>/gi, ', ').replace(/&bull;/g, '•') : '-') + '</p>' +
-            (app.siri && app.siri !== '-' ? '<p><strong>No. Siri/PC:</strong> <span style="font-family: monospace; background: #fef9c3; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #854d0e;">' + app.siri + '</span></p>' : '') +
-            '<p><strong>Tujuan:</strong> ' + (app.tujuan || '-') + '</p>' +
-            '<p><strong>Lokasi:</strong> ' + (app.lokasi || '-') + '</p>' +
-            '<p><strong>Catatan Admin:</strong> ' + (app.catatanAdmin || '-') + '</p>';
-            
+        '<div style="background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary);">' +
+        '<p style="margin: 0;"><strong>No. Permohonan:</strong> ' + (app.noPermohonan || '-') + '</p>' +
+        '<p style="margin: 0; font-size: 0.8rem; color: #64748b;">Status: <span class="badge ' + statusClass + '">' + (app.status || 'Menunggu') + '</span></p>' +
+        '</div>' +
+        '<p><strong>Tarikh Mohon:</strong> ' + formatDate(app.mula) + ' hingga ' + formatDate(app.tamat) + '</p>' +
+        '<p><strong>Model:</strong> ' + (app.model || '-') + '</p>' +
+        '<p><strong>Kuantiti:</strong> ' + (app.kuantiti ? app.kuantiti.replace(/<br\s*\/?>/gi, ', ').replace(/&bull;/g, '•') : '-') + '</p>' +
+        (app.siri && app.siri !== '-' ? '<p><strong>No. Siri/PC:</strong> <span style="font-family: monospace; background: #fef9c3; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #854d0e;">' + app.siri + '</span></p>' : '') +
+        '<p><strong>Tujuan:</strong> ' + (app.tujuan || '-') + '</p>' +
+        '<p><strong>Lokasi:</strong> ' + (app.lokasi || '-') + '</p>' +
+        '<p><strong>Catatan Admin:</strong> ' + (app.catatanAdmin || '-') + '</p>';
+
     // Maklumat Ambil/Pulang (Jika sudah di-scan)
     if (app.scanPinjam || app.scanPulang) {
         html += '<div style="margin-top: 15px; padding: 12px; background: #fdf2f2; border-radius: 8px; border: 1px solid #fee2e2;">';
         html += '<h4 style="font-size: 0.85rem; color: #b91c1c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><i class="fas fa-clipboard-check"></i> Maklumat Pengesahan Ambil/Pulang</h4>';
-        
+
         if (app.scanPinjam) {
             html += `<div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #fecaca;">`;
             html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Nama Pengambil:</strong> ${app.authNamaPinjam || '-'}</p>`;
             html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Tarikh Ambil:</strong> ${formatDate(app.scanPinjam)}</p>`;
             html += `</div>`;
         }
-        
+
         if (app.scanPulang) {
             html += `<div>`;
             html += `<p style="font-size: 0.8rem; margin: 0;"><strong>Nama Pemulang:</strong> ${app.authNamaPulang || '-'}</p>`;
@@ -3934,7 +3952,7 @@ window.viewUserApp = function(appId) {
             </div>
         `;
     }
-    
+
     // Butang Cetak Borang (Hanya jika sudah diluluskan/proses)
     const isProcessed = (app.status === 'Lulus' || app.status === 'Sedang Digunakan' || app.status === 'Dipulangkan' || app.status === 'Selesai');
     if (isProcessed) {
@@ -3946,7 +3964,7 @@ window.viewUserApp = function(appId) {
             </div>
         `;
     }
-    
+
     html += '</div>';
 
     Swal.fire({
@@ -3957,7 +3975,7 @@ window.viewUserApp = function(appId) {
     });
 }
 
-window.cancelUserApp = function(id) {
+window.cancelUserApp = function (id) {
     Swal.fire({
         title: 'Batal Permohonan?',
         text: "Adakah anda pasti mahu membatalkan permohonan ini? Data akan dibuang dari sistem secara kekal.",
@@ -3970,7 +3988,7 @@ window.cancelUserApp = function(id) {
         if (result.isConfirmed) {
             // Sync to GAS (Delete)
             syncToGAS({ id: id }, 'delete', 'permohonan');
-            
+
             Swal.fire({
                 title: 'Berjaya!',
                 text: 'Permohonan anda telah dibatalkan.',
@@ -3978,14 +3996,14 @@ window.cancelUserApp = function(id) {
                 timer: 2000,
                 showConfirmButton: false
             });
-            
+
             // Refresh data
             setTimeout(fetchUserApplicationsFromGAS, 1000);
         }
     });
 }
 
-window.editUserApp = function(id) {
+window.editUserApp = function (id) {
     // Redirect ke borang dengan ID untuk mod edit
     window.location.href = `../formuser/index.html?id=${id}`;
 }

@@ -283,28 +283,56 @@
             z-index: 100;
             animation: starPop 1s ease-out forwards;
         }
+
         .error-msg {
             animation: slideIn 0.3s ease-out, shake 0.4s ease-in-out;
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-4px); }
-            40%, 80% { transform: translateX(4px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-4px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(4px);
+            }
         }
 
-        .verify-card, .success-card {
+        .verify-card,
+        .success-card {
             animation: fadeInScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         /* Signature Pad Styles */
@@ -363,10 +391,12 @@
             .main-wrapper {
                 padding: 1rem 0.5rem;
             }
+
             .verify-card {
                 padding: 1.25rem;
                 border-radius: 12px;
             }
+
             .footer-text {
                 font-size: 0.7rem;
                 padding: 1rem 0.5rem;
@@ -378,180 +408,194 @@
 <body>
     <div class="main-wrapper">
         <div class="verify-card" id="mainCard">
-        <div class="verify-header">
-            <img src="../Pictrure/Logo Digital UMS.png" class="logo" />
-            <i id="headerIcon" class="fas fa-file-signature"></i>
-            <h2 id="pageTitle">Pengesahan</h2>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">Sila semak maklumat dan sahkan di bawah.</p>
+            <div class="verify-header">
+                <img src="../Pictrure/Logo Digital UMS.png" class="logo" />
+                <i id="headerIcon" class="fas fa-file-signature"></i>
+                <h2 id="pageTitle">Pengesahan</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Sila semak maklumat dan sahkan di bawah.</p>
+            </div>
+
+            <div id="loading" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin"></i> Memuatkan data...
+            </div>
+
+            <div id="content" style="display: none;">
+                <div class="info-row">
+                    <span class="info-label">No. Permohonan</span>
+                    <span class="info-value" id="dispNo"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Penama Pinjam</span>
+                    <span class="info-value" id="dispNama"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Model & Kuantiti</span>
+                    <span class="info-value" id="dispItem"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tarikh Pinjam</span>
+                    <span class="info-value" id="dispMula"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tarikh Pulang</span>
+                    <span class="info-value" id="dispTamat"></span>
+                </div>
+
+                <!-- Table bernama scan - dibawah area mula -->
+                <div id="scanArea"
+                    style="display: none; margin: 1.5rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                    <div class="scan-area-title">
+                        <i class="fas fa-clock"></i> Rekod Imbasan (Scan)
+                    </div>
+                    <table id="scan" class="scan-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Tarikh & Masa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scanBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Table Rating (Hidden by default, used in success state) -->
+                <div id="feedbackResultArea"
+                    style="display: none; margin: 1rem 0; padding: 1rem; background: #fff7ed; border-radius: 12px; border: 1px dashed #fdba74;">
+                    <div class="scan-area-title" style="color: #ea580c;">
+                        <i class="fas fa-star"></i> Maklumbalas Anda
+                    </div>
+                    <table class="scan-table">
+                        <thead>
+                            <tr>
+                                <th>Perkara</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbackBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="signatureSection" class="signature-container">
+                    <div class="scan-area-title">
+                        <i class="fas fa-pen-nib"></i> Sila Tandatangan Di Bawah
+                    </div>
+                    <div class="signature-pad-wrapper">
+                        <canvas id="signature-pad"></canvas>
+                    </div>
+                    <div class="signature-actions">
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">Gunakan jari atau stylus anda</span>
+                        <button type="button" class="clear-btn" id="clearSignature">Padam Pad</button>
+                    </div>
+                </div>
+
+                <!-- Feedback Section (Pulang Only) -->
+                <div id="feedbackSection" class="feedback-section" style="display: none;">
+                    <div class="feedback-title">D. Maklumbalas Pengguna</div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem;">Maklumbalas anda
+                        adalah
+                        penting bagi penambahbaikan mutu perkhidmatan kami.</p>
+
+                    <div class="rating-group" data-rating-id="kemudahan">
+                        <label class="rating-label">1. Kemudahan (Peralatan yang dipinjam) <span
+                                style="color: #ef4444;">*</span></label>
+                        <div class="rating-options">
+                            <button class="rating-btn" onclick="setRating('kemudahan', 1)">1 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('kemudahan', 2)">2 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('kemudahan', 3)">3 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('kemudahan', 4)">4 <i
+                                    class="fas fa-star"></i></button>
+                        </div>
+                        <div class="error-msg" id="err-kemudahan"
+                            style="color: #ef4444; font-size: 0.7rem; margin-top: 5px; display: none;"><i
+                                class="fas fa-exclamation-triangle"></i> Sila pilih tahap kepuasan anda</div>
+                    </div>
+
+                    <div class="rating-group" data-rating-id="penyampaian">
+                        <label class="rating-label">2. Penyampaian <span style="color: #ef4444;">*</span></label>
+                        <div class="rating-options">
+                            <button class="rating-btn" onclick="setRating('penyampaian', 1)">1 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('penyampaian', 2)">2 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('penyampaian', 3)">3 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('penyampaian', 4)">4 <i
+                                    class="fas fa-star"></i></button>
+                        </div>
+                        <div class="error-msg" id="err-penyampaian"
+                            style="color: #ef4444; font-size: 0.7rem; margin-top: 5px; display: none;"><i
+                                class="fas fa-exclamation-triangle"></i> Sila pilih tahap kepuasan anda</div>
+                    </div>
+
+                    <div class="rating-group" data-rating-id="keseluruhan">
+                        <label class="rating-label">3. Keseluruhan <span style="color: #ef4444;">*</span></label>
+                        <div class="rating-options">
+                            <button class="rating-btn" onclick="setRating('keseluruhan', 1)">1 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('keseluruhan', 2)">2 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('keseluruhan', 3)">3 <i
+                                    class="fas fa-star"></i></button>
+                            <button class="rating-btn" onclick="setRating('keseluruhan', 4)">4 <i
+                                    class="fas fa-star"></i></button>
+                        </div>
+                        <div class="error-msg" id="err-keseluruhan"
+                            style="color: #ef4444; font-size: 0.7rem; margin-top: 5px; display: none;"><i
+                                class="fas fa-exclamation-triangle"></i> Sila pilih tahap kepuasan anda</div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label class="rating-label">Cadangan Penambahbaikan (Jika ada)</label>
+                        <textarea id="feedbackNotes" class="feedback-textarea"
+                            placeholder="Tuliskan cadangan anda di sini..."></textarea>
+                    </div>
+
+                    <div class="help-question">
+                        <label class="rating-label" style="color: #166534;">Adakah kami membantu anda? <span
+                                style="color: #ef4444;">*</span></label>
+                        <div class="help-options">
+                            <button class="help-btn" onclick="setHelpOption('YA')">YA</button>
+                            <button class="help-btn" onclick="setHelpOption('TIDAK')">TIDAK</button>
+                            <button class="help-btn" onclick="setHelpOption('BELUM PASTI')">BELUM PASTI</button>
+                        </div>
+                        <div class="error-msg" id="err-help"
+                            style="color: #ef4444; font-size: 0.7rem; margin-top: 8px; display: none;"><i
+                                class="fas fa-exclamation-triangle"></i> Sila pilih salah satu jawapan</div>
+                    </div>
+
+                    <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem; text-align: center;">1 =
+                        Kurang
+                        Memuaskan | 2 = Memuaskan | 3 = Baik | 4 = Sangat Baik</p>
+                </div>
+
+
+                <div class="terms-box">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="termsCheck" style="width: 20px; height: 20px;">
+                        <span id="termsText"></span>
+                    </label>
+                </div>
+
+                <button class="btn btn-primary submit-btn" id="btnSubmit" onclick="submitVerify()">
+                    Hantar & Sahkan
+                </button>
+            </div>
+
+            <div id="successState">
+                <i class="fas fa-check-circle"
+                    style="font-size: 5rem; color: var(--success); margin-bottom: 1.5rem;"></i>
+                <h3>Berjaya Disahkan!</h3>
+                <p style="margin: 1rem 0; color: var(--text-muted);">Masa dan tarikh telah direkodkan secara automatik
+                    ke
+                    dalam sistem.</p>
+                <button class="btn btn-outline" onclick="window.close()">Tutup Halaman</button>
+            </div>
         </div>
 
-        <div id="loading" style="text-align: center; padding: 2rem;">
-            <i class="fas fa-spinner fa-spin"></i> Memuatkan data...
-        </div>
-
-        <div id="content" style="display: none;">
-            <div class="info-row">
-                <span class="info-label">No. Permohonan</span>
-                <span class="info-value" id="dispNo"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Penama Pinjam</span>
-                <span class="info-value" id="dispNama"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Model & Kuantiti</span>
-                <span class="info-value" id="dispItem"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Tarikh Pinjam</span>
-                <span class="info-value" id="dispMula"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Tarikh Pulang</span>
-                <span class="info-value" id="dispTamat"></span>
-            </div>
-
-            <!-- Table bernama scan - dibawah area mula -->
-            <div id="scanArea"
-                style="display: none; margin: 1.5rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
-                <div class="scan-area-title">
-                    <i class="fas fa-clock"></i> Rekod Imbasan (Scan)
-                </div>
-                <table id="scan" class="scan-table">
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th>Tarikh & Masa</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scanBody"></tbody>
-                </table>
-            </div>
-
-            <!-- Table Rating (Hidden by default, used in success state) -->
-            <div id="feedbackResultArea"
-                style="display: none; margin: 1rem 0; padding: 1rem; background: #fff7ed; border-radius: 12px; border: 1px dashed #fdba74;">
-                <div class="scan-area-title" style="color: #ea580c;">
-                    <i class="fas fa-star"></i> Maklumbalas Anda
-                </div>
-                <table class="scan-table">
-                    <thead>
-                        <tr>
-                            <th>Perkara</th>
-                            <th>Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody id="feedbackBody"></tbody>
-                </table>
-            </div>
-
-            <div id="signatureSection" class="signature-container">
-                <div class="scan-area-title">
-                    <i class="fas fa-pen-nib"></i> Sila Tandatangan Di Bawah
-                </div>
-                <div class="signature-pad-wrapper">
-                    <canvas id="signature-pad"></canvas>
-                </div>
-                <div class="signature-actions">
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Gunakan jari atau stylus anda</span>
-                    <button type="button" class="clear-btn" id="clearSignature">Padam Pad</button>
-                </div>
-            </div>
-
-            <!-- Feedback Section (Pulang Only) -->
-            <div id="feedbackSection" class="feedback-section" style="display: none;">
-                <div class="feedback-title">D. Maklumbalas Pengguna</div>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem;">Maklumbalas anda adalah
-                    penting bagi penambahbaikan mutu perkhidmatan kami.</p>
-
-                <div class="rating-group" data-rating-id="kemudahan">
-                    <label class="rating-label">1. Kemudahan (Peralatan yang dipinjam) <span style="color: #ef4444;">*</span></label>
-                    <div class="rating-options">
-                        <button class="rating-btn" onclick="setRating('kemudahan', 1)">1 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('kemudahan', 2)">2 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('kemudahan', 3)">3 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('kemudahan', 4)">4 <i
-                                class="fas fa-star"></i></button>
-                    </div>
-                    <div class="error-msg" id="err-kemudahan" style="color: #ef4444; font-size: 0.7rem; margin-top: 5px; display: none;"><i class="fas fa-exclamation-triangle"></i> Sila pilih tahap kepuasan anda</div>
-                </div>
-
-                <div class="rating-group" data-rating-id="penyampaian">
-                    <label class="rating-label">2. Penyampaian <span style="color: #ef4444;">*</span></label>
-                    <div class="rating-options">
-                        <button class="rating-btn" onclick="setRating('penyampaian', 1)">1 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('penyampaian', 2)">2 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('penyampaian', 3)">3 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('penyampaian', 4)">4 <i
-                                class="fas fa-star"></i></button>
-                    </div>
-                    <div class="error-msg" id="err-penyampaian" style="color: #ef4444; font-size: 0.7rem; margin-top: 5px; display: none;"><i class="fas fa-exclamation-triangle"></i> Sila pilih tahap kepuasan anda</div>
-                </div>
-
-                <div class="rating-group" data-rating-id="keseluruhan">
-                    <label class="rating-label">3. Keseluruhan <span style="color: #ef4444;">*</span></label>
-                    <div class="rating-options">
-                        <button class="rating-btn" onclick="setRating('keseluruhan', 1)">1 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('keseluruhan', 2)">2 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('keseluruhan', 3)">3 <i
-                                class="fas fa-star"></i></button>
-                        <button class="rating-btn" onclick="setRating('keseluruhan', 4)">4 <i
-                                class="fas fa-star"></i></button>
-                    </div>
-                    <div class="error-msg" id="err-keseluruhan" style="color: #ef4444; font-size: 0.7rem; margin-top: 5px; display: none;"><i class="fas fa-exclamation-triangle"></i> Sila pilih tahap kepuasan anda</div>
-                </div>
-
-                <div class="rating-group">
-                    <label class="rating-label">Cadangan Penambahbaikan (Jika ada)</label>
-                    <textarea id="feedbackNotes" class="feedback-textarea"
-                        placeholder="Tuliskan cadangan anda di sini..."></textarea>
-                </div>
-
-                <div class="help-question">
-                    <label class="rating-label" style="color: #166534;">Adakah kami membantu anda? <span style="color: #ef4444;">*</span></label>
-                    <div class="help-options">
-                        <button class="help-btn" onclick="setHelpOption('YA')">YA</button>
-                        <button class="help-btn" onclick="setHelpOption('TIDAK')">TIDAK</button>
-                        <button class="help-btn" onclick="setHelpOption('BELUM PASTI')">BELUM PASTI</button>
-                    </div>
-                    <div class="error-msg" id="err-help" style="color: #ef4444; font-size: 0.7rem; margin-top: 8px; display: none;"><i class="fas fa-exclamation-triangle"></i> Sila pilih salah satu jawapan</div>
-                </div>
-
-                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem; text-align: center;">1 = Kurang
-                    Memuaskan | 2 = Memuaskan | 3 = Baik | 4 = Sangat Baik</p>
-            </div>
-
-
-            <div class="terms-box">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="termsCheck" style="width: 20px; height: 20px;">
-                    <span id="termsText"></span>
-                </label>
-            </div>
-
-            <button class="btn btn-primary submit-btn" id="btnSubmit" onclick="submitVerify()">
-                Hantar & Sahkan
-            </button>
-        </div>
-
-        <div id="successState">
-            <i class="fas fa-check-circle" style="font-size: 5rem; color: var(--success); margin-bottom: 1.5rem;"></i>
-            <h3>Berjaya Disahkan!</h3>
-            <p style="margin: 1rem 0; color: var(--text-muted);">Masa dan tarikh telah direkodkan secara automatik ke
-                dalam sistem.</p>
-            <button class="btn btn-outline" onclick="window.close()">Tutup Halaman</button>
-        </div>
-    </div>
-
-        </div> <!-- End of Success/Content cards -->
+    </div> <!-- End of Success/Content cards -->
     </div> <!-- End of main-wrapper -->
 
     <footer class="footer-text" id="qrFooter"
@@ -659,7 +703,7 @@
             }
 
             window.currentApp = app;
-            
+
             // Inisialisasi Signature Pad
             const canvas = document.getElementById('signature-pad');
             const signaturePad = new SignaturePad(canvas, {
@@ -694,13 +738,13 @@
                 if (document.getElementById('feedbackSection')) document.getElementById('feedbackSection').style.display = 'none';
                 if (document.getElementById('signatureSection')) document.getElementById('signatureSection').style.display = 'none';
                 document.getElementById('termsCheck').disabled = true;
-                
+
                 const btn = document.getElementById('btnSubmit');
                 btn.disabled = true;
                 btn.style.background = '#94a3b8';
                 btn.style.cursor = 'not-allowed';
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> REKOD INI TELAH DISAHKAN';
-                
+
                 // Tambah mesej makluman di atas butang
                 const infoMsg = document.createElement('div');
                 infoMsg.style.cssText = 'background:#f0f9ff; color:#0369a1; padding:1rem; border-radius:12px; border:1px solid #bae6fd; margin-bottom:1rem; font-size:0.85rem; display:flex; align-items:center; gap:0.75rem;';
@@ -808,7 +852,7 @@
 
             const btn = document.getElementById('btnSubmit');
             const originalHtml = btn.innerHTML;
-            
+
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menunggu Microsoft...';
@@ -816,7 +860,7 @@
                 // Semakan maklumbalas jika jenis 'pulang' (Per seksyen)
                 if (type === 'pulang') {
                     let hasError = false;
-                    
+
                     ['kemudahan', 'penyampaian', 'keseluruhan'].forEach(id => {
                         const errEl = document.getElementById('err-' + id);
                         if (!ratings[id]) {
@@ -851,10 +895,10 @@
                 const provider = new firebase.auth.OAuthProvider('microsoft.com');
                 provider.addScope('email');
                 provider.addScope('User.Read');
-                
+
                 const result = await firebase.auth().signInWithPopup(provider);
                 const user = result.user;
-                
+
                 let authEmail = user.email;
                 if (!authEmail && result.additionalUserInfo && result.additionalUserInfo.profile) {
                     authEmail = result.additionalUserInfo.profile.mail || result.additionalUserInfo.profile.userPrincipalName;

@@ -91,7 +91,6 @@ body {
 .form-title {
     text-align: center;
     font-size: 12pt;
-    text-decoration: underline;
     margin: 20px 0;
     line-height: 1.4;
     text-transform: uppercase;
@@ -106,7 +105,6 @@ body {
 .terms-section h4 {
     margin: 0 0 5px 0;
     font-style: italic;
-    text-decoration: underline;
 }
 
 .terms-section ul {

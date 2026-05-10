@@ -53,19 +53,35 @@ async function loadApplicationData(id) {
     setText('borang-no', app.noPermohonan || '_____');
 
     // Populate Digital Audit Info (Jika ada)
-    setText('print-authNamaPinjam', app.authNamaPinjam || '______________________');
-    setText('print-scanPinjam', formatDate(app.scanPinjam) || '______________________');
-    setSignature('print-sigPinjam', app.signaturePinjam);
-    
-    setText('print-authNamaPulang', app.authNamaPulang || '______________________');
-    setText('print-scanPulang', formatDate(app.scanPulang) || '______________________');
-    setSignature('print-sigPulang', app.signaturePulang);
+    // Seksyen Pinjam
+    if (app.authNamaPinjam || app.adminNamaPinjam) {
+        setText('print-adminNama', app.adminNamaPinjam || app.authNamaPinjam);
+        setText('print-adminTarikh', formatDate(app.adminTarikhPinjam || app.scanPinjam));
+        const adminSigPinjam = document.getElementById('print-adminSigPinjam');
+        if (adminSigPinjam) adminSigPinjam.style.display = 'inline';
+
+        setText('print-authNamaPinjam', app.authNamaPinjam || '______________________');
+        setText('print-scanPinjam', formatDate(app.scanPinjam) || '______________________');
+        setSignature('print-sigPinjam', app.signaturePinjam);
+    }
+
+    // Seksyen Pulang
+    if (app.authNamaPulang || app.adminNamaPulang) {
+        setText('print-adminNamaPulang', app.adminNamaPulang || app.authNamaPulang);
+        setText('print-adminTarikhPulang', formatDate(app.adminTarikhPulang || app.scanPulang));
+        const adminSigPulang = document.getElementById('print-adminSigPulang');
+        if (adminSigPulang) adminSigPulang.style.display = 'inline';
+
+        setText('print-authNamaPulang', app.authNamaPulang || '______________________');
+        setText('print-scanPulang', formatDate(app.scanPulang) || '______________________');
+        setSignature('print-sigPulang', app.signaturePulang);
+    }
 
     // Populate Feedback Section D
     if (app.feedback) {
         try {
             const fb = JSON.parse(app.feedback);
-            
+
             // Bulatkan Rating
             if (fb.ratings) {
                 if (fb.ratings.kemudahan) circleElement(`rate-kemudahan-${fb.ratings.kemudahan}`);
