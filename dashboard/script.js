@@ -333,7 +333,7 @@ function initializeDashboard(adminData) {
     setInterval(() => {
         console.log('🔄 Background Sync: Mengemaskini data...');
         fetchAllFromGAS();
-    }, 30000); 
+    }, 30000);
 
     // Burger Menu Logic
     burgerBtn.addEventListener('click', () => {
@@ -353,6 +353,12 @@ function initializeDashboard(adminData) {
 
     // 3. Auto Logout Logic (Idle Monitor)
     initIdleMonitor();
+
+    // Initialize Report Filters Default Values
+    const monthSelect = document.getElementById('rptMonth');
+    const yearSelect = document.getElementById('rptYear');
+    if (monthSelect) monthSelect.value = new Date().getMonth();
+    if (yearSelect) yearSelect.value = new Date().getFullYear();
 }
 
 function hideGlobalLoader() {
@@ -1321,6 +1327,13 @@ function renderAllUI() {
     renderComputerTable();
     renderCategoryTable();
     renderAdminTable();
+    populateReportYearDropdown();
+
+    // Refresh Python Report (Stats + Table + Chart)
+    if (window.refreshPythonReport) {
+        window.refreshPythonReport();
+    }
+
     loadSettings();
 }
 
@@ -1365,6 +1378,22 @@ let CORE_DATA = {
     [DB_KEYS.ADMINS]: [],
     [DB_KEYS.CATS]: []
 };
+
+function getAppsJSON() {
+    try {
+        // Gunakan filteredReportData jika ada (walaupun kosong jika itu hasil tapis)
+        // Kita perlukan flag untuk tahu jika tapis sedang aktif
+        const isFilterActive = document.getElementById('rptSearch').value !== '' ||
+            document.getElementById('rptDateFrom').value !== '' ||
+            document.getElementById('rptStatus').value !== 'semua';
+
+        const apps = isFilterActive ? filteredReportData : getDB(DB_KEYS.APPS);
+        return JSON.stringify(apps);
+    } catch (e) {
+        console.error("Error stringifying apps:", e);
+        return "[]";
+    }
+}
 
 function getDB(key) {
     // 1. Cuba ambil dari Memory (Laju)
@@ -1431,7 +1460,8 @@ function renderDashboardStats() {
     const apps = getDB(DB_KEYS.APPS);
 
     const countBaru = apps.filter(a => a.status === 'Menunggu' || a.status === 'Baru').length;
-    const countLulus = apps.filter(a => a.status === 'Lulus').length;
+    const countAkanDatang = apps.filter(a => a.status === 'Akan Datang').length;
+    const countLulus = apps.filter(a => a.status === 'Lulus' || a.status === 'Sedang Digunakan').length;
     const countDipulangkan = apps.filter(a => a.status === 'Dipulangkan').length;
     const countLewat = apps.filter(a => a.status === 'Lewat').length;
     const countDitolak = apps.filter(a => a.status === 'Ditolak' || a.status === 'Tolak').length;
@@ -1450,8 +1480,8 @@ function renderDashboardStats() {
     // Update notification
     const notifEl = document.getElementById('actionNotifications');
     if (notifEl) {
-        if (countBaru > 0) {
-            notifEl.innerHTML = `<p style="color: var(--warning); font-size: 0.875rem;"><i class="fas fa-exclamation-triangle"></i> <strong>${countBaru}</strong> permohonan baru menunggu kelulusan.</p>`;
+        if (countBaru > 0 || countAkanDatang > 0) {
+            notifEl.innerHTML = `<p style="color: var(--warning); font-size: 0.875rem;"><i class="fas fa-exclamation-triangle"></i> <strong>${countBaru}</strong> baru & <strong>${countAkanDatang}</strong> akan datang.</p>`;
         } else {
             notifEl.innerHTML = `<p style="color: var(--text-muted); font-size: 0.875rem;">Tiada tindakan segera diperlukan.</p>`;
         }
@@ -1502,8 +1532,8 @@ function renderAdminTable() {
     table.innerHTML = data.map(admin => {
         // Pengecaman "SAYA" yang lebih unik (Guna Email/Username dahulu)
         const isAdminMatch = (admin.email && currentUser.email && admin.email.toLowerCase().trim() === currentUser.email.toLowerCase().trim()) ||
-                            (admin.username && currentUser.username && admin.username.toLowerCase().trim() === currentUser.username.toLowerCase().trim());
-        
+            (admin.username && currentUser.username && admin.username.toLowerCase().trim() === currentUser.username.toLowerCase().trim());
+
         const isMe = currentUser && isAdminMatch;
 
         return `
@@ -1641,16 +1671,18 @@ function renderCategoryTable() {
 ============================== */
 function renderApplicationTable() {
     const activeTable = document.getElementById('applicantTableBody');
+    const futureTable = document.getElementById('futureTableBody');
     const completedTable = document.getElementById('completedTableBody');
     const delayedTable = document.getElementById('delayedTableBody');
     const rejectedTable = document.getElementById('rejectedTableBody');
 
-    if (!activeTable || !completedTable || !delayedTable || !rejectedTable) return;
+    if (!activeTable || !futureTable || !completedTable || !delayedTable || !rejectedTable) return;
 
     const data = getDB(DB_KEYS.APPS);
 
     // Filter data
-    const activeData = data.filter(app => !['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak', 'Lewat'].includes(app.status));
+    const activeData = data.filter(app => !['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak', 'Lewat', 'Akan Datang'].includes(app.status));
+    const futureData = data.filter(app => app.status === 'Akan Datang');
     const completedData = data.filter(app => ['Selesai', 'Dipulangkan'].includes(app.status));
     const delayedData = data.filter(app => app.status === 'Lewat');
     const rejectedData = data.filter(app => app.status === 'Ditolak' || app.status === 'Tolak');
@@ -1797,6 +1829,7 @@ function renderApplicationTable() {
 
     // Render all tables
     renderRows(activeData, activeTable, 'Tiada permohonan aktif.');
+    renderRows(futureData, futureTable, 'Tiada rekod akan datang.');
     renderRows(completedData, completedTable, 'Tiada rekod selesai.');
     renderRows(delayedData, delayedTable, 'Tiada rekod lewat.');
     renderRows(rejectedData, rejectedTable, 'Tiada rekod ditolak.');
@@ -1811,6 +1844,18 @@ function renderApplicationTable() {
     updateCount('count-lewat', delayedData.length);
     updateCount('count-selesai', completedData.length);
     updateCount('count-ditolak', rejectedData.length);
+
+    // Toggle Warning Icon on Tab
+    const warnIcon = document.getElementById('warn-lewat');
+    if (warnIcon) {
+        if (delayedData.length > 0) {
+            warnIcon.style.display = 'inline-block';
+            warnIcon.classList.add('blink');
+        } else {
+            warnIcon.style.display = 'none';
+            warnIcon.classList.remove('blink');
+        }
+    }
 
     // Paparan Amaran Lewat (Tanda Peringatan Merah)
     const lateContainer = document.getElementById('lateAlertContainer');
@@ -1888,12 +1933,14 @@ function deleteApplication(btn, id) {
 }
 
 function getStatusClass(status) {
-    if (status === 'Menunggu' || status === 'Baru') return 'waiting';
-    if (status === 'Lulus') return 'approved';
-    if (status === 'Ditolak' || status === 'Tolak') return 'danger';
-    if (status === 'Dipulangkan' || status === 'Selesai') return 'info';
-    if (status === 'Sedang Digunakan') return 'warning';
-    if (status === 'Lewat') return 'danger';
+    const s = status.toLowerCase();
+    if (s === 'lulus' || s === 'approve' || s === 'dipinjam') return 'success';
+    if (s === 'sedang digunakan') return 'warning';
+    if (s === 'menunggu' || s === 'baru' || s === 'pending') return 'waiting';
+    if (s === 'akan datang') return 'future';
+    if (s === 'tolak' || s === 'rejected' || s === 'ditolak') return 'danger';
+    if (s === 'dipulangkan' || s === 'selesai' || s === 'returned') return 'info';
+    if (s === 'lewat' || s === 'late') return 'danger';
     return 'info';
 }
 
@@ -2106,7 +2153,7 @@ function urusApp(id) {
 }
 
 // Fungsi pembantu untuk sembunyi/papar butang kemaskini secara dinamik
-window.toggleUpdateButton = function(status) {
+window.toggleUpdateButton = function (status) {
     const btn = document.getElementById('btnUpdateRecord');
     if (!btn) return;
     if (status === 'Sedang Digunakan' || status === 'Dipulangkan') {
@@ -2977,23 +3024,41 @@ function populateCategoryDropdown() {
 ============================== */
 let filteredReportData = [];
 
-function renderReportStats() {
+function populateReportYearDropdown() {
+    const yearSelect = document.getElementById('rptYear');
+    if (!yearSelect) return;
+
     const apps = getDB(DB_KEYS.APPS);
+    const years = new Set();
 
-    const total = apps.length;
-    const menunggu = apps.filter(a => a.status === 'Menunggu' || a.status === 'Baru').length;
-    const lulus = apps.filter(a => a.status === 'Lulus').length;
-    const tolak = apps.filter(a => a.status === 'Tolak' || a.status === 'Ditolak').length;
-    const pulang = apps.filter(a => a.status === 'Dipulangkan').length;
-    const lewat = apps.filter(a => a.status === 'Lewat').length;
+    // 1. Ambil tahun dari data permohonan
+    apps.forEach(app => {
+        const d = parseDateDMY(app.mula);
+        if (d) years.add(d.getFullYear());
+    });
 
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('rptTotal', total);
-    set('rptMenunggu', menunggu);
-    set('rptLulus', lulus);
-    set('rptTolak', tolak);
-    set('rptPulang', pulang);
-    set('rptLewat', lewat);
+    // 2. Sentiasa masukkan tahun semasa
+    years.add(new Date().getFullYear());
+
+    // 3. Susun tahun (Menurun)
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+    // Simpan nilai semasa untuk restore nanti
+    const currentVal = yearSelect.value;
+
+    // 4. Jana HTML
+    yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+
+    // Restore atau set default (jika baru buka, guna tahun semasa)
+    if (currentVal && sortedYears.includes(parseInt(currentVal))) {
+        yearSelect.value = currentVal;
+    } else {
+        yearSelect.value = new Date().getFullYear();
+    }
+}
+
+function renderReportStats(data = null) {
+    if (window.refreshPythonReport) window.refreshPythonReport();
 }
 
 function renderComputerUsage() {
@@ -3072,11 +3137,22 @@ function renderComputerUsage() {
 }
 
 function parseDateDMY(dateStr) {
-    // Parse DD/MM/YYYY HH:MM format
     if (!dateStr || dateStr === '-') return null;
-    const parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-    if (!parts) return null;
-    return new Date(parseInt(parts[3]), parseInt(parts[2]) - 1, parseInt(parts[1]));
+
+    // 1. Cuba parsing standard (ISO, etc)
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        // Reset masa untuk perbandingan tarikh sahaja
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    // 2. Fallback untuk format DD/MM/YYYY
+    const parts = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (parts) {
+        return new Date(parseInt(parts[3]), parseInt(parts[2]) - 1, parseInt(parts[1]));
+    }
+
+    return null;
 }
 
 function applyReportFilter() {
@@ -3093,6 +3169,7 @@ function applyReportFilter() {
         filtered = filtered.filter(a => {
             if (status === 'Menunggu') return a.status === 'Menunggu' || a.status === 'Baru';
             if (status === 'Tolak') return a.status === 'Tolak' || a.status === 'Ditolak';
+            if (status === 'Lulus') return a.status === 'Lulus' || a.status === 'Sedang Digunakan';
             return a.status === status;
         });
     }
@@ -3126,58 +3203,111 @@ function applyReportFilter() {
     }
 
     filteredReportData = filtered;
-    renderReportTable(filtered);
+    // renderReportTable(filtered); // Dipindahkan ke PyScript
+    // renderReportStats(filtered); // Dipindahkan ke PyScript
+    if (window.refreshPythonReport) window.refreshPythonReport();
 
     const countEl = document.getElementById('rptRecordCount');
     if (countEl) countEl.textContent = `${filtered.length} rekod dijumpai`;
 }
 
+function handleReportPeriodChange() {
+    const period = document.getElementById('rptPeriod').value;
+    const fromInput = document.getElementById('rptDateFrom');
+    const toInput = document.getElementById('rptDateTo');
+    const groupMonth = document.getElementById('groupMonth');
+    const groupYear = document.getElementById('groupYear');
+
+    // Reset visibility
+    if (groupMonth) groupMonth.style.display = 'none';
+    if (groupYear) groupYear.style.display = 'none';
+
+    if (period === 'manual') {
+        fromInput.disabled = false;
+        toInput.disabled = false;
+        return;
+    }
+
+    fromInput.disabled = true;
+    toInput.disabled = true;
+
+    const now = new Date();
+    let start = new Date(now);
+    let end = new Date(now);
+
+    if (period === 'week') {
+        // Start of week (Monday)
+        const day = now.getDay();
+        const diff = now.getDate() - (day === 0 ? 6 : day - 1);
+        start = new Date(now.getFullYear(), now.getMonth(), diff);
+        end = new Date(now);
+    } else if (period === 'month') {
+        if (groupMonth) groupMonth.style.display = 'block';
+        if (groupYear) groupYear.style.display = 'block';
+
+        const m = parseInt(document.getElementById('rptMonth').value);
+        const y = parseInt(document.getElementById('rptYear').value);
+        start = new Date(y, m, 1);
+        end = new Date(y, m + 1, 0); // Last day of month
+    } else if (period === 'year') {
+        if (groupYear) groupYear.style.display = 'block';
+
+        const y = parseInt(document.getElementById('rptYear').value);
+        start = new Date(y, 0, 1);
+        end = new Date(y, 11, 31);
+    }
+
+    // Local ISO string hack to avoid timezone shifts
+    const toLocalISO = (date) => {
+        const d = new Date(date);
+        const offset = d.getTimezoneOffset();
+        const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+        return localDate.toISOString().split('T')[0];
+    };
+
+    fromInput.value = toLocalISO(start);
+    toInput.value = toLocalISO(end);
+
+    // Auto apply filter
+    applyReportFilter();
+}
+
 function resetReportFilter() {
-    document.getElementById('rptDateFrom').value = '';
-    document.getElementById('rptDateTo').value = '';
+    const periodEl = document.getElementById('rptPeriod');
+    const fromEl = document.getElementById('rptDateFrom');
+    const toEl = document.getElementById('rptDateTo');
+    const groupMonth = document.getElementById('groupMonth');
+    const groupYear = document.getElementById('groupYear');
+
+    if (groupMonth) groupMonth.style.display = 'none';
+    if (groupYear) groupYear.style.display = 'none';
+
+    if (periodEl) periodEl.value = 'manual';
+    if (fromEl) {
+        fromEl.value = '';
+        fromEl.disabled = false;
+    }
+    if (toEl) {
+        toEl.value = '';
+        toEl.disabled = false;
+    }
+
     document.getElementById('rptStatus').value = 'semua';
     document.getElementById('rptSearch').value = '';
 
     // Show all data
     const apps = getDB(DB_KEYS.APPS);
     filteredReportData = apps;
-    renderReportTable(apps);
+    // renderReportTable(apps); // Dipindahkan ke PyScript
+    // renderReportStats(apps); // Dipindahkan ke PyScript
+    if (window.refreshPythonReport) window.refreshPythonReport();
 
     const countEl = document.getElementById('rptRecordCount');
     if (countEl) countEl.textContent = `${apps.length} rekod dijumpai`;
 }
 
 function renderReportTable(data) {
-    const tbody = document.getElementById('reportTableBody');
-    if (!tbody) return;
-
-    if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tiada data untuk dipaparkan.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = data.map((app, i) => `
-        <tr>
-            <td data-label="#">${i + 1}</td>
-            <td data-label="No. Permohonan"><strong>${app.noPermohonan}</strong></td>
-            <td data-label="Maklumat Pemohon">
-                <div style="font-weight: 600;">${app.nama}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">${app.jabatan}</div>
-                <div style="font-size: 0.7rem; color: var(--primary); margin-top: 4px; border-top: 1px dashed #e2e8f0; padding-top: 2px;">${app.email}</div>
-            </td>
-            <td data-label="Maklumat Pinjaman">
-                <div style="font-weight: 500;">${app.jenis}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">${app.model} (${app.kuantiti} Unit)</div>
-            </td>
-            <td data-label="Tempoh">
-                <div style="font-size: 0.8rem;">${formatDate(app.mula)}</div>
-                <div style="font-size: 0.8rem;">${formatDate(app.tamat)}</div>
-            </td>
-            <td data-label="Status">
-                <span class="badge status-${getStatusClass(app.status)}">${app.status}</span>
-            </td>
-        </tr>
-    `).join('');
+    // Dipindahkan ke PyScript (render_full_report)
 }
 
 function getComputerUsageData() {
@@ -3244,7 +3374,15 @@ function printReport() {
                 .status-waiting { background: #fef08a; color: #854d0e; }
                 .status-approved { background: #dcfce7; color: #166534; }
                 .status-danger { background: #fee2e2; color: #991b1b; }
-                .status-info { background: #e0f2fe; color: #0369a1; }
+                .status-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-future {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
                 .section-title { font-size: 1rem; font-weight: 700; color: #4f46e5; margin: 2rem 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #eef2ff; }
                 .usage-badge { padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
                 @media print { body { padding: 0.5rem; } .page-break { page-break-before: always; } }
@@ -3373,7 +3511,7 @@ function exportExcel() {
    </Row>`;
 
     data.forEach((app, i) => {
-        const esc = (s) => (s || '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/<br\s*\/?>/gi, ' ');
+        const esc = (s) => String(s || '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/<br\s*\/?>/gi, ' ');
         xml += `
    <Row>
     <Cell ss:StyleID="default"><Data ss:Type="Number">${i + 1}</Data></Cell>
@@ -3648,7 +3786,7 @@ async function logout() {
 
         localStorage.removeItem('loggedInAdmin');
         await firebase.auth().signOut();
-        
+
         // Sedikit delay untuk visual loading yang lebih smooth
         setTimeout(() => {
             window.location.href = '../';
@@ -3676,26 +3814,27 @@ function filterApplicantTab(tab, updateHash = true) {
 
     // Tunjuk/Sembunyi kontainer mengikut tab
     const containers = {
-        'aktif': document.getElementById('container-aktif'),
-        'lewat': document.getElementById('container-lewat'),
-        'selesai': document.getElementById('container-selesai'),
-        'ditolak': document.getElementById('container-ditolak')
+        'aktif': [document.getElementById('container-aktif'), document.getElementById('container-akandatang')],
+        'lewat': [document.getElementById('container-lewat')],
+        'selesai': [document.getElementById('container-selesai')],
+        'ditolak': [document.getElementById('container-ditolak')]
     };
 
     if (tab === 'all') {
-        Object.values(containers).forEach(c => { if(c) c.style.display = 'block'; });
+        Object.values(containers).flat().forEach(c => { if (c) c.style.display = 'block'; });
     } else {
         Object.keys(containers).forEach(key => {
-            if (containers[key]) {
-                containers[key].style.display = (key === tab) ? 'block' : 'none';
-            }
+            const list = containers[key];
+            list.forEach(c => {
+                if (c) c.style.display = (key === tab) ? 'block' : 'none';
+            });
         });
     }
 }
 
 function searchPemohon() {
     const input = document.getElementById('pemohonSearch').value.toLowerCase();
-    const tables = ['applicantTableBody', 'delayedTableBody', 'completedTableBody', 'rejectedTableBody'];
+    const tables = ['applicantTableBody', 'futureTableBody', 'delayedTableBody', 'completedTableBody', 'rejectedTableBody'];
 
     let totalMatches = 0;
 

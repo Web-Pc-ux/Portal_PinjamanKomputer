@@ -504,6 +504,21 @@ body.dark-mode .calendar-day:hover:not(.empty) {
     color: #991b1b;
 }
 
+.status-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-future {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
 /* Table Styling */
 .table-container {
     background: var(--bg-card);
@@ -631,6 +646,84 @@ tbody tr:nth-child(even) {
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text-main);
+}
+
+/* Report Section Enhancements */
+.stat-card-premium {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-premium::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color);
+}
+
+.stat-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-premium .icon-wrap {
+    width: 50px;
+    height: 50px;
+    background: rgba(59, 130, 246, 0.1); /* Fallback if color-mix not supported */
+    background: color-mix(in srgb, var(--color), white 85%);
+    color: var(--color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.stat-card-premium .info .label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card-premium .info .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+@media (max-width: 992px) {
+    .control-panel-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.table-compact th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1rem;
+}
+
+.table-compact td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .btn-outline:hover {
@@ -1197,4 +1290,15 @@ body.dark-mode .applicant-tabs {
 
 body.dark-mode .applicant-tabs .tab-btn:hover {
     background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Animations */
+@keyframes blink {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.blink {
+    animation: blink 1.2s infinite ease-in-out;
 }

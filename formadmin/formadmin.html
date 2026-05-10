@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Borang Permohonan Peminjaman Peralatan ICT</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="formadmin.css" />
+</head>
+
+<body>
+
+    <!-- Floating Back Button -->
+    <a href="../dashboard/" class="floating-back-btn" title="Kembali ke Senarai Pemohon">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
+
+    <div id="page2" class="form-card">
+        <h2 class="form-subtitle"><i class="fas fa-user-edit"></i> MAKLUMAT PEMOHON</h2>
+
+        <form id="applicationForm" class="modern-form">
+            <div class="form-group">
+                <label for="name"><i class="fas fa-user"></i> 1. Nama Pemohon :</label>
+                <span class="field-desc">Sila masukkan nama penuh pemohon</span>
+                <input type="text" id="name" name="name" required placeholder="Contoh: Ahmad Bin Ali" />
+            </div>
+
+            <div class="form-group">
+                <label for="noPekerja"><i class="fas fa-id-badge"></i> 2. No. Pekerja :</label>
+                <span class="field-desc">Masukkan No. Pekerja UMS</span>
+                <input type="text" id="noPekerja" name="noPekerja" required placeholder="UMSXXXXX" />
+            </div>
+
+            <div class="form-group" style="position: relative;">
+                <label for="email"><i class="fas fa-envelope"></i> 3. Email UMS :</label>
+                <span class="field-desc">Carian automatik aktif (Microsoft Directory)</span>
+                <input type="email" id="email" name="email" required placeholder="peminjam@ums.edu.my"
+                    autocomplete="off" />
+                <div id="emailSuggestions" class="suggestions-box" style="display:none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone"><i class="fas fa-phone-alt"></i> 4. No. Telefon :</label>
+                <span class="field-desc">No. telefon aktif pemohon</span>
+                <input type="tel" id="phone" name="phone" required placeholder="Contoh: 012-3456789" />
+            </div>
+
+            <div class="form-group full-width">
+                <label for="jabatan"><i class="fas fa-building"></i> 5. J/A/F/P/I/B :</label>
+                <span class="field-desc">Jabatan / Fakulti / Institut / Pusat</span>
+                <input type="text" id="jabatan" name="jabatan" required placeholder="Contoh: Digital UMS" />
+            </div>
+
+            <h2 class="form-subtitle full-width"><i class="fas fa-clipboard-list"></i> MAKLUMAT PERMOHONAN</h2>
+
+            <div class="form-group">
+                <label for="jenisPermohonan"><i class="fas fa-file-alt"></i> 6. Jenis Permohonan :</label>
+                <span class="field-desc">Sumber rujukan permohonan</span>
+                <select id="jenisPermohonan" name="jenisPermohonan" required>
+                    <option value="">-- Sila Pilih --</option>
+                    <option value="Email">Email</option>
+                    <option value="Surat">Surat</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                </select>
+
+                <div id="divJenisLain" class="conditional-field" style="display:none; margin-top: 12px;">
+                    <label for="jenisLain">Nyatakan Jenis Lain :</label>
+                    <input type="text" id="jenisLain" name="jenisLain" placeholder="Contoh: Memo Pelantikan" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="lokasi"><i class="fas fa-map-marker-alt"></i> 7. Lokasi Penggunaan :</label>
+                <span class="field-desc">Lokasi program/aktiviti dijalankan</span>
+                <input type="text" id="lokasi" name="lokasi" required placeholder="Contoh: Dewan Canselor" />
+            </div>
+
+            <div class="form-group full-width">
+                <label for="tujuan"><i class="fas fa-tasks"></i> 8. Tujuan Penggunaan :</label>
+                <span class="field-desc">Nyatakan tujuan peminjaman peralatan secara ringkas</span>
+                <textarea id="tujuan" name="tujuan" rows="3" required
+                    placeholder="Contoh: Mesyuarat Rasmi Jabatan"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="tarikhMasaPinjam"><i class="fas fa-calendar-plus"></i> 9. Tarikh Peminjaman :</label>
+                <span class="field-desc">Tarikh & masa peralatan diambil</span>
+                <input type="datetime-local" id="tarikhMasaPinjam" name="tarikhMasaPinjam" required />
+            </div>
+
+            <div class="form-group">
+                <label for="tarikhMasaPulangan"><i class="fas fa-calendar-check"></i> 10. Tarikh Pemulangan :</label>
+                <span class="field-desc">Tarikh & masa peralatan dipulangkan</span>
+                <input type="datetime-local" id="tarikhMasaPulangan" name="tarikhMasaPulangan" required />
+            </div>
+
+            <fieldset class="multi-choice full-width">
+                <legend>11. Model dan Kuantiti Peminjaman:</legend>
+                
+                <!-- Pilih Semua -->
+                <div class="select-all-container" style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                    <label style="display: flex; align-items: center; cursor: pointer; text-transform: none; color: var(--primary); font-weight: 600;">
+                        <input type="checkbox" id="selectAllModels" style="width: 20px; margin-right: 10px;" /> 
+                        PILIH SEMUA PERALATAN
+                    </label>
+                </div>
+
+                <div id="modelContainer">
+                    <!-- Dinamik: diisi oleh JS dari db_computers -->
+                    <p style="color:#999; font-size:0.9em;">Memuatkan senarai komputer...</p>
+                </div>
+            </fieldset>
+
+            <div class="btn-container">
+                <button type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Hantar Permohonan</button>
+                <button type="reset">Set Semula</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="successMessage"
+        style="display:none; text-align:center; padding:20px; border:2px solid #2a3eb1; border-radius:10px; background-color:#e0f0ff; margin-top:20px; font-weight:bold; font-size:1.1rem;">
+        <div id="successText">Borang berjaya dihantar!</div>
+        <div id="applicationNo" style="margin-top:10px; font-size:0.95rem;"></div>
+    </div>
+
+    <footer id="adminFooter"
+        style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; padding: 2rem 0; border-top: 1px solid #e2e8f0; margin-top: 2rem;">
+        © 2026 Jabatan Digital UMS , Unit Perkomputeraan. Hak Cipta Terpelihara.
+    </footer>
+
+    <script src="formadmin.js"></script>
+    </script>
+</body>
+
+</html>

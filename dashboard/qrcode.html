@@ -406,10 +406,14 @@
                 <span class="info-label">Tarikh Pinjam</span>
                 <span class="info-value" id="dispMula"></span>
             </div>
+            <div class="info-row">
+                <span class="info-label">Tarikh Pulang</span>
+                <span class="info-value" id="dispTamat"></span>
+            </div>
 
             <!-- Table bernama scan - dibawah area mula -->
             <div id="scanArea"
-                style="display: none; margin: 1rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                style="display: none; margin: 1.5rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
                 <div class="scan-area-title">
                     <i class="fas fa-clock"></i> Rekod Imbasan (Scan)
                 </div>
@@ -422,10 +426,6 @@
                     </thead>
                     <tbody id="scanBody"></tbody>
                 </table>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Tarikh Pulang</span>
-                <span class="info-value" id="dispTamat"></span>
             </div>
 
             <!-- Table Rating (Hidden by default, used in success state) -->
@@ -624,8 +624,22 @@
                 `<div style="font-size:0.85rem; line-height:1.5;">${app.kuantiti}</div>`;
             document.getElementById('dispItem').innerHTML = modelHtml;
 
-            document.getElementById('dispMula').textContent = app.mula;
-            document.getElementById('dispTamat').textContent = app.tamat;
+            function formatDate(str) {
+                if (!str || str === '-' || str === 'undefined') return '-';
+                try {
+                    const d = new Date(str);
+                    if (isNaN(d.getTime())) return str;
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const year = d.getFullYear();
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    return `${day}/${month}/${year} ${hours}:${minutes}`;
+                } catch (e) { return str; }
+            }
+
+            document.getElementById('dispMula').textContent = formatDate(app.mula);
+            document.getElementById('dispTamat').textContent = formatDate(app.tamat);
 
             updateScanTable(app);
 

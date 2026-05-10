@@ -260,6 +260,7 @@ if (msBtn) {
             // Minta akses untuk mendapatkan emel
             provider.addScope('email');
             provider.addScope('User.Read');
+            provider.addScope('User.ReadBasic.All'); // Diperlukan untuk mencari pengguna lain dalam organisasi
 
             const result = await auth.signInWithPopup(provider);
             
@@ -372,6 +373,11 @@ if (msBtn) {
 
             localStorage.setItem('loggedInAdmin', JSON.stringify(sessionData));
             localStorage.removeItem('activeDashboardSection');
+
+            // 2.5 Simpan Access Token Microsoft (untuk kegunaan carian direktori di halaman lain)
+            if (result.credential && result.credential.accessToken) {
+                localStorage.setItem('msGraphToken', result.credential.accessToken);
+            }
 
             // 3. SUCCESS NOTIFICATION & REDIRECTION
             const displayName = msName || getVal(finalAdmin, 'nama') || email.split('@')[0];

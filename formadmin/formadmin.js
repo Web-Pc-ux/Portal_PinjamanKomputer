@@ -34,18 +34,184 @@ function saveDB(key, data) {
 /* ==============================
    PAGE CONTROL
 ============================== */
-const agreeBtn = document.getElementById('agreeBtn');
-const page1 = document.getElementById('page1');
 const page2 = document.getElementById('page2');
 const form = document.getElementById('applicationForm');
 
-if (agreeBtn) {
-    agreeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        page1.style.display = 'none';
-        page2.style.display = 'block';
+// Toggle Jenis Lain
+const jenisPermohonanSelect = document.getElementById('jenisPermohonan');
+const divJenisLain = document.getElementById('divJenisLain');
+const inputJenisLain = document.getElementById('jenisLain');
+
+if (jenisPermohonanSelect) {
+    jenisPermohonanSelect.addEventListener('change', () => {
+        if (jenisPermohonanSelect.value === 'Lain-lain') {
+            divJenisLain.style.display = 'block';
+            inputJenisLain.required = true;
+        } else {
+            divJenisLain.style.display = 'none';
+            inputJenisLain.required = false;
+            inputJenisLain.value = '';
+        }
     });
 }
+
+/* ==============================
+   EMAIL AUTO-FILL (Search from history)
+============================== */
+const emailInput = document.getElementById('email');
+const suggestionsBox = document.getElementById('emailSuggestions');
+
+if (emailInput) {
+    emailInput.addEventListener('input', () => {
+        const query = emailInput.value.toLowerCase().trim();
+        
+        // Sembunyi jika kosong
+        if (query.length < 1) {
+            suggestionsBox.style.display = 'none';
+            return;
+        }
+
+        const apps = getDB(DB_KEYS.APPS);
+        console.log(`🔍 Carian emel: "${query}" | Total Rekod: ${apps.length}`);
+
+        // Ambil pemohon unik berdasarkan emel (terkini dahulu) dari database tempatan
+        const uniqueUsers = {};
+        [...apps].reverse().forEach(app => {
+            const email = (app.email || '').toLowerCase().trim();
+            if (email && email !== '-' && !uniqueUsers[email]) {
+                uniqueUsers[email] = {
+                    nama: app.nama,
+                    noPekerja: app.noPekerja,
+                    telefon: app.telefon,
+                    jabatan: app.jabatan,
+                    email: app.email,
+                    source: 'History'
+                };
+            }
+        });
+
+        const localMatches = Object.values(uniqueUsers).filter(u => 
+            u.email.toLowerCase().includes(query) || 
+            u.nama.toLowerCase().includes(query)
+        ).slice(0, 3);
+
+        renderSuggestions(localMatches);
+
+        // --- TAMBAHAN: Carian Microsoft Graph (Jika Log Masuk MS) ---
+        const msToken = localStorage.getItem('msGraphToken');
+        if (msToken && query.length >= 3) {
+            searchMicrosoftGraph(query, msToken, localMatches);
+        }
+    });
+
+    // Sembunyi bila klik luar
+    document.addEventListener('click', (e) => {
+        if (!emailInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+}
+
+async function searchMicrosoftGraph(query, token, localMatches) {
+    try {
+        const url = `https://graph.microsoft.com/v1.0/users?$filter=startsWith(displayName,'${query}') or startsWith(mail,'${query}') or startsWith(userPrincipalName,'${query}')&$select=displayName,mail,jobTitle,userPrincipalName,mobilePhone&$top=5`;
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+            console.warn("⚠️ Token Microsoft tamat tempoh.");
+            localStorage.removeItem('msGraphToken');
+            return;
+        }
+
+        const result = await res.json();
+        if (result.value && result.value.length > 0) {
+            const msMatches = result.value.map(u => ({
+                nama: u.displayName,
+                email: u.mail || u.userPrincipalName,
+                jabatan: u.jobTitle || '',
+                telefon: u.mobilePhone || '',
+                noPekerja: '', // Microsoft Graph biasanya tidak dedahkan No Pekerja secara terus di endpoint umum
+                source: 'Microsoft'
+            }));
+
+            // Gabung dengan hasil tempatan (buang duplikasi emel)
+            const combined = [...localMatches];
+            msMatches.forEach(ms => {
+                if (!combined.some(l => l.email.toLowerCase() === ms.email.toLowerCase())) {
+                    combined.push(ms);
+                }
+            });
+
+            renderSuggestions(combined.slice(0, 8));
+        }
+    } catch (e) {
+        console.error("❌ Ralat Carian Microsoft:", e);
+    }
+}
+
+let lastSearchResults = [];
+
+function renderSuggestions(matches) {
+    lastSearchResults = matches; // Simpan untuk kegunaan autoFill
+    if (matches.length > 0) {
+        suggestionsBox.innerHTML = matches.map(m => `
+            <div class="suggestion-item" onclick="autoFillApplicant('${m.email.replace(/'/g, "\\'")}', '${m.source}')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="s-name">${m.nama}</span>
+                    <span style="font-size: 0.6rem; background: ${m.source === 'Microsoft' ? '#0078d4' : '#64748b'}; color: white; padding: 2px 6px; border-radius: 10px; font-weight: 800;">${m.source.toUpperCase()}</span>
+                </div>
+                <span class="s-email">${m.email}</span>
+            </div>
+        `).join('');
+        suggestionsBox.style.display = 'block';
+    } else {
+        const query = emailInput.value.trim();
+        if (query.length > 0) {
+            suggestionsBox.innerHTML = '<div class="suggestion-item" style="color: #94a3b8; font-size: 0.8rem; cursor: default;">Tiada rekod ditemui</div>';
+            suggestionsBox.style.display = 'block';
+        }
+    }
+}
+
+window.autoFillApplicant = function(email, source = 'History') {
+    let userData = null;
+    
+    if (source === 'History') {
+        const apps = getDB(DB_KEYS.APPS);
+        userData = [...apps].reverse().find(app => (app.email || '').toLowerCase().trim() === email.toLowerCase().trim());
+    } else {
+        // Ambil dari hasil carian Microsoft terakhir
+        userData = lastSearchResults.find(m => m.email.toLowerCase().trim() === email.toLowerCase().trim());
+    }
+    
+    if (userData) {
+        console.log(`✅ Auto-fill (${source}) untuk:`, email);
+        document.getElementById('email').value = userData.email || email;
+        document.getElementById('name').value = userData.nama || '';
+        document.getElementById('noPekerja').value = userData.noPekerja || '';
+        // Telefon & Jabatan tidak auto-fill (permintaan user)
+        // document.getElementById('phone').value = userData.telefon || '';
+        // document.getElementById('jabatan').value = userData.jabatan || '';
+        
+        // Highlight
+        const fields = ['email', 'name', 'noPekerja'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.background = '#f0fdf4';
+                el.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    el.style.background = '';
+                    el.style.borderColor = '';
+                }, 1500);
+            }
+        });
+    }
+
+    if (suggestionsBox) suggestionsBox.style.display = 'none';
+};
 
 /* ==============================
    DYNAMIC MODEL BUILDER
@@ -161,6 +327,17 @@ function buildModelSection() {
                 </label>
 
                 <div class="sub-models" id="models-${catId}" style="display:none;">
+                    ${availableItems.length > 1 ? `
+                        <div class="sub-select-all" style="margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 5px;">
+                            <a href="javascript:void(0)" onclick="toggleSubModels('${catId}', true)" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+                                <i class="fas fa-check-double"></i> Pilih Semua ${catName}
+                            </a>
+                            <span style="margin: 0 8px; color: #ccc;">|</span>
+                            <a href="javascript:void(0)" onclick="toggleSubModels('${catId}', false)" style="font-size: 0.75rem; color: #64748b; text-decoration: none;">
+                                Kosongkan
+                            </a>
+                        </div>
+                    ` : ''}
                     ${availableItems.slice(0, availableQuota).map(comp => `
                         <label>
                             <input type="checkbox" name="model_${catId}" value="${comp.model}" data-nopc="${comp.noPC || ''}" data-nosiri="${comp.noSiri || ''}" />
@@ -175,6 +352,14 @@ function buildModelSection() {
     });
 
     container.innerHTML = html;
+
+    // Tambah fungsi global untuk toggle sub-models
+    window.toggleSubModels = (catId, check) => {
+        const subContainer = document.getElementById('models-' + catId);
+        if (subContainer) {
+            subContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = check);
+        }
+    };
 
     // Attach toggle event listeners
     container.querySelectorAll('.cat-check').forEach(check => {
@@ -293,10 +478,20 @@ if (form) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghantar...';
+        }
+
         const container = document.getElementById('modelContainer');
         const checkedCats = container.querySelectorAll('.cat-check:checked');
         if (checkedCats.length === 0) {
             alert('Sila pilih sekurang-kurangnya 1 kategori peralatan');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Hantar Permohonan';
+            }
             return;
         }
 
@@ -310,7 +505,13 @@ if (form) {
                 valid = false;
             }
         });
-        if (!valid) return;
+        if (!valid) {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Hantar Permohonan';
+            }
+            return;
+        }
 
         const appNo = generateApplicationNo();
         const newId = generateId();
@@ -340,6 +541,25 @@ if (form) {
         const now = new Date();
         const timestamp = now.toLocaleDateString('ms-MY') + ' ' + now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
 
+        const jenisRaw = document.getElementById('jenisPermohonan').value;
+        const jenisLain = document.getElementById('jenisLain').value;
+        const finalJenis = (jenisRaw === 'Lain-lain' && jenisLain) ? jenisLain : jenisRaw;
+
+        // Logic Penentuan Status Awal
+        const loanStartDate = new Date(document.getElementById('tarikhMasaPinjam').value);
+        const today = new Date();
+        
+        // Kira perbezaan hari
+        const diffTime = loanStartDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Jika tarikh pinjam lebih dari 7 hari dari sekarang, set sebagai 'Akan Datang'
+        // Jika tidak, kekalkan 'Menunggu' (untuk tindakan segera)
+        let initialStatus = 'Menunggu';
+        if (diffDays > 7) {
+            initialStatus = 'Akan Datang';
+        }
+
         const newApp = {
             id: newId,
             noPermohonan: appNo,
@@ -348,18 +568,20 @@ if (form) {
             jabatan: document.getElementById('jabatan').value,
             telefon: document.getElementById('phone').value,
             email: document.getElementById('email').value,
-            jenis: document.getElementById('jenisPermohonan').value,
+            jenis: finalJenis,
             lokasi: document.getElementById('lokasi').value,
             tujuan: document.getElementById('tujuan').value,
-            mula: formatDateTime(document.getElementById('tarikhMasaPinjam').value),
-            tamat: formatDateTime(document.getElementById('tarikhMasaPulangan').value),
+            mula: document.getElementById('tarikhMasaPinjam').value, // Simpan ISO untuk sorting/logic
+            tamat: document.getElementById('tarikhMasaPulangan').value, // Simpan ISO
+            mula_format: formatDateTime(document.getElementById('tarikhMasaPinjam').value),
+            tamat_format: formatDateTime(document.getElementById('tarikhMasaPulangan').value),
             model: models.join(', ') || '-',
             kuantiti: kuantitiParts.join('<br>') || '-',
             siri: siriParts.join('<br>') || '-',
             scanPinjam: '-',
             scanPulang: '-',
             catatanAdmin: '',
-            status: 'Menunggu',
+            status: initialStatus,
             timestamp: timestamp
         };
 
@@ -380,9 +602,6 @@ if (form) {
         form.reset();
         container.querySelectorAll('.sub-models').forEach(sm => sm.style.display = 'none');
         container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-        page2.style.display = 'none';
-        page1.style.display = 'block';
     });
 }
 
@@ -457,5 +676,58 @@ async function fetchInitialData() {
    INIT
 ============================== */
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. SET MIN DATE (LOCK PAST DATES) ---
+    const now = new Date();
+    // Format to YYYY-MM-DDTHH:MM
+    const nowFormatted = now.toISOString().slice(0, 16);
+    
+    const pinjamInput = document.getElementById('tarikhMasaPinjam');
+    const pulangInput = document.getElementById('tarikhMasaPulangan');
+
+    if (pinjamInput) {
+        pinjamInput.min = nowFormatted;
+        pinjamInput.addEventListener('change', () => {
+            if (pulangInput) {
+                // Tarikh pulang mestilah selepas tarikh pinjam
+                pulangInput.min = pinjamInput.value;
+                if (pulangInput.value && pulangInput.value < pinjamInput.value) {
+                    pulangInput.value = pinjamInput.value;
+                }
+            }
+        });
+    }
+
+    if (pulangInput) {
+        pulangInput.min = nowFormatted;
+    }
+
+    // --- 2. LOAD DATA ---
     fetchInitialData();
+
+    // --- 3. PILIH SEMUA PERALATAN LOGIC ---
+    const selectAllCheck = document.getElementById('selectAllModels');
+    if (selectAllCheck) {
+        selectAllCheck.addEventListener('change', () => {
+            const container = document.getElementById('modelContainer');
+            const isChecked = selectAllCheck.checked;
+            
+            // 1. Ambil semua kategori
+            const catChecks = container.querySelectorAll('.cat-check');
+            catChecks.forEach(cc => {
+                if (!cc.disabled) {
+                    cc.checked = isChecked;
+                    // Trigger change manually to expand/collapse sub-models
+                    cc.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // 2. Ambil semua sub-models (yang tidak disabled)
+            const modelChecks = container.querySelectorAll('.sub-models input[type="checkbox"]');
+            modelChecks.forEach(mc => {
+                if (!mc.disabled) {
+                    mc.checked = isChecked;
+                }
+            });
+        });
+    }
 });
