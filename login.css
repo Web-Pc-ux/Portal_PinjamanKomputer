@@ -1,5 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 * {
     box-sizing: border-box;
 }
@@ -91,9 +102,18 @@ body::before {
 
 
 h2 {
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     color: #444;
     font-weight: 600;
+}
+
+.login-instruction {
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    animation: fadeInDown 0.8s ease-out;
 }
 
 .input-group {
@@ -195,24 +215,30 @@ button:hover {
 
 .btn-ms {
     background-color: #fff;
-    color: #555;
-    border: 1px solid #ccc;
+    color: #333;
+    border: 1.5px solid #e1e4e8;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-ms:hover {
-    background-color: #f9f9f9;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #fcfcfc;
+    border-color: #d1d5da;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
 }
 
 .btn-ms img {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+    width: 22px;
+    height: 22px;
+    margin-right: 12px;
 }
 
 /* Responsive untuk layar kecil */

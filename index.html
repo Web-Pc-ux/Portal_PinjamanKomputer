@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Portal Pinjaman Komputer UMS - Log Masuk</title>
 
+
     <!-- SEO Meta Tags -->
     <meta name="description"
         content="Portal rasmi peminjaman komputer dan peralatan ICT untuk staf dan pelajar Universiti Malaysia Sabah (UMS). Log masuk untuk mula memohon." />
@@ -31,33 +32,12 @@
             <form id="loginForm" novalidate>
                 <img src="Pictrure/Logo Digital UMS.png" alt="Logo Digital UMS" class="logo" />
                 <h2 data-i18n="portal_title">Portal Peminjaman Komputer</h2>
-                <div class="input-group">
-                    <label for="username" data-i18n="username_label">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter username"
-                        data-i18n="username_placeholder" />
-                    <span class="error-message" id="usernameError"></span>
-                </div>
-                <div class="input-group">
-                    <label for="password" data-i18n="password_label">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter password"
-                        data-i18n="password_placeholder" />
-                    <span class="error-message" id="passwordError"></span>
-                </div>
-                <button type="submit" data-i18n="login_btn">Log In</button>
-
-                <div class="divider">
-                    <span data-i18n="or_divider">ATAU</span>
-                </div>
-
-
+                <div class="login-instruction" data-i18n="login_instruction">Sila Log Masuk Menggunakan Akaun Microsoft UMS</div>
                 <button type="button" id="msBtn" class="btn-ms">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
                         alt="Microsoft Logo">
                     <span data-i18n="ms_login">Log Masuk dengan Microsoft</span>
                 </button>
-
-                <button type="button" id="forgotBtn" class="link-button" data-i18n="forgot_pass">Lupa Kata
-                    Laluan?</button>
 
 
             </form>

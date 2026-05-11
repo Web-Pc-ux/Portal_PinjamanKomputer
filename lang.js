@@ -36,6 +36,10 @@ const translations = {
         "BM": "Lupa Kata Laluan?",
         "EN": "Forgot Password?"
     },
+    "login_instruction": {
+        "BM": "Sila Log Masuk Menggunakan Akaun Microsoft UMS",
+        "EN": "Please Log In Using UMS Microsoft Account"
+    },
 
     "footer_text": {
         "BM": "© 2026 Jabatan Digital UMS , Unit Perkomputeran. Hak Cipta Terpelihara.",
