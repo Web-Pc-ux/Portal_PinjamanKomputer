@@ -1184,7 +1184,7 @@ async function saveSettingsSilently() {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyRu1LP3k8mHUAsCi5voU5QkmO9H-rMictLQ_7IUc74-F4fzmGO8DlKhc_15jYKbl-tUQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
 
 function updateConnectionStatus(isConnected) {
     const statusBox = document.getElementById('connectionStatus');
@@ -1246,6 +1246,8 @@ async function syncToGAS(data, action = 'update', sheet = 'permohonan') {
     const url = GAS_URL;
     if (!url) return;
 
+    const msToken = localStorage.getItem('msGraphToken'); // Ambil token Microsoft
+
     try {
         await fetch(url, {
             method: 'POST',
@@ -1253,6 +1255,7 @@ async function syncToGAS(data, action = 'update', sheet = 'permohonan') {
             body: JSON.stringify({
                 action: action,
                 token: GAS_TOKEN,
+                msToken: msToken, // Hantar ke GAS
                 data: {
                     ...data,
                     jenis_data: sheet

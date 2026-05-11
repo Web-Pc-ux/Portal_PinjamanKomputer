@@ -34,7 +34,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyRu1LP3k8mHUAsCi5voU5QkmO9H-rMictLQ_7IUc74-F4fzmGO8DlKhc_15jYKbl-tUQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
 
 // Helper function for case-insensitive property access
 const getVal = (obj, key) => {
