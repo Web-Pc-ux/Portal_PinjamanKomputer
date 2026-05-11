@@ -1,5 +1,5 @@
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyRu1LP3k8mHUAsCi5voU5QkmO9H-rMictLQ_7IUc74-F4fzmGO8DlKhc_15jYKbl-tUQ/exec";
 
 /* ==============================
    FORGOT PASSWORD — SEARCH FROM CLOUD

@@ -1184,7 +1184,7 @@ async function saveSettingsSilently() {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyXM2XdS32iEQIBcjZnv7uyswowBln22gnLOfzRi8LdKj2eM6W9cZhixL_PhQDb91jq1w/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyRu1LP3k8mHUAsCi5voU5QkmO9H-rMictLQ_7IUc74-F4fzmGO8DlKhc_15jYKbl-tUQ/exec";
 
 function updateConnectionStatus(isConnected) {
     const statusBox = document.getElementById('connectionStatus');
@@ -2188,6 +2188,11 @@ function urusApp(id) {
                             </select>
                         </div>
 
+                        <div class="form-group" style="margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0;">
+                            <input type="checkbox" id="notify_user_email" checked style="width:18px; height:18px; cursor:pointer;">
+                            <label for="notify_user_email" style="font-size:0.85rem; font-weight:600; color:#1e293b; margin:0; cursor:pointer;">Hantar emel notifikasi kepada pemohon?</label>
+                        </div>
+
                         <div class="form-group">
                             <label style="font-size:0.8rem; margin-bottom:0.4rem;">Catatan Admin</label>
                             <textarea id="admin_catatan" placeholder="Masukkan nota di sini..." 
@@ -2592,9 +2597,11 @@ function updateAppManagement(id) {
     if (index !== -1) {
         const newStatus = document.getElementById('admin_status').value;
         const note = document.getElementById('admin_catatan').value;
+        const notifyUser = document.getElementById('notify_user_email')?.checked || false;
 
         apps[index].status = newStatus;
         apps[index].catatanAdmin = note;
+        apps[index].hantarNotifikasi = notifyUser; // Tambah flag notifikasi
 
         // Handle Model baru jika admin ada pilih
         const selectedItems = Array.from(document.querySelectorAll('input[name="admin_model_item"]:checked'));
