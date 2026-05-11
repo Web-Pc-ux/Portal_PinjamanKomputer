@@ -331,22 +331,32 @@ function hideGlobalLoader() {
     }
 }
 
+// --- Global Idle State for User ---
+let lastActivity = Date.now();
+let isWarningShown = false;
+let idleListenersAdded = false;
 let idleTimer;
+
+function resetIdleTimer() {
+    lastActivity = Date.now();
+}
+
 function initIdleMonitor() {
-    let lastActivity = Date.now();
+    // 1. Tambah listener hanya SEKALI sahaja
+    if (!idleListenersAdded) {
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, true);
+        });
+        idleListenersAdded = true;
+        console.log("✅ User Idle Monitor: Activity listeners added.");
+    }
 
-    const resetTimer = () => {
-        lastActivity = Date.now();
-    };
-
-    // Events to track
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
-        document.addEventListener(evt, resetTimer, true);
-    });
-
+    // 2. Bersihkan timer lama jika ada
     if (idleTimer) clearInterval(idleTimer);
-    let isWarningShown = false;
+    isWarningShown = false;
+    resetIdleTimer();
 
+    // 3. Mulakan timer semakan setiap 5 saat
     idleTimer = setInterval(() => {
         if (isWarningShown) return;
 
@@ -381,13 +391,15 @@ function initIdleMonitor() {
             }).then((result) => {
                 if (result.dismiss === Swal.DismissReason.timer) {
                     performAutoLogout();
-                } else if (result.isConfirmed) {
+                } else {
+                    // User tekan butang atau tutup modal
                     isWarningShown = false;
-                    resetTimer();
+                    resetIdleTimer();
+                    console.log("🔄 Sesi pengguna disambung semula.");
                 }
             });
         }
-    }, 5000); // Semak setiap 5 saat
+    }, 5000);
 }
 
 async function performAutoLogout() {
@@ -923,9 +935,9 @@ function loadSettings() {
    SOUND & NOTIFICATION ENGINE
  ============================== */
 const SOUNDS = {
-    bell: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
-    chime: 'https://assets.mixkit.co/active_storage/sfx/2218/2218-preview.mp3',
-    alert: 'https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3'
+    bell: '../assets/sounds/bell.mp3',
+    chime: '../assets/sounds/chime.mp3',
+    alert: '../assets/sounds/alert.mp3'
 };
 
 function playSound(type = null) {

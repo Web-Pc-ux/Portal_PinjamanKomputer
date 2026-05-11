@@ -404,27 +404,37 @@ async function triggerManualRefresh() {
     }
 }
 
+// --- Global Idle State ---
+let lastActivity = Date.now();
+let isWarningShown = false;
+let idleListenersAdded = false;
 let idleTimer;
+
+function resetIdleTimer() {
+    lastActivity = Date.now();
+}
+
 function initIdleMonitor() {
-    let lastActivity = Date.now();
+    // 1. Tambah listener hanya SEKALI sahaja
+    if (!idleListenersAdded) {
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, true);
+        });
+        idleListenersAdded = true;
+        console.log("✅ Idle Monitor: Activity listeners added.");
+    }
 
-    const resetTimer = () => {
-        lastActivity = Date.now();
-    };
-
-    // Events to track
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
-        document.addEventListener(evt, resetTimer, true);
-    });
-
+    // 2. Bersihkan timer lama jika ada (Proteksi ganda)
     if (idleTimer) clearInterval(idleTimer);
-    let isWarningShown = false;
+    isWarningShown = false;
+    resetIdleTimer();
 
+    // 3. Mulakan timer semakan setiap 5 saat
     idleTimer = setInterval(() => {
         if (isWarningShown) return;
 
         const settings = getDB('db_settings');
-        const idleLimitSeconds = parseInt(settings.idle || "1800");
+        const idleLimitSeconds = parseInt(settings.idle || "1800"); // Default 30 minit
         const elapsedSeconds = (Date.now() - lastActivity) / 1000;
 
         if (elapsedSeconds >= idleLimitSeconds) {
@@ -454,13 +464,15 @@ function initIdleMonitor() {
             }).then((result) => {
                 if (result.dismiss === Swal.DismissReason.timer) {
                     performAutoLogout();
-                } else if (result.isConfirmed) {
+                } else {
+                    // User tekan butang atau tutup modal
                     isWarningShown = false;
-                    resetTimer();
+                    resetIdleTimer();
+                    console.log("🔄 Sesi disambung semula.");
                 }
             });
         }
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 }
 
 async function performAutoLogout() {
@@ -960,6 +972,41 @@ async function saveSettings() {
     }
 }
 
+async function updateSoundSettings(isSilent = false) {
+    const sound = document.getElementById('soundChoice')?.value || "bell";
+    const volume = document.getElementById('soundVolume')?.value || "80";
+    const isMuted = document.getElementById('muteSound')?.checked || false;
+
+    // Ambil tetapan lama supaya tidak hilang data lain (logo/bg/idle)
+    const settings = getDB('db_settings');
+    settings.sound = sound;
+    settings.volume = volume;
+    settings.isMuted = isMuted;
+
+    // Simpan ke LocalStorage
+    saveDB('db_settings', settings);
+
+    if (!isSilent) {
+        Swal.fire({
+            title: 'Berjaya!',
+            text: 'Tetapan bunyi telah dikemaskini.',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    // Sync ke GAS
+    try {
+        await syncToGAS({ id: 'current', ...settings }, 'update', 'tetapan');
+        console.log("🔊 Tetapan bunyi diselaraskan ke Cloud.");
+    } catch (e) {
+        console.error("❌ Gagal selaras bunyi ke Cloud:", e);
+    }
+}
+
 function loadSettings() {
     const data = localStorage.getItem('db_settings');
     if (!data) return;
@@ -996,9 +1043,9 @@ function loadSettings() {
    SOUND & NOTIFICATION ENGINE
  ============================== */
 const SOUNDS = {
-    bell: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
-    chime: 'https://assets.mixkit.co/active_storage/sfx/2218/2218-preview.mp3',
-    alert: 'https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3'
+    bell: '../assets/sounds/bell.mp3',
+    chime: '../assets/sounds/chime.mp3',
+    alert: '../assets/sounds/alert.mp3'
 };
 
 function playSound(type = null) {
@@ -1490,18 +1537,52 @@ function renderDashboardStats() {
 
     // Update notification
     const notifEl = document.getElementById('actionNotifications');
+    
+    // Logic for Upcoming in 7 Days (Peringatan 7 Hari)
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const next7Days = new Date();
+    next7Days.setDate(today.getDate() + 7);
+    next7Days.setHours(23,59,59,999);
+
+    const akanDatangSegera = apps.filter(a => {
+        // Hanya ambil yang 'Akan Datang' atau 'Lulus' yang belum mula
+        if (a.status !== 'Akan Datang' && a.status !== 'Lulus') return false; 
+        const loanDate = parseDateDMY(a.mula);
+        return loanDate && loanDate >= today && loanDate <= next7Days;
+    }).length;
+
     if (notifEl) {
-        if (countBaru > 0 || countAkanDatang > 0) {
-            notifEl.innerHTML = `<p style="color: var(--warning); font-size: 0.875rem;"><i class="fas fa-exclamation-triangle"></i> <strong>${countBaru}</strong> baru & <strong>${countAkanDatang}</strong> akan datang.</p>`;
+        if (countBaru > 0 || akanDatangSegera > 0) {
+            let msg = `<i class="fas fa-info-circle" style="margin-right: 8px;"></i>`;
+            if (countBaru > 0) {
+                msg += `Terdapat <b>${countBaru} permohonan baru</b> yang memerlukan kelulusan anda. `;
+            }
+            if (akanDatangSegera > 0) {
+                msg += `Terdapat <b>${akanDatangSegera} pinjaman</b> yang akan bermula dalam tempoh 7 hari lagi. `;
+            }
+            msg += `<br><small>Jumlah keseluruhan rekod permohonan: ${apps.length}</small>`;
+
+            notifEl.innerHTML = `
+                <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.6;">
+                    ${msg}
+                </div>
+            `;
         } else {
-            notifEl.innerHTML = `<p style="color: var(--text-muted); font-size: 0.875rem;">Tiada tindakan segera diperlukan.</p>`;
+            notifEl.innerHTML = `<p style="color: var(--text-muted); font-size: 0.875rem;">✅ Tiada tindakan segera diperlukan. (Jumlah rekod: ${apps.length})</p>`;
         }
     }
 
-    // Update notification bar
+    // Update notification bar (Blue Alert at the top)
     const alertBar = document.querySelector('#dashboard .alert');
     if (alertBar) {
-        alertBar.innerHTML = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> ${countBaru} permohonan baru menunggu kelulusan. Jumlah rekod: ${apps.length}.`;
+        let alertMsg = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> ${countBaru} permohonan baru menunggu kelulusan. Jumlah rekod: ${apps.length}.`;
+        
+        if (akanDatangSegera > 0) {
+            alertMsg += ` <span style="margin-left:10px; color:#c2410c; font-weight:bold;">⚠️ Peringatan: ${akanDatangSegera} permohonan akan bermula dalam 7 hari!</span>`;
+        }
+        
+        alertBar.innerHTML = alertMsg;
     }
 }
 
