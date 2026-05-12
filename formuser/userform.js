@@ -785,7 +785,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                     // Isi borang (Pastikan id sedia ada sepadan)
                                     document.getElementById('noPekerja').value = currentEditData.noPekerja || '';
-                                    document.getElementById('phone').value = currentEditData.telefon || '';
+                                    let tel = String(currentEditData.telefon || '');
+                                    if (tel.startsWith("'")) tel = tel.substring(1);
+                                    if (tel.startsWith('1') && (tel.length === 9 || tel.length === 10)) tel = '0' + tel;
+                                    document.getElementById('phone').value = tel;
                                     document.getElementById('jabatan').value = currentEditData.jabatan || '';
                                     document.getElementById('lokasi').value = currentEditData.lokasi || '';
                                     document.getElementById('tujuan').value = currentEditData.tujuan || '';

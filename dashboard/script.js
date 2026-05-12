@@ -2006,7 +2006,12 @@ function urusApp(id) {
             </div>
             <div class="form-group">
                 <label>No. Telefon</label>
-                <div class="info-box">${(app.telefon || '').startsWith("'") ? app.telefon.substring(1) : (app.telefon || '-')}</div>
+                <div class="info-box">${(() => {
+                    let tel = String(app.telefon || '');
+                    if (tel.startsWith("'")) tel = tel.substring(1);
+                    if (tel.startsWith('1') && (tel.length === 9 || tel.length === 10)) tel = '0' + tel;
+                    return tel || '-';
+                })()}</div>
             </div>
             <div class="form-group">
                 <label>Email</label>
@@ -3709,7 +3714,12 @@ function exportExcel() {
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.nama)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.noPekerja)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.jabatan)}</Data></Cell>
-    <Cell ss:StyleID="default"><Data ss:Type="String">${esc((app.telefon || '').startsWith("'") ? app.telefon.substring(1) : app.telefon)}</Data></Cell>
+    <Cell ss:StyleID="default"><Data ss:Type="String">${esc((() => {
+        let tel = String(app.telefon || '');
+        if (tel.startsWith("'")) tel = tel.substring(1);
+        if (tel.startsWith('1') && (tel.length === 9 || tel.length === 10)) tel = '0' + tel;
+        return tel;
+    })())}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.email)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.jenis)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.lokasi)}</Data></Cell>
@@ -3788,7 +3798,12 @@ function exportCSV() {
             `"${app.nama}"`,
             `"${app.noPekerja}"`,
             `"${app.jabatan}"`,
-            `"${(app.telefon || '').startsWith("'") ? app.telefon.substring(1) : (app.telefon || '')}"`,
+            `"${(() => {
+                let tel = String(app.telefon || '');
+                if (tel.startsWith("'")) tel = tel.substring(1);
+                if (tel.startsWith('1') && (tel.length === 9 || tel.length === 10)) tel = '0' + tel;
+                return tel;
+            })()}"`,
             `"${app.email}"`,
             `"${app.jenis}"`,
             `"${app.lokasi}"`,

@@ -3526,7 +3526,7 @@ async function editMyProfile() {
 async function logout() {
     const result = await Swal.fire({
         title: 'Log Keluar?',
-        text: "Anda akan dipandu ke halaman log masuk.",
+        text: "Anda akan log keluar dari sistem.",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: 'var(--danger)',

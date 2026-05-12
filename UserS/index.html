@@ -25,16 +25,18 @@
             gap: 15px;
             margin-top: 15px;
         }
+
         .mobile-app-card {
             background: #fff;
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .mobile-app-card-header {
             display: flex;
             justify-content: space-between;
@@ -42,45 +44,54 @@
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
         }
+
         .mobile-app-card-body p {
             margin: 5px 0;
             font-size: 0.9rem;
             color: var(--text-dark);
         }
+
         .mobile-app-card-body strong {
             color: #475569;
         }
+
         .mobile-app-card-footer {
             margin-top: 5px;
             display: flex;
             justify-content: flex-end;
         }
-        
+
         @media (max-width: 768px) {
             .table-container {
                 display: none !important;
             }
+
             .mobile-cards-container {
                 display: grid !important;
             }
+
             .sidebar {
                 display: none !important;
             }
+
             .burger-menu {
                 display: none !important;
             }
+
             .bottom-nav {
                 display: flex !important;
             }
+
             .main-content {
                 margin-left: 0 !important;
                 padding-bottom: 70px !important;
             }
+
             #commonFooter {
                 margin-bottom: 60px !important;
             }
         }
-        
+
         .bottom-nav {
             display: none;
             position: fixed;
@@ -88,7 +99,7 @@
             left: 0;
             width: 100%;
             background: #ffffff;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
             z-index: 1000;
             justify-content: space-around;
             align-items: center;
@@ -96,6 +107,7 @@
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
         }
+
         .bottom-nav-item {
             display: flex;
             flex-direction: column;
@@ -106,17 +118,22 @@
             transition: all 0.3s;
             width: 33%;
         }
+
         .bottom-nav-item i {
             font-size: 1.4rem;
             transition: all 0.3s;
         }
+
         .bottom-nav-item.active {
-            color: #6366f1; /* Vibrant purple/indigo */
+            color: #6366f1;
+            /* Vibrant purple/indigo */
         }
+
         .bottom-nav-item.active i {
             transform: translateY(-3px);
             font-size: 1.5rem;
         }
+
         /* Hide text in bottom nav to match reference image */
         .bottom-nav-item span {
             display: none;
@@ -180,7 +197,8 @@
             <span>Sejarah</span>
         </div>
         <div class="bottom-nav-item" onclick="logout()">
-            <i class="fas fa-user"></i>
+            <img src="../assets/icon/log_out_btn.png" alt="Logout"
+                style="width: 24px; height: 24px; object-fit: contain;">
             <span>Keluar</span>
         </div>
     </nav>
@@ -196,16 +214,19 @@
             <div class="user-profile" style="position: relative;">
                 <div style="display: flex; align-items: center; gap: 1rem; padding: 5px 10px;">
                     <!-- Clock Badge -->
-                    <div style="display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); color: var(--primary); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 4px 15px rgba(99,102,241,0.1); backdrop-filter: blur(8px); margin-right: 0.5rem;">
+                    <div
+                        style="display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); color: var(--primary); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 4px 15px rgba(99,102,241,0.1); backdrop-filter: blur(8px); margin-right: 0.5rem;">
                         <i class="fas fa-clock" style="color: #8b5cf6;"></i>
                         <span id="digital-clock" style="font-family: 'Inter', sans-serif;">-</span>
                     </div>
-                    
+
                     <!-- Profile Icon -->
-                    <div style="cursor: pointer; transition: transform 0.2s ease;" onclick="toggleProfileMenu(event)" title="Menu Profil" class="profile-hover">
+                    <div style="cursor: pointer; transition: transform 0.2s ease;" onclick="toggleProfileMenu(event)"
+                        title="Menu Profil" class="profile-hover">
                         <div id="userProfileIcon"
                             style="width: 42px; height: 42px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 4px 10px rgba(99,102,241,0.2); transition: all 0.3s ease;">
-                            <i class="fas fa-user" style="color: #64748b;"></i>
+                            <img src="../assets/icon/log_out_btn.png" alt="Logout"
+                                style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                     </div>
                 </div>
@@ -248,7 +269,8 @@
                     <div>
                         <strong style="display: block; color: #0369a1; margin-bottom: 0.25rem;">Notifikasi
                             Terkini</strong>
-                        <span style="color: #0369a1;">Sila tunggu sebentar, sedang menyemak rekod permohonan anda...</span>
+                        <span style="color: #0369a1;">Sila tunggu sebentar, sedang menyemak rekod permohonan
+                            anda...</span>
                     </div>
                 </div>
             </div>
@@ -290,7 +312,8 @@
                 </div>
 
                 <div id="userApplicationListMobile" class="mobile-cards-container">
-                    <div style="text-align: center; padding: 2rem; color: var(--text-muted); background: #fff; border-radius: 10px;">
+                    <div
+                        style="text-align: center; padding: 2rem; color: var(--text-muted); background: #fff; border-radius: 10px;">
                         Memuatkan senarai permohonan...
                     </div>
                 </div>
@@ -303,7 +326,8 @@
         <section id="sejarah" class="section-content">
             <div class="settings-card">
                 <h3><i class="fas fa-history"></i> Sejarah Permohonan Anda</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Rekod permohonan yang telah selesai atau tamat tempoh.</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Rekod permohonan yang telah
+                    selesai atau tamat tempoh.</p>
 
                 <div class="table-container">
                     <table class="table-compact">
