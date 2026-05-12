@@ -1114,7 +1114,7 @@ async function saveSettingsSilently() {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
 function updateConnectionStatus(isConnected) {
     const statusBox = document.getElementById('connectionStatus');
@@ -1919,7 +1919,7 @@ function renderApplicationTable() {
 function deleteApplication(btn, id) {
     Swal.fire({
         title: 'Padam Rekod?',
-        text: "Data pemohon ini akan dibuang secara kekal dari LocalStorage!",
+        text: "Adakah Anda Yakin Ingin Padam Rekod Ini?",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
@@ -2006,7 +2006,7 @@ function urusApp(id) {
             </div>
             <div class="form-group">
                 <label>No. Telefon</label>
-                <div class="info-box">${app.telefon}</div>
+                <div class="info-box">${(app.telefon || '').startsWith("'") ? app.telefon.substring(1) : (app.telefon || '-')}</div>
             </div>
             <div class="form-group">
                 <label>Email</label>
@@ -2172,6 +2172,10 @@ function urusApp(id) {
         <button class="btn btn-primary" onclick="window.open('../printfile/print.html?id=${app.id}', '_blank')" style="background: #6366f1; border: none; padding: 0.75rem 1.5rem;">
             <i class="fas fa-print"></i> Cetak Borang
         </button>
+        ${app.status === 'Lulus' ? `
+        <button class="btn btn-outline" onclick="createOutlookEvent(${app.id})" style="border-color: #0078d4; color: #0078d4; padding: 0.75rem 1.5rem;">
+            <i class="fab fa-microsoft"></i> Tambah ke Kalendar
+        </button>` : ''}
         <button class="btn btn-outline" onclick="closeModal('urusModal')" style="padding: 0.75rem 1.5rem;">
             <i class="fas fa-times"></i> Tutup
         </button>
@@ -2588,10 +2592,158 @@ function updateAppManagement(id) {
         Swal.fire({
             icon: 'success',
             title: 'Berjaya Dikemaskini!',
-            text: 'Tindakan admin telah disimpan dan diselaraskan ke Google Sheets.',
+            text: ' ',
             timer: 1500,
             showConfirmButton: false
         });
+
+        // INTEGRASI KALENDAR OUTLOOK: Jika status LULUS dan Admin ada Token MS
+        if (newStatus === 'Lulus' && localStorage.getItem('msGraphToken')) {
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Integrasi Kalendar',
+                    text: 'Adakah anda mahu menambah pinjaman ini ke dalam Kalendar Outlook anda dan pemohon?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Tambah',
+                    cancelButtonText: 'Tidak'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        createOutlookEvent(id);
+                    }
+                });
+            }, 1600);
+        }
+    }
+}
+
+/**
+ * INTEGRASI MICROSOFT GRAPH - TAMBAH ACARA KE KALENDAR OUTLOOK
+ */
+async function createOutlookEvent(id) {
+    const apps = getDB(DB_KEYS.APPS);
+    const app = apps.find(a => a.id === id);
+    if (!app) return;
+
+    const msToken = localStorage.getItem('msGraphToken');
+    if (!msToken) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Log Masuk Microsoft Diperlukan',
+            text: 'Sila log masuk dengan akaun Microsoft/Outlook untuk menggunakan ciri penyelarasan kalendar.',
+            footer: '<a href="../index.html">Halaman Log Masuk</a>'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Menyemak Kalendar...',
+        text: 'Sedang berhubung dengan Microsoft Graph...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        // Formatter Tarikh untuk Microsoft Graph (ISO 8601)
+        const formatForMS = (dateStr) => {
+            const d = parseDateDMY(dateStr);
+            if (!d) return null;
+            
+            // Set default time to 08:00 if not present
+            let time = "08:00:00";
+            if (dateStr.includes('T')) {
+                const tPart = dateStr.split('T')[1].substring(0, 5);
+                time = tPart + ":00";
+            }
+            
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}T${time}`;
+        };
+
+        const startTime = formatForMS(app.mula);
+        const endTime = formatForMS(app.tamat);
+
+        if (!startTime || !endTime) throw new Error("Format tarikh pinjaman tidak sah.");
+
+        const eventPayload = {
+            subject: `[PINJAMAN COMPUTER] ${app.noPermohonan} - ${app.nama}`,
+            body: {
+                contentType: "HTML",
+                content: `
+                    <div style="font-family: sans-serif;">
+                        <h2 style="color: #2563eb;">Butiran Pinjaman Komputer</h2>
+                        <hr>
+                        <p><strong>No. Permohonan:</strong> ${app.noPermohonan}</p>
+                        <p><strong>Nama Peminjam:</strong> ${app.nama}</p>
+                        <p><strong>No. Pekerja:</strong> ${app.noPekerja}</p>
+                        <p><strong>Jabatan:</strong> ${app.jabatan}</p>
+                        <p><strong>Peralatan:</strong> ${app.model}</p>
+                        <p><strong>Lokasi:</strong> ${app.lokasi}</p>
+                        <p><strong>Tujuan:</strong> ${app.tujuan}</p>
+                        <br>
+                        <p style="color: #64748b; font-size: 0.9rem;">Disediakan secara automatik oleh Portal Pinjaman Komputer.</p>
+                    </div>
+                `
+            },
+            start: {
+                dateTime: startTime,
+                timeZone: "Singapore Standard Time"
+            },
+            end: {
+                dateTime: endTime,
+                timeZone: "Singapore Standard Time"
+            },
+            location: {
+                displayName: app.lokasi || "Pusat Teknologi Maklumat"
+            },
+            attendees: [
+                {
+                    emailAddress: {
+                        address: app.email,
+                        name: app.nama
+                    },
+                    type: "required"
+                }
+            ],
+            importance: "high"
+        };
+
+        const response = await fetch('https://graph.microsoft.com/v1.0/me/events', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${msToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventPayload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("❌ MS Graph Error:", errorData);
+            
+            if (response.status === 401) {
+                localStorage.removeItem('msGraphToken');
+                throw new Error("Sesi Microsoft telah tamat. Sila log masuk semula.");
+            }
+            throw new Error(errorData.error?.message || "Gagal menghubungi Microsoft Graph API.");
+        }
+
+        const eventResult = await response.json();
+        console.log("✅ Outlook Event Created:", eventResult);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Kalendar Dikemaskini!',
+            text: 'Jadual pinjaman telah berjaya ditambah ke Kalendar Outlook anda dan pemohon.',
+            timer: 3000,
+            showConfirmButton: true
+        });
+
+    } catch (err) {
+        console.error("❌ Calendar Sync Error:", err);
+        Swal.fire('Ralat Kalendar', err.message, 'error');
     }
 }
 
@@ -2602,7 +2754,8 @@ function saveAppEdit(id) {
         apps[index].nama = document.getElementById('edit_nama').value;
         apps[index].noPekerja = document.getElementById('edit_noPekerja').value;
         apps[index].jabatan = document.getElementById('edit_jabatan').value;
-        apps[index].telefon = document.getElementById('edit_telefon').value;
+        const phoneVal = document.getElementById('edit_telefon').value;
+        apps[index].telefon = phoneVal.startsWith("'") ? phoneVal : "'" + phoneVal;
         apps[index].email = document.getElementById('edit_email').value;
         apps[index].lokasi = document.getElementById('edit_lokasi').value;
         apps[index].tujuan = document.getElementById('edit_tujuan').value;
@@ -3556,7 +3709,7 @@ function exportExcel() {
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.nama)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.noPekerja)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.jabatan)}</Data></Cell>
-    <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.telefon)}</Data></Cell>
+    <Cell ss:StyleID="default"><Data ss:Type="String">${esc((app.telefon || '').startsWith("'") ? app.telefon.substring(1) : app.telefon)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.email)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.jenis)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.lokasi)}</Data></Cell>
@@ -3635,7 +3788,7 @@ function exportCSV() {
             `"${app.nama}"`,
             `"${app.noPekerja}"`,
             `"${app.jabatan}"`,
-            `"${app.telefon}"`,
+            `"${(app.telefon || '').startsWith("'") ? app.telefon.substring(1) : (app.telefon || '')}"`,
             `"${app.email}"`,
             `"${app.jenis}"`,
             `"${app.lokasi}"`,

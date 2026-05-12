@@ -3,7 +3,7 @@ function formatDate(str) {
     try {
         const d = new Date(str);
         if (isNaN(d.getTime())) return str;
-        
+
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
@@ -12,7 +12,7 @@ function formatDate(str) {
         const ampm = hours >= 12 ? 'petang' : 'pagi';
         hours = hours % 12 || 12;
         const strHours = String(hours).padStart(2, '0');
-        
+
         return `${day}/${month}/${year} ${strHours}:${minutes} ${ampm}`;
     } catch (e) {
         return str;
@@ -1081,7 +1081,7 @@ async function saveSettingsSilently() {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
 function updateConnectionStatus(isConnected) {
     const statusBox = document.getElementById('connectionStatus');
@@ -1874,7 +1874,7 @@ function urusApp(id) {
             </div>
             <div class="form-group">
                 <label>No. Telefon</label>
-                <div class="info-box">${app.telefon}</div>
+                <div class="info-box">${(app.telefon || '').startsWith("'") ? app.telefon.substring(1) : (app.telefon || '-')}</div>
             </div>
             <div class="form-group">
                 <label>Email</label>
@@ -3292,7 +3292,7 @@ function exportExcel() {
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.nama)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.noPekerja)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.jabatan)}</Data></Cell>
-    <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.telefon)}</Data></Cell>
+    <Cell ss:StyleID="default"><Data ss:Type="String">${esc((app.telefon || '').startsWith("'") ? app.telefon.substring(1) : app.telefon)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.email)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.jenis)}</Data></Cell>
     <Cell ss:StyleID="default"><Data ss:Type="String">${esc(app.lokasi)}</Data></Cell>
@@ -3371,7 +3371,7 @@ function exportCSV() {
             `"${app.nama}"`,
             `"${app.noPekerja}"`,
             `"${app.jabatan}"`,
-            `"${app.telefon}"`,
+            `"${(app.telefon || '').startsWith("'") ? app.telefon.substring(1) : (app.telefon || '')}"`,
             `"${app.email}"`,
             `"${app.jenis}"`,
             `"${app.lokasi}"`,

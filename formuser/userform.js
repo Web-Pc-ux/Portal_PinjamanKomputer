@@ -64,11 +64,11 @@ if (urlParams.has('id')) {
     isEditMode = true;
     editId = urlParams.get('id');
     console.log("🛠️ Masuk ke MOD EDIT untuk ID:", editId);
-    
+
     // Tukar tajuk & butang
     const mainTitle = document.querySelector('.form-header h2');
     if (mainTitle) mainTitle.innerHTML = '<i class="fas fa-edit"></i> Kemaskini Permohonan';
-    
+
     const submitBtn = document.querySelector('button[type="submit"] span');
     if (submitBtn) submitBtn.textContent = 'Kemaskini Permohonan';
 
@@ -96,7 +96,7 @@ if (jenisSelect) {
 }
 
 // Kemaskini had tarikh secara real-time
-function updateDateRestrictions() { 
+function updateDateRestrictions() {
     const now = new Date();
     // Format: YYYY-MM-DDTHH:MM
     const year = now.getFullYear();
@@ -104,23 +104,23 @@ function updateDateRestrictions() {
     const day = String(now.getDate()).padStart(2, '0');
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    
+
     const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    
+
     const pinjamInput = document.getElementById('tarikhMasaPinjam');
     const pulangInput = document.getElementById('tarikhMasaPulangan');
-    
+
     if (pinjamInput) {
         // Jika bukan mod edit, baru kita sekat tarikh lepas
         if (!isEditMode) {
-            pinjamInput.min = minDateTime; 
+            pinjamInput.min = minDateTime;
         }
     }
-    
+
     if (pulangInput) {
         // Masa pulang mesti selepas masa sekarang
-        pulangInput.min = minDateTime; 
-        
+        pulangInput.min = minDateTime;
+
         // Dan mesti selepas masa pinjam yang dipilih
         if (pinjamInput && pinjamInput.value) {
             if (pinjamInput.value > minDateTime) {
@@ -133,7 +133,7 @@ function updateDateRestrictions() {
 // Jalankan sekatan tarikh
 document.addEventListener('DOMContentLoaded', () => {
     updateDateRestrictions();
-    
+
     const pinjamInput = document.getElementById('tarikhMasaPinjam');
     const pulangInput = document.getElementById('tarikhMasaPulangan');
 
@@ -495,7 +495,7 @@ form.addEventListener('submit', async (e) => {
         nama: document.getElementById('name').value,
         noPekerja: document.getElementById('noPekerja').value,
         jabatan: document.getElementById('jabatan').value,
-        telefon: document.getElementById('phone').value,
+        telefon: "'" + document.getElementById('phone').value,
         email: document.getElementById('email').value,
         jenis: document.getElementById('jenisPermohonan').value === 'Lain-lain' ?
             document.getElementById('jenisLain').value :
@@ -525,7 +525,7 @@ form.addEventListener('submit', async (e) => {
 
     // Kirim ke Google Sheets (GAS) - Mod Update atau Create
     const result = await syncToGAS(newApp, isEditMode ? 'update' : 'create');
-    
+
     // TUTUP LOADING SEBELUM TUNJUK MODAL BERJAYA
     Swal.close();
 
@@ -579,7 +579,7 @@ form.addEventListener('submit', async (e) => {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
 // Fungsi untuk sync ke Google Sheets
 async function syncToGAS(data, action = 'create') {
@@ -589,7 +589,7 @@ async function syncToGAS(data, action = 'create') {
         // Papar loading
         Swal.fire({
             title: 'Menghantar Borang...',
-            text: action === 'update' ? 'Sedang mengemaskini permohonan' : 'Sedang memproses fail ke Google Drive',
+            text: action === 'update' ? 'Sedang mengemaskini permohonan' : 'Sila tunggu sebentar, fail sedang di upload',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
@@ -597,7 +597,7 @@ async function syncToGAS(data, action = 'create') {
         const response = await fetch(GAS_URL, {
             method: 'POST',
             body: JSON.stringify({
-                action: action, 
+                action: action,
                 token: GAS_TOKEN,
                 data: {
                     ...data,
@@ -729,24 +729,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnText = document.getElementById('userGoogleLoginText');
     const btnMsLogin = document.getElementById('userMsLoginBtn');
     const btnMsText = document.getElementById('userMsLoginText');
-    
+
     if (auth) {
         // Check if user is already logged in
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 let email = user.email || "";
                 if (!email && user.providerData) {
-                    for(let p of user.providerData) {
+                    for (let p of user.providerData) {
                         if (p.email) { email = p.email; break; }
                     }
                 }
-                
+
                 // Verify UMS Email
                 if (email.toLowerCase().endsWith('@ums.edu.my')) {
                     // Simpan data login secara rahsia (global)
                     window.loggedInGoogleEmail = email;
                     window.loggedInGoogleName = user.displayName || "";
-                    
+
                     // Sembunyikan login, tunjuk borang
                     if (loginOverlay) loginOverlay.style.display = 'none';
                     if (mainContent) mainContent.style.display = 'block';
@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Auto-isi maklumat pengguna dan lock
                     const nameInput = document.getElementById('name');
                     const emailInput = document.getElementById('email');
-                    
+
                     if (nameInput) {
                         nameInput.value = window.loggedInGoogleName.toUpperCase();
                         nameInput.readOnly = true;
@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         emailInput.style.backgroundColor = '#f1f5f9';
                         emailInput.style.color = '#475569';
                     }
-                    
+
                     if (!isEditMode) {
                         restoreFormState();
                     }
@@ -779,17 +779,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             try {
                                 const res = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=permohonan&search=${editId}`);
                                 const result = await res.json();
-                                
+
                                 if (result.status === 'success' && result.data && result.data.length > 0) {
                                     currentEditData = result.data[0];
-                                    
+
                                     // Isi borang (Pastikan id sedia ada sepadan)
                                     document.getElementById('noPekerja').value = currentEditData.noPekerja || '';
                                     document.getElementById('phone').value = currentEditData.telefon || '';
                                     document.getElementById('jabatan').value = currentEditData.jabatan || '';
                                     document.getElementById('lokasi').value = currentEditData.lokasi || '';
                                     document.getElementById('tujuan').value = currentEditData.tujuan || '';
-                                    
+
                                     // Isi Tarikh & Masa (Perlu tukar format ke ISO)
                                     setTimeout(() => {
                                         if (currentEditData.mula) {
@@ -821,7 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             fileContainer.style.display = 'flex';
                                             fileLink.href = currentEditData.failBorang;
                                             fileLink.textContent = "Lihat Lampiran Sedia Ada (" + (currentEditData.noPermohonan) + ")";
-                                            
+
                                             // Jadikan input fail tidak wajib jika sudah ada fail
                                             const fileInput = document.getElementById('failPermohonan');
                                             if (fileInput) fileInput.required = false;
@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire({
                         icon: 'error',
                         title: 'Akses Ditolak',
-                        text: 'Hanya pengguna dengan emel rasmi UMS (@ums.edu.my) dibenarkan untuk mengakses borang ini.'
+                        text: 'Hanya pengguna dengan emel rasmi UMS (@ums.edu.my/@student.ums.edu.my/@iluv.ums.edu.my) dibenarkan untuk mengakses borang ini.'
                     });
                     if (btnLogin) {
                         btnLogin.disabled = false;
@@ -877,7 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 btnLogin.disabled = true;
                 btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-                
+
                 // Trik fokus: Jika pengguna kembali ke tingkap utama (tutup popup) 
                 // butang akan terus dibersihkan dari loading.
                 const resetBtnOnFocus = () => {
@@ -891,9 +891,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const provider = new firebase.auth.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
-                
+
                 await auth.signInWithPopup(provider);
-                
+
                 // Tunjukkan loading overlay
                 Swal.fire({
                     title: 'Mengesahkan Akaun...',
@@ -920,7 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 btnMsLogin.disabled = true;
                 btnMsText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-                
+
                 const resetBtnOnFocus = () => {
                     setTimeout(() => {
                         btnMsLogin.disabled = false;
@@ -946,19 +946,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         Swal.showLoading();
                     }
                 });
-                
+
                 // Ekstrak nama Microsoft sebenar dari profil
                 if (result && result.user) {
-                    const profileName = (result.additionalUserInfo && result.additionalUserInfo.profile && result.additionalUserInfo.profile.displayName) 
+                    const profileName = (result.additionalUserInfo && result.additionalUserInfo.profile && result.additionalUserInfo.profile.displayName)
                         || result.user.displayName || "Peminjam UMS";
-                        
+
                     // Pastikan displayName dalam Firebase diupdate supaya onAuthStateChanged dapat detect
                     if (!result.user.displayName || result.user.displayName !== profileName) {
                         await result.user.updateProfile({ displayName: profileName });
                         window.loggedInGoogleName = profileName;
                     }
                 }
-                
+
                 // onAuthStateChanged akan uruskan validasi emel dan auto-isi borang
             } catch (error) {
                 btnMsLogin.disabled = false;
@@ -978,34 +978,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// Fungsi untuk buang rujukan fail sedia ada semasa EDIT
-window.removeExistingFile = function() {
-    Swal.fire({
-        title: 'Padam Fail?',
-        text: "Pautan fail sedia ada akan dikeluarkan dari permohonan ini. Sila muat naik fail baru jika perlu.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Padam'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            if (currentEditData) currentEditData.failBorang = '-';
-            const fileContainer = document.getElementById('existingFileContainer');
-            if (fileContainer) fileContainer.style.display = 'none';
-            
-            // Jika asal fail adalah wajib, kita boleh minta user upload baru
-            // document.getElementById('failPermohonan').required = true;
-            
-            Swal.fire('Dipadam', 'Rujukan fail telah dikeluarkan.', 'success');
-        }
-    });
-}
+    // Fungsi untuk buang rujukan fail sedia ada semasa EDIT
+    window.removeExistingFile = function () {
+        Swal.fire({
+            title: 'Padam Fail?',
+            text: "Pautan fail sedia ada akan dikeluarkan dari permohonan ini. Sila muat naik fail baru jika perlu.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Padam'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (currentEditData) currentEditData.failBorang = '-';
+                const fileContainer = document.getElementById('existingFileContainer');
+                if (fileContainer) fileContainer.style.display = 'none';
+
+                // Jika asal fail adalah wajib, kita boleh minta user upload baru
+                // document.getElementById('failPermohonan').required = true;
+
+                Swal.fire('Dipadam', 'Rujukan fail telah dikeluarkan.', 'success');
+            }
+        });
+    }
 
     // Auto-save form draft on input/change
     if (form) {
         form.addEventListener('input', saveFormState);
         form.addEventListener('change', saveFormState);
-        
+
         // Buang draf sekiranya pengguna menekan butang "Set Semula"
         form.addEventListener('reset', () => {
             sessionStorage.removeItem('userFormDraft');
@@ -1015,7 +1015,7 @@ window.removeExistingFile = function() {
     // Valdiasi saiz fail secara langsung bila dipilih
     const fileInput = document.getElementById('failPermohonan');
     if (fileInput) {
-        fileInput.addEventListener('change', function() {
+        fileInput.addEventListener('change', function () {
             if (this.files && this.files[0]) {
                 const sizeMB = this.files[0].size / (1024 * 1024);
                 if (sizeMB > 2) {
@@ -1060,10 +1060,10 @@ function saveFormState() {
 function restoreFormState() {
     const draft = sessionStorage.getItem('userFormDraft');
     if (!draft) return;
-    
+
     try {
         const formData = JSON.parse(draft);
-        
+
         // Restore static fields
         ['noPekerja', 'phone', 'jabatan', 'jenisPermohonan', 'jenisLain', 'lokasi', 'tujuan', 'tarikhMasaPinjam', 'tarikhMasaPulangan'].forEach(id => {
             const el = document.getElementById(id);
@@ -1093,7 +1093,7 @@ function restoreDynamicFormState() {
                 if (check && !check.disabled) {
                     check.checked = true;
                     check.dispatchEvent(new Event('change'));
-                    
+
                     const qtyInput = document.getElementById('qty-' + catId);
                     if (qtyInput) {
                         qtyInput.value = formData.dynamic[catId].qty;
@@ -1107,16 +1107,17 @@ function restoreDynamicFormState() {
 }
 
 // Fungsi tambahan untuk memulihkan pilihan peralatan semasa EDIT
-function restoreEditPeralatan(kuantitiStr) { console.log("🔍 Memulihkan:", kuantitiStr);
+function restoreEditPeralatan(kuantitiStr) {
+    console.log("🔍 Memulihkan:", kuantitiStr);
     if (!kuantitiStr || kuantitiStr === "-") return;
-    
+
     const lines = kuantitiStr.replace(/<br\s*\/?>/gi, "\n").replace(/&bull;/g, "�").split("\n");
     lines.forEach(line => {
         const match = line.match(/�?\s*(.+?)\s*[-��]\s*(\d+)/i);
         if (match) {
             const catName = match[1].trim();
             const qty = match[2].trim();
-            
+
             // Cari checkbox yang sepadan dengan nama kategori
             const check = Array.from(document.querySelectorAll(".cat-check")).find(c => (c.dataset.catname || "").toLowerCase().trim() === catName.toLowerCase().trim());
             if (check) {
@@ -1138,9 +1139,9 @@ function convertToISODate(str) {
 
         // Dijangka format: dd/mm/yyyy HH:mm
         const parts = str.trim().split(/\s+/);
-        const datePart = parts[0]; 
-        const timePart = parts[1] || '08:00'; 
-        
+        const datePart = parts[0];
+        const timePart = parts[1] || '08:00';
+
         const dParts = datePart.split('/');
         if (dParts.length < 3) {
             // Cuba split guna '-' jika ada
@@ -1153,11 +1154,11 @@ function convertToISODate(str) {
             }
             return '';
         }
-        
+
         const day = dParts[0].padStart(2, '0');
         const month = dParts[1].padStart(2, '0');
         const year = dParts[2];
-        
+
         const result = `${year}-${month}-${day}T${timePart}`;
         console.log("Converted date:", str, "to", result);
         return result;
@@ -1168,28 +1169,28 @@ function convertToISODate(str) {
 }
 
 // Fungsi Pemulihan Peralatan Versi Stabil
-window.restoreEditPeralatan = function(kuantitiStr) {
+window.restoreEditPeralatan = function (kuantitiStr) {
     if (!kuantitiStr || kuantitiStr === '-') return;
-    
+
     // Bersihkan HTML dan tukar ke baris baru
     let cleanText = kuantitiStr.replace(/<br\s*\/?>/gi, '\n').replace(/&bull;/g, '');
     let lines = cleanText.split('\n');
-    
+
     lines.forEach(line => {
         if (!line.trim()) return;
-        
+
         // Cari pembahagi (biasanya ' - ')
         let parts = line.split(/[-–—]/);
         if (parts.length >= 2) {
             let catName = parts[0].replace(/[•]/g, '').trim().toLowerCase();
             let qtyPart = parts[1].trim();
             let qtyMatch = qtyPart.match(/(\d+)/);
-            
+
             if (qtyMatch) {
                 let qty = qtyMatch[1];
                 let allChecks = document.querySelectorAll('.cat-check');
                 let check = Array.from(allChecks).find(c => (c.dataset.catname || '').toLowerCase().trim() === catName);
-                
+
                 if (check) {
                     check.checked = true;
                     check.dispatchEvent(new Event('change'));
@@ -1215,7 +1216,7 @@ function convertToISODate(str) {
         let s = str.toString().trim();
         // Handle ISO (YYYY-MM-DDTHH:mm)
         if (s.includes('T')) return s.substring(0, 16);
-        
+
         // Handle dd/mm/yyyy HH:mm
         const parts = s.split(/\s+/);
         const datePart = parts[0];

@@ -1,6 +1,6 @@
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -44,7 +44,7 @@ async function loadApplicationData(id) {
     }
 
     if (!app) {
-        console.error('Permohonan tidak dijumpai dalam database.');
+        console.error('Permohonan tidak dijumpai');
         return;
     }
 
@@ -54,7 +54,10 @@ async function loadApplicationData(id) {
     setText('print-noPekerja', app.noPekerja);
     setText('print-jabatan', app.jabatan);
     setText('print-noSamb', app.noSamb || '-'); // Jika ada field baru
-    setText('print-phone', app.telefon);
+    // Fix Telefon display: buang ' jika ada
+    let displayPhone = app.telefon || '-';
+    if (displayPhone.startsWith("'")) displayPhone = displayPhone.substring(1);
+    setText('print-phone', displayPhone);
     setText('print-tarikhPinjam', formatDate(app.mula));
     setText('print-tarikhPulang', formatDate(app.tamat));
     setText('print-lokasi', app.lokasi || '-');
@@ -164,11 +167,11 @@ async function loadApplicationData(id) {
                     const currentSiri = serialsRaw[serialIndex];
                     if (currentSiri) {
                         siriForThisModel.push(currentSiri);
-                        
+
                         // Cuba cari model spesifik dari database komputer (hanya untuk item pertama dalam group)
                         if (i === 0 && typeof computers !== 'undefined' && computers.length > 0) {
-                            const comp = computers.find(c => 
-                                (c.noPC && c.noPC.toString().trim().toLowerCase() === currentSiri.toLowerCase()) || 
+                            const comp = computers.find(c =>
+                                (c.noPC && c.noPC.toString().trim().toLowerCase() === currentSiri.toLowerCase()) ||
                                 (c.noSiri && c.noSiri.toString().trim().toLowerCase() === currentSiri.toLowerCase())
                             );
                             if (comp && comp.model) {

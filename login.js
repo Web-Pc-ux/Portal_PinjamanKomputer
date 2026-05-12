@@ -34,7 +34,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
 // Helper function for case-insensitive property access
 const getVal = (obj, key) => {
@@ -90,6 +90,7 @@ if (msBtn) {
             provider.addScope('email');
             provider.addScope('User.Read');
             provider.addScope('User.ReadBasic.All'); // Diperlukan untuk mencari pengguna lain dalam organisasi
+            provider.addScope('Calendars.ReadWrite'); // TAMBAHAN: Untuk integrasi Kalendar Outlook
 
             const result = await auth.signInWithPopup(provider);
             

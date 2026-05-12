@@ -581,7 +581,7 @@ if (form) {
             nama: document.getElementById('name').value,
             noPekerja: document.getElementById('noPekerja').value,
             jabatan: document.getElementById('jabatan').value,
-            telefon: document.getElementById('phone').value,
+            telefon: "'" + document.getElementById('phone').value,
             email: document.getElementById('email').value,
             jenis: finalJenis,
             lokasi: document.getElementById('lokasi').value,
@@ -622,7 +622,7 @@ if (form) {
 
 // --- KONFIGURASI INTEGRASI (TANAM) ---
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxfA_6FxdnHQC6ngT0kBjNCbFMz6_-NJ-Y1tm1CGl-PWC9oFnV_WecJg9h36UT7UmyhLA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
 async function syncToGAS(data) {
     if (!GAS_URL) return;
