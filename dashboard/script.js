@@ -3,12 +3,17 @@ function formatDate(str) {
     try {
         const d = new Date(str);
         if (isNaN(d.getTime())) return str;
+
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, '0');
+        let hours = d.getHours();
         const minutes = String(d.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
+        const ampm = hours >= 12 ? 'petang' : 'pagi';
+        hours = hours % 12 || 12;
+        const strHours = String(hours).padStart(2, '0');
+
+        return `${day}/${month}/${year} ${strHours}:${minutes} ${ampm}`;
     } catch (e) {
         return str;
     }
@@ -171,82 +176,8 @@ function initializeDashboard(adminData) {
     setInterval(updateDigitalClock, 1000);
     updateDigitalClock();
 
-    // Calendar Popup
-    const clockBtn = document.getElementById('digital-clock');
-    if (clockBtn) {
-        clockBtn.addEventListener('click', () => {
-            showCalendar();
-        });
-    }
-
-    // State for Calendar Navigation
-    let currentCalendarDate = new Date();
-
-    function showCalendar(targetDate = new Date()) {
-        currentCalendarDate = targetDate;
-        const now = new Date();
-        const month = targetDate.getMonth();
-        const year = targetDate.getFullYear();
-        const monthNames = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
-
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        let daysHtml = '';
-        const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
-        for (let i = 0; i < adjustedFirstDay; i++) {
-            daysHtml += '<div class="calendar-day empty"></div>';
-        }
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear()) ? 'today' : '';
-            daysHtml += `<div class="calendar-day ${isToday}" onclick="Swal.close()">${i}</div>`;
-        }
-
-        Swal.fire({
-            title: '',
-            html: `
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)" title="Bulan Sebelum">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <h3>${monthNames[month]} ${year}</h3>
-                        <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)" title="Bulan Depan">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                    <div class="calendar-grid">
-                        <div class="calendar-day-name">Sn</div>
-                        <div class="calendar-day-name">Sl</div>
-                        <div class="calendar-day-name">Rb</div>
-                        <div class="calendar-day-name">Kh</div>
-                        <div class="calendar-day-name">Jm</div>
-                        <div class="calendar-day-name">Sb</div>
-                        <div class="calendar-day-name">Ah</div>
-                        ${daysHtml}
-                    </div>
-                    <div style="margin-top: 1.5rem; text-align: center;">
-                        <button class="btn btn-outline" onclick="showCalendar(new Date())" style="font-size: 0.75rem; padding: 0.4rem 1rem;">Hari Ini</button>
-                    </div>
-                </div>
-            `,
-            showConfirmButton: false,
-            showCloseButton: true,
-            width: '400px',
-            background: 'var(--bg-card)',
-            color: 'var(--text-main)',
-            didOpen: () => {
-                const container = Swal.getHtmlContainer();
-                if (container) container.style.color = 'var(--text-main)';
-            }
-        });
-    }
-
-    window.changeCalendarMonth = function (offset) {
-        const newDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + offset, 1);
-        showCalendar(newDate);
-    };
+    // Initialize Dashboard Calendar
+    renderDashboardCalendar();
 
     // Navigation logic
     const navItems = document.querySelectorAll('.nav-item[data-section]');
@@ -263,7 +194,6 @@ function initializeDashboard(adminData) {
         // Update active nav
         navItems.forEach(nav => nav.classList.remove('active'));
         targetItem.classList.add('active');
-
         // Update visible section
         sections.forEach(sec => sec.classList.remove('active'));
         document.getElementById(sectionId).classList.add('active');
@@ -1389,6 +1319,7 @@ function renderAllUI() {
     renderCategoryTable();
     renderAdminTable();
     populateReportYearDropdown();
+    renderDashboardCalendar(); // Add this line
 
     // Refresh Python Report (Stats + Table + Chart)
     if (window.refreshPythonReport) {
@@ -1540,17 +1471,17 @@ function renderDashboardStats() {
 
     // Update notification
     const notifEl = document.getElementById('actionNotifications');
-    
+
     // Logic for Upcoming in 7 Days (Peringatan 7 Hari)
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const next7Days = new Date();
     next7Days.setDate(today.getDate() + 7);
-    next7Days.setHours(23,59,59,999);
+    next7Days.setHours(23, 59, 59, 999);
 
     const akanDatangSegera = apps.filter(a => {
         // Hanya ambil yang 'Akan Datang' atau 'Lulus' yang belum mula
-        if (a.status !== 'Akan Datang' && a.status !== 'Lulus') return false; 
+        if (a.status !== 'Akan Datang' && a.status !== 'Lulus') return false;
         const loanDate = parseDateDMY(a.mula);
         return loanDate && loanDate >= today && loanDate <= next7Days;
     }).length;
@@ -1580,11 +1511,11 @@ function renderDashboardStats() {
     const alertBar = document.querySelector('#dashboard .alert');
     if (alertBar) {
         let alertMsg = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> ${countBaru} permohonan baru menunggu kelulusan. Jumlah rekod: ${apps.length}.`;
-        
+
         if (akanDatangSegera > 0) {
             alertMsg += ` <span style="margin-left:10px; color:#c2410c; font-weight:bold;">⚠️ Peringatan: ${akanDatangSegera} permohonan akan bermula dalam 7 hari!</span>`;
         }
-        
+
         alertBar.innerHTML = alertMsg;
     }
 }
@@ -1982,7 +1913,7 @@ function renderApplicationTable() {
     renderDashboardStats();
 
     // Refresh Calendar
-    renderCalendar();
+    renderDashboardCalendar();
 }
 
 function deleteApplication(btn, id) {
@@ -3987,97 +3918,190 @@ function searchPemohon() {
     }
 }
 
-/* ==============================
-   CALENDAR LOGIC
-============================== */
-let currentCalendarDate = new Date();
 
-function renderCalendar() {
+
+/* ==============================
+   GLOBAL CALENDAR LOGIC
+============================== */
+let dashboardCalendarDate = new Date();
+
+function parseDateDMY(dateStr) {
+    if (!dateStr) return null;
+    // Handle DD/MM/YYYY format
+    const parts = dateStr.split(' ')[0].split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    // Fallback to standard Date parsing
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function renderDashboardCalendar() {
     const calendarMonthYear = document.getElementById('calendarMonthYear');
     const calendarDays = document.getElementById('calendarDays');
     if (!calendarMonthYear || !calendarDays) return;
 
-    const apps = getDB(DB_KEYS.APPS) || [];
-
-    const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth();
-
+    const now = new Date();
+    const month = dashboardCalendarDate.getMonth();
+    const year = dashboardCalendarDate.getFullYear();
     const monthNames = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+
     calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
 
-    // First day of month
     const firstDay = new Date(year, month, 1).getDay();
-    // Days in month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    // Days in prev month
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    const prevMonthLastDate = new Date(year, month, 0).getDate();
 
     calendarDays.innerHTML = '';
 
-    // Prev month padding
+    const apps = (getDB(DB_KEYS.APPS) || []).filter(a => a.mula && a.tamat);
+    const viewStart = new Date(year, month, 1);
+    const viewEnd = new Date(year, month, daysInMonth);
+
+    const appsInView = apps.map(app => {
+        const start = parseDateDMY(app.mula);
+        const end = parseDateDMY(app.tamat);
+        return { ...app, startDate: start, endDate: end };
+    }).filter(app => {
+        return app.startDate && app.endDate &&
+            app.startDate <= viewEnd && app.endDate >= viewStart;
+    });
+
+    const dayLanes = {};
+    const appLanes = {};
+
+    appsInView.sort((a, b) => a.startDate - b.startDate || (b.endDate - b.startDate) - (a.endDate - a.startDate));
+
+    appsInView.forEach(app => {
+        let lane = 0;
+        let foundLane = false;
+        while (!foundLane) {
+            let collision = false;
+            let curr = new Date(app.startDate);
+            while (curr <= app.endDate) {
+                const dKey = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
+                if (dayLanes[dKey] && dayLanes[dKey][lane]) {
+                    collision = true;
+                    break;
+                }
+                curr.setDate(curr.getDate() + 1);
+            }
+            if (!collision) {
+                let curr2 = new Date(app.startDate);
+                while (curr2 <= app.endDate) {
+                    const dKey = `${curr2.getFullYear()}-${String(curr2.getMonth() + 1).padStart(2, '0')}-${String(curr2.getDate()).padStart(2, '0')}`;
+                    if (!dayLanes[dKey]) dayLanes[dKey] = [];
+                    dayLanes[dKey][lane] = app.id;
+                    curr2.setDate(curr2.getDate() + 1);
+                }
+                appLanes[app.id] = lane;
+                foundLane = true;
+            } else {
+                lane++;
+            }
+        }
+    });
+
     for (let i = firstDay; i > 0; i--) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day other-month';
+        div.innerHTML = `<div class="day-number-wrapper"><span class="day-number">${prevMonthLastDate - i + 1}</span></div>`;
+        calendarDays.appendChild(div);
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateObj = new Date(year, month, i);
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear());
+
         const dayDiv = document.createElement('div');
-        dayDiv.className = 'calendar-day other-month';
-        dayDiv.textContent = daysInPrevMonth - i + 1;
+        dayDiv.className = `calendar-day ${isToday ? 'today' : ''}`;
+        dayDiv.innerHTML = `<div class="day-number-wrapper"><span class="day-number">${i}</span></div>`;
+
+        const lanesOnThisDay = dayLanes[dateKey] || [];
+        const maxVisibleLanes = 3;
+
+        for (let l = 0; l < maxVisibleLanes; l++) {
+            const appId = lanesOnThisDay[l];
+            if (appId) {
+                const app = appsInView.find(a => a.id === appId);
+                const isStart = app.startDate.getTime() === dateObj.getTime();
+                const isEnd = app.endDate.getTime() === dateObj.getTime();
+                const isMonday = dateObj.getDay() === 1;
+                const isSunday = dateObj.getDay() === 0;
+
+                const bar = document.createElement('div');
+                let type = 'tengah';
+                if (isStart && isEnd) type = 'single';
+                else if (isStart || (isMonday && app.startDate < dateObj)) type = 'mula';
+                else if (isEnd || (isSunday && app.endDate > dateObj)) type = 'tamat';
+
+                const statusClass = getStatusClass(app.status);
+                bar.className = `event-bar ${type} status-${statusClass}`;
+                if (isStart || isMonday || i === 1) {
+                    bar.textContent = `${app.nama} - ${app.model}`;
+                }
+                bar.onclick = (e) => { e.stopPropagation(); showAppDetails(app); };
+                dayDiv.appendChild(bar);
+            } else {
+                const spacer = document.createElement('div');
+                spacer.style.height = '12px';
+                spacer.style.marginBottom = '1px';
+                dayDiv.appendChild(spacer);
+            }
+        }
+
+        if (lanesOnThisDay.filter(x => x).length > maxVisibleLanes) {
+            const more = document.createElement('div');
+            more.className = 'more-events';
+            more.textContent = `+${lanesOnThisDay.filter(x => x).length - maxVisibleLanes} lagi`;
+            dayDiv.appendChild(more);
+        }
         calendarDays.appendChild(dayDiv);
     }
 
-    const today = new Date();
-
-    // Current month days
-    for (let d = 1; d <= daysInMonth; d++) {
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'calendar-day';
-        dayDiv.textContent = d;
-
-        // Highlight today
-        if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
-            dayDiv.classList.add('today');
-        }
-
-        // Highlight applications (Blue)
-        const appsOnDate = apps.filter(app => {
-            if (!app.mula) return false;
-            const appDate = new Date(app.mula);
-            return appDate.getFullYear() === year && appDate.getMonth() === month && appDate.getDate() === d;
-        });
-
-        if (appsOnDate.length > 0) {
-            dayDiv.classList.add('has-app');
-            dayDiv.title = `${appsOnDate.length} Permohonan`;
-            const badge = document.createElement('span');
-            badge.className = 'app-count';
-            badge.textContent = `${appsOnDate.length} App`;
-            dayDiv.appendChild(badge);
-
-            // Add click event to see apps on that day
-            dayDiv.onclick = (e) => {
-                e.stopPropagation();
-                Swal.fire({
-                    title: `Permohonan pada ${d} ${monthNames[month]}`,
-                    html: `<div style="text-align:left; max-height: 300px; overflow-y: auto;">
-                        ${appsOnDate.map(a => `
-                            <div style="margin-bottom:10px; padding:12px; background:#f8fafc; border-radius:8px; border-left:4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <strong style="color:var(--primary);">${escapeHTML(a.nama)}</strong><br>
-                                <span style="font-size:0.8rem; color:var(--text-muted);"><i class="fas fa-laptop"></i> ${escapeHTML(a.model)} (${a.kuantiti} Unit)</span>
-                            </div>
-                        `).join('')}
-                    </div>`,
-                    icon: 'info'
-                });
-            };
-        }
-
-        calendarDays.appendChild(dayDiv);
+    const totalSlots = calendarDays.children.length;
+    const remaining = 42 - totalSlots;
+    for (let i = 1; i <= remaining; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day other-month';
+        div.innerHTML = `<div class="day-number-wrapper"><span class="day-number">${i}</span></div>`;
+        calendarDays.appendChild(div);
     }
 }
 
-window.prevMonth = function () {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-    renderCalendar();
-};
+function showAppDetails(app) {
+    Swal.fire({
+        title: `Butiran Pinjaman`,
+        html: `<div style="text-align: left; padding: 10px;">
+            <p><strong>Pemohon:</strong> ${app.nama}</p>
+            <p><strong>Peralatan:</strong> ${app.model}</p>
+            <p><strong>Tempoh:</strong> ${app.mula} hingga ${app.tamat}</p>
+            <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(app.status)}">${app.status}</span></p>
+        </div>`,
+        icon: 'info',
+        confirmButtonText: 'Tutup'
+    });
+}
 
+function getStatusClass(status) {
+    if (!status) return 'baru';
+    const s = status.toLowerCase();
+    if (s.includes('lulus')) return 'lulus';
+    if (s.includes('guna')) return 'guna';
+    if (s.includes('lewat')) return 'lewat';
+    if (s.includes('pulang') || s.includes('selesai')) return 'selesai';
+    if (s.includes('akan datang')) return 'akandatang';
+    return 'baru';
+}
+
+window.renderDashboardCalendar = renderDashboardCalendar;
+window.prevMonth = function () {
+    dashboardCalendarDate.setMonth(dashboardCalendarDate.getMonth() - 1);
+    renderDashboardCalendar();
+};
 window.nextMonth = function () {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-    renderCalendar();
+    dashboardCalendarDate.setMonth(dashboardCalendarDate.getMonth() + 1);
+    renderDashboardCalendar();
 };

@@ -18,16 +18,25 @@ async function loadApplicationData(id) {
 
     // 1. Cuba cari dalam LocalStorage dulu (Legacy Support)
     const apps = JSON.parse(localStorage.getItem('db_applications') || '[]');
+    const computers = JSON.parse(localStorage.getItem('db_computers') || '[]');
     app = apps.find(a => a.id === id);
 
     // 2. Jika TIADA dalam LocalStorage, tarik dari Cloud (Turbo Sync Mode)
-    if (!app && GAS_URL) {
+    if ((!app || computers.length === 0) && GAS_URL) {
         console.log('🔍 Menarik data dari Cloud...');
         try {
-            const res = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=permohonan`);
-            const result = await res.json();
-            if (result.status === 'success' && result.data) {
-                app = result.data.find(a => a.id === id);
+            // Tarik permohonan
+            const resApps = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=permohonan`);
+            const resultApps = await resApps.json();
+            if (resultApps.status === 'success' && resultApps.data) {
+                app = resultApps.data.find(a => a.id === id);
+            }
+
+            // Tarik komputer/peralatan (untuk cari model spesifik)
+            const resComps = await fetch(`${GAS_URL}?action=read&token=${GAS_TOKEN}&sheet=komputer`);
+            const resultComps = await resComps.json();
+            if (resultComps.status === 'success' && resultComps.data) {
+                localStorage.setItem('db_computers', JSON.stringify(resultComps.data));
             }
         } catch (e) {
             console.error('Gagal tarik dari Cloud:', e);
@@ -115,7 +124,27 @@ async function loadApplicationData(id) {
         if (models.length > 0) {
             let serialIndex = 0;
             models.forEach((mod, index) => {
+                // Hilangkan kuantiti dari nama model (Contoh: "Model - 1 Unit" -> "Model")
+                if (mod.includes(' - ')) {
+                    mod = mod.split(' - ')[0].trim();
+                } else if (mod.includes('-')) {
+                    // Fallback jika tiada space tetapi ada dash dihujung
+                    const parts = mod.split('-');
+                    if (parts.length > 1 && parts[parts.length - 1].toLowerCase().includes('unit')) {
+                        parts.pop();
+                        mod = parts.join('-').trim();
+                    }
+                }
+
                 let qtyStr = quantities[index] || '-';
+
+                // Hilangkan nama model dari string kuantiti (Contoh: "Model - 1 Unit" -> "1 Unit")
+                if (qtyStr.includes(' - ')) {
+                    qtyStr = qtyStr.split(' - ').pop().trim();
+                } else if (qtyStr.includes('-')) {
+                    // Fallback jika tiada space
+                    qtyStr = qtyStr.split('-').pop().trim();
+                }
 
                 // Cari jumlah unit untuk extract nombor siri yang sepadan
                 let count = 1;
@@ -129,18 +158,34 @@ async function loadApplicationData(id) {
                 }
 
                 let siriForThisModel = [];
+                let specificModelName = "";
+
                 for (let i = 0; i < count; i++) {
-                    if (serialsRaw[serialIndex]) {
-                        siriForThisModel.push(serialsRaw[serialIndex]);
+                    const currentSiri = serialsRaw[serialIndex];
+                    if (currentSiri) {
+                        siriForThisModel.push(currentSiri);
+                        
+                        // Cuba cari model spesifik dari database komputer (hanya untuk item pertama dalam group)
+                        if (i === 0 && typeof computers !== 'undefined' && computers.length > 0) {
+                            const comp = computers.find(c => 
+                                (c.noPC && c.noPC.toString().trim().toLowerCase() === currentSiri.toLowerCase()) || 
+                                (c.noSiri && c.noSiri.toString().trim().toLowerCase() === currentSiri.toLowerCase())
+                            );
+                            if (comp && comp.model) {
+                                specificModelName = comp.model;
+                            }
+                        }
                         serialIndex++;
                     }
                 }
+
                 const noSiriStr = siriForThisModel.length > 0 ? siriForThisModel.join(', ') : '-';
+                const displayName = specificModelName ? `${mod} (${specificModelName})` : mod;
 
                 const row = `
                     <tr>
                         <td style="text-align:center;">${index + 1}</td>
-                        <td>${mod}</td>
+                        <td>${displayName}</td>
                         <td style="text-align:center;">${qtyStr}</td>
                         <td>${noSiriStr}</td>
                     </tr>
@@ -180,7 +225,7 @@ function formatDate(dateStr) {
         const year = d.getFullYear();
         let hours = d.getHours();
         const minutes = String(d.getMinutes()).padStart(2, "0");
-        const ampm = hours >= 12 ? "PM" : "AM";
+        const ampm = hours >= 12 ? "petang" : "pagi";
         hours = hours % 12 || 12;
         const hourStr = String(hours).padStart(2, "0");
         return `${day}/${month}/${year} ${hourStr}:${minutes} ${ampm}`;

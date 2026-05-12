@@ -1,14 +1,19 @@
 function formatDate(str) {
-    if (!str || str === '-') return '-';
+    if (!str || str === '-' || str === 'undefined') return '-';
     try {
         const d = new Date(str);
         if (isNaN(d.getTime())) return str;
+        
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, '0');
+        let hours = d.getHours();
         const minutes = String(d.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
+        const ampm = hours >= 12 ? 'petang' : 'pagi';
+        hours = hours % 12 || 12;
+        const strHours = String(hours).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${strHours}:${minutes} ${ampm}`;
     } catch (e) {
         return str;
     }
@@ -3685,19 +3690,17 @@ function renderUserApplicationsUI() {
 
     // Filter data: Active vs Akan Datang vs History
     const activeApps = userApps.filter(a => !['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak', 'Akan Datang'].includes(a.status));
-    const upcomingApps = userApps.filter(a => a.status === 'Akan Datang');
+
     const historyApps = userApps.filter(a => ['Selesai', 'Dipulangkan', 'Tolak', 'Ditolak'].includes(a.status));
 
     // Sorting: Newest first
     activeApps.sort((a, b) => b.id - a.id);
-    upcomingApps.sort((a, b) => b.id - a.id);
     historyApps.sort((a, b) => b.id - a.id);
 
     const tbody = document.getElementById('userApplicationList');
     const mobileContainer = document.getElementById('userApplicationListMobile');
 
-    const akanDatangTbody = document.getElementById('akanDatangTableBody');
-    const akanDatangMobile = document.getElementById('akanDatangMobileBody');
+
 
     const historyTbody = document.getElementById('userHistoryList');
     const historyMobileContainer = document.getElementById('userHistoryListMobile');
@@ -3825,13 +3828,7 @@ function renderUserApplicationsUI() {
         mobileContainer.innerHTML = activeApps.length > 0 ? activeApps.map(generateCardHtml).join('') : '<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: #fff; border-radius: 16px; margin-top: 10px; border: 1px dashed var(--border);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-folder-open"></i></div>Tiada permohonan aktif.</div>';
     }
 
-    // Render Akan Datang Table
-    if (akanDatangTbody) {
-        akanDatangTbody.innerHTML = upcomingApps.length > 0 ? upcomingApps.map(app => generateRowHtml(app, false)).join('') : '<tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-calendar-day"></i></div>Tiada permohonan akan datang buat masa ini.</td></tr>';
-    }
-    if (akanDatangMobile) {
-        akanDatangMobile.innerHTML = upcomingApps.length > 0 ? upcomingApps.map(generateCardHtml).join('') : '<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: #fff; border-radius: 16px; margin-top: 10px; border: 1px dashed var(--border);"><div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-calendar-times"></i></div>Tiada jadual akan datang.</div>';
-    }
+
 
     // Render History Table
     if (historyTbody) {
@@ -3847,25 +3844,31 @@ function renderUserApplicationsUI() {
     const notifBox = document.getElementById('userNotifications');
 
     if (statusText) {
-        let msg = 'Status Terkini: ' + latestApp.status + ' (No. Permohonan: ' + latestApp.noPermohonan + ')';
+        if (!latestApp) {
+            statusText.textContent = 'Tiada rekod permohonan ditemui.';
+        } else {
+            let msg = 'Status Terkini: ' + latestApp.status + ' (No. Permohonan: ' + latestApp.noPermohonan + ')';
 
-        if ((latestApp.status === 'Dipinjam' || latestApp.status === 'Sedang Digunakan') && latestApp.authNamaPinjam) {
-            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah diambil oleh ${latestApp.authNamaPinjam} pada ${formatDate(latestApp.scanPinjam)}`;
-        } else if ((latestApp.status === 'Selesai' || latestApp.status === 'Dipulangkan') && latestApp.authNamaPulang) {
-            msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah dipulangkan oleh ${latestApp.authNamaPulang} pada ${formatDate(latestApp.scanPulang)}`;
-        } else if (latestApp.status === 'Lulus') {
-            msg = `Status Terkini: Permohonan Lulus (No: ${latestApp.noPermohonan}). Sila hadir untuk pengambilan peralatan ICT.`;
-        } else if (latestApp.status === 'Baru' || latestApp.status === 'Menunggu') {
-            msg = `Status Terkini: Permohonan anda sedang dalam proses semakan (No: ${latestApp.noPermohonan})`;
-        } else if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
-            msg = `Status Terkini: Permohonan Tidak Diluluskan (No: ${latestApp.noPermohonan})`;
+            if ((latestApp.status === 'Dipinjam' || latestApp.status === 'Sedang Digunakan') && latestApp.authNamaPinjam) {
+                msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah diambil oleh ${latestApp.authNamaPinjam} pada ${formatDate(latestApp.scanPinjam)}`;
+            } else if ((latestApp.status === 'Selesai' || latestApp.status === 'Dipulangkan') && latestApp.authNamaPulang) {
+                msg = `Status Terkini: Komputer (No: ${latestApp.noPermohonan}) telah dipulangkan oleh ${latestApp.authNamaPulang} pada ${formatDate(latestApp.scanPulang)}`;
+            } else if (latestApp.status === 'Lulus') {
+                msg = `Status Terkini: Permohonan Lulus (No: ${latestApp.noPermohonan}). Sila hadir untuk pengambilan peralatan ICT.`;
+            } else if (latestApp.status === 'Baru' || latestApp.status === 'Menunggu') {
+                msg = `Status Terkini: Permohonan anda sedang dalam proses semakan (No: ${latestApp.noPermohonan})`;
+            } else if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
+                msg = `Status Terkini: Permohonan Tidak Diluluskan (No: ${latestApp.noPermohonan})`;
+            }
+
+            statusText.textContent = msg;
         }
-
-        statusText.textContent = msg;
     }
 
     if (notifBox) {
-        if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
+        if (!latestApp) {
+            notifBox.style.display = 'none';
+        } else if (latestApp.status === 'Tolak' || latestApp.status === 'Ditolak') {
             notifBox.style.display = 'flex';
             notifBox.className = 'alert alert-danger';
             notifBox.style.background = '#fee2e2';

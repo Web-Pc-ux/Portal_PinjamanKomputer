@@ -130,71 +130,119 @@
             </div>
 
             <style>
-                .calendar-grid {
+                #calendar-card {
+                    width: 420px !important;
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0; /* Garis border lebih jelas */
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+                    border-radius: 20px;
+                    margin: 1.5rem auto;
+                    padding: 1rem !important;
+                    overflow: hidden;
+                    box-sizing: border-box;
+                }
+
+                .days-grid {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    gap: 8px;
+                    gap: 2px; /* Rapatkan lagi supaya bar nampak bersambung rapat */
+                    width: 100%;
                 }
+
+                .calendar-header-grid {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    margin-bottom: 5px;
+                    width: 100%;
+                }
+
                 .calendar-day-label {
                     text-align: center;
-                    font-weight: 700;
-                    font-size: 0.75rem;
-                    color: var(--text-muted);
-                    padding-bottom: 8px;
+                    font-weight: 800;
+                    font-size: 0.6rem;
+                    color: #94a3b8;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    padding: 4px 0;
                 }
-                .days-grid {
-                    min-height: 200px;
-                }
+
                 .calendar-day {
-                    aspect-ratio: 1;
+                    height: 60px !important;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
-                    background: var(--bg-main);
-                    border-radius: 8px;
-                    font-size: 0.8rem;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.2s;
+                    justify-content: flex-start;
+                    background: #ffffff; /* Putih bersih */
+                    border: 1px solid #f1f5f9; /* Garis pemisah hari */
+                    padding: 2px;
                     position: relative;
-                    border: 1px solid transparent;
+                    overflow: hidden;
+                    box-sizing: border-box;
                 }
-                .calendar-day:hover {
-                    background: rgba(59, 130, 246, 0.05);
-                    transform: translateY(-2px);
-                    border-color: rgba(59, 130, 246, 0.2);
-                }
-                .calendar-day.today {
-                    background: rgba(59, 130, 246, 0.1);
-                    color: var(--primary);
-                    border: 1px solid var(--primary);
+
+                .day-number {
+                    font-size: 0.7rem;
                     font-weight: 700;
+                    color: #64748b;
+                    margin-bottom: 2px;
                 }
-                .calendar-day.has-app {
-                    background: #3b82f6;
-                    color: white;
-                    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+
+                .calendar-day.today {
+                    background: #f0f9ff;
+                    border: 1px solid #3b82f6;
                 }
-                .calendar-day.has-app:hover {
-                    background: #2563eb;
+                .calendar-day.today .day-number { color: #3b82f6; }
+
+                .calendar-day.other-month { opacity: 0.3; }
+
+                .event-bar {
+                    height: 14px !important;
+                    font-size: 0.45rem !important;
+                    line-height: 14px !important;
+                    color: white !important;
+                    margin-bottom: 1px;
+                    padding: 0 4px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: block;
+                    z-index: 5;
+                    position: relative;
+                    font-weight: 700;
+                    width: 100%;
+                    box-sizing: border-box;
                 }
-                .calendar-day.other-month {
-                    opacity: 0.2;
-                    cursor: default;
+
+                /* Warna mengikut posisi */
+                .event-bar.mula { 
+                    background: #3b82f6 !important; /* Biru untuk Mula */
+                    border-radius: 4px 0 0 4px;
+                    width: calc(100% + 4px);
+                    margin-right: -4px;
                 }
-                .calendar-day .app-count {
-                    position: absolute;
-                    bottom: 4px;
-                    font-size: 0.6rem;
-                    background: rgba(255, 255, 255, 0.3);
-                    padding: 1px 4px;
+                .event-bar.tengah { 
+                    background: #93c5fd !important; /* Biru Muda untuk Tengah */
+                    border-radius: 0;
+                    width: calc(100% + 4px);
+                    margin-left: -2px;
+                    margin-right: -2px;
+                }
+                .event-bar.tamat { 
+                    background: #f59e0b !important; /* Jingga untuk Tamat */
+                    border-radius: 0 4px 4px 0;
+                    margin-left: -2px;
+                    width: 100%;
+                }
+                .event-bar.single { 
+                    background: #3b82f6 !important; 
                     border-radius: 4px;
                 }
-            </style>
 
+                .calendar-day .more-events {
+                    font-size: 0.4rem;
+                    color: #64748b;
+                    font-weight: 800;
+                }
+            </style>
             <div class="dashboard-grid">
                 <div class="stat-card jumlah">
                     <span class="label" data-i18n="dash_total">Jumlah Keseluruhan</span>
@@ -230,19 +278,25 @@
             </div>
 
             <!-- Calendar Section -->
-            <div class="settings-card" id="calendar-card" style="margin-top: 3rem; margin-bottom: 2rem; padding: 1.25rem; max-width: 500px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                    <h3 style="margin-bottom: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+            <div class="settings-card" id="calendar-card"
+                style="margin-top: 3rem; margin-bottom: 2rem; padding: 1.25rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <h3
+                        style="margin-bottom: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
                         <i class="fas fa-calendar-alt"></i> Kalendar
                     </h3>
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <button class="btn btn-outline" onclick="prevMonth()" style="padding: 2px 8px; font-size: 0.8rem;"><i class="fas fa-chevron-left"></i></button>
-                        <span id="calendarMonthYear" style="font-weight: 700; min-width: 120px; text-align: center; color: var(--text-main); font-size: 0.9rem;">...</span>
-                        <button class="btn btn-outline" onclick="nextMonth()" style="padding: 2px 8px; font-size: 0.8rem;"><i class="fas fa-chevron-right"></i></button>
+                        <button class="btn btn-outline" onclick="prevMonth()"
+                            style="padding: 2px 8px; font-size: 0.8rem;"><i class="fas fa-chevron-left"></i></button>
+                        <span id="calendarMonthYear"
+                            style="font-weight: 700; min-width: 120px; text-align: center; color: var(--text-main); font-size: 0.9rem;">...</span>
+                        <button class="btn btn-outline" onclick="nextMonth()"
+                            style="padding: 2px 8px; font-size: 0.8rem;"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
-                
-                <div class="calendar-grid">
+
+                <div class="calendar-header-grid">
                     <div class="calendar-day-label">Ahd</div>
                     <div class="calendar-day-label">Isn</div>
                     <div class="calendar-day-label">Sel</div>
@@ -251,21 +305,27 @@
                     <div class="calendar-day-label">Jum</div>
                     <div class="calendar-day-label">Sab</div>
                 </div>
-                <div id="calendarDays" class="calendar-grid days-grid"></div>
-                
-                <div style="margin-top: 1.5rem; display: flex; gap: 1.5rem; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 12px; height: 12px; background: #3b82f6; border-radius: 3px; display: inline-block;"></span>
+                <div id="calendarDays" class="days-grid"></div>
+
+                <div
+                    style="margin-top: 1.5rem; display: flex; gap: 1.5rem; font-size: 0.75rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 1.25rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span
+                            style="width: 14px; height: 14px; background: #3b82f6; border-radius: 4px; display: inline-block;"></span>
                         Tarikh Permohonan (Mula)
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 3px; display: inline-block;"></span>
+                        <span
+                            style="width: 14px; height: 14px; background: #f59e0b; border-radius: 4px; display: inline-block;"></span>
+                        Tarikh Pulang (Tamat)
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span
+                            style="width: 14px; height: 14px; background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 4px; display: inline-block;"></span>
                         Hari Ini
                     </div>
                 </div>
             </div>
-        </section>
-
         </section>
 
         <!-- Section: Senarai Pemohon -->
@@ -311,7 +371,8 @@
                     </button>
                     <button class="tab-btn" onclick="filterApplicantTab('lewat')"
                         style="padding: 0.6rem 1.2rem; border: none; background: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                        <i id="warn-lewat" class="fas fa-exclamation-triangle" style="color: #ef4444; display: none; font-size: 0.8rem;"></i>
+                        <i id="warn-lewat" class="fas fa-exclamation-triangle"
+                            style="color: #ef4444; display: none; font-size: 0.8rem;"></i>
                         Lewat <span class="tab-count" id="count-lewat"
                             style="background: rgba(100, 116, 139, 0.1); padding: 2px 8px; border-radius: 20px; font-size: 0.75rem;">0</span>
                     </button>
@@ -364,7 +425,8 @@
             <!-- Jadual 1.5: Permohonan Akan Datang -->
             <div class="settings-card" id="container-akandatang" style="margin-bottom: 2rem;">
                 <h3 style="color: #8b5cf6;"><i class="fas fa-calendar-alt"></i> <span>Permohonan Akan Datang</span></h3>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Senarai permohonan yang dijadualkan untuk masa hadapan (> 7 hari dari sekarang).</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Senarai permohonan yang
+                    dijadualkan untuk masa hadapan (> 7 hari dari sekarang).</p>
                 <div class="table-container">
                     <table class="table-compact">
                         <thead>
@@ -856,13 +918,14 @@
                     </div>
                     <div class="form-group">
                         <label data-i18n="lbl_sound_volume">Kelantangan Bunyi</label>
-                        <input type="range" id="soundVolume" min="0" max="100" value="80" onchange="updateSoundSettings(true)">
+                        <input type="range" id="soundVolume" min="0" max="100" value="80"
+                            onchange="updateSoundSettings(true)">
                     </div>
                     <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
                         <input type="checkbox" id="muteSound" style="width: auto;" onchange="updateSoundSettings(true)">
                         <label style="margin: 0;">Mute Sound</label>
                     </div>
-                    
+
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
                         <button class="btn btn-outline" onclick="testSound()"
                             style="justify-content: center; border-color: var(--primary); color: var(--primary);">

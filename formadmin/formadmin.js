@@ -420,12 +420,16 @@ function generateId() {
 function formatDateTime(dtString) {
     if (!dtString) return '-';
     const dt = new Date(dtString);
+    if (isNaN(dt.getTime())) return dtString;
     const day = String(dt.getDate()).padStart(2, '0');
     const month = String(dt.getMonth() + 1).padStart(2, '0');
     const year = dt.getFullYear();
-    const hours = String(dt.getHours()).padStart(2, '0');
+    let hours = dt.getHours();
     const minutes = String(dt.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+    const ampm = hours >= 12 ? 'petang' : 'pagi';
+    hours = hours % 12 || 12;
+    const strHours = String(hours).padStart(2, '0');
+    return `${day}/${month}/${year} ${strHours}:${minutes} ${ampm}`;
 }
 
 /* ==============================
