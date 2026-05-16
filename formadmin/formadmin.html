@@ -17,6 +17,14 @@
         <i class="fas fa-arrow-left"></i> Kembali
     </a>
 
+    <!-- Notification Bar -->
+    <div id="notificationBar" class="alert-info" style="display: none; max-width: 850px; width: 100%; margin: 10px auto 20px auto; padding: 12px 20px; background: #e0f2fe; border-radius: 12px; border-left: 5px solid #0ea5e9; font-size: 0.9rem; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); box-sizing: border-box;">
+        <i class="fas fa-bell" style="color: #0369a1;"></i>
+        <div id="notificationContent" style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+            Memuatkan maklumat...
+        </div>
+    </div>
+
     <div id="page2" class="form-card">
         <h2 class="form-subtitle"><i class="fas fa-user-edit"></i> MAKLUMAT PEMOHON</h2>
 
@@ -36,7 +44,7 @@
             <div class="form-group" style="position: relative;">
                 <label for="email"><i class="fas fa-envelope"></i> 3. Email UMS :</label>
                 <span class="field-desc">Carian automatik aktif (Microsoft Directory)</span>
-                <input type="email" id="email" name="email" required placeholder="peminjam@ums.edu.my"
+                <input type="email" id="email" name="email" required placeholder="peminjam@ums.edu.my / @student.ums.edu.my"
                     autocomplete="off" />
                 <div id="emailSuggestions" class="suggestions-box" style="display:none;"></div>
             </div>

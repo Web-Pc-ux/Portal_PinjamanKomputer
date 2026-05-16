@@ -1450,12 +1450,19 @@ function renderAllTables() {
 ============================== */
 function renderDashboardStats() {
     const apps = getDB(DB_KEYS.APPS);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const isOverdue = (a) => {
+        if (['Dipulangkan', 'Selesai', 'Ditolak', 'Tolak'].includes(a.status)) return false;
+        const endDate = parseDateDMY(a.tamat);
+        return endDate && endDate < today;
+    };
 
     const countBaru = apps.filter(a => a.status === 'Menunggu' || a.status === 'Baru').length;
-    const countAkanDatang = apps.filter(a => a.status === 'Akan Datang').length;
-    const countLulus = apps.filter(a => a.status === 'Lulus' || a.status === 'Sedang Digunakan').length;
-    const countDipulangkan = apps.filter(a => a.status === 'Dipulangkan').length;
-    const countLewat = apps.filter(a => a.status === 'Lewat').length;
+    const countLulus = apps.filter(a => (a.status === 'Lulus' || a.status === 'Sedang Digunakan') && !isOverdue(a)).length;
+    const countDipulangkan = apps.filter(a => a.status === 'Dipulangkan' || a.status === 'Selesai').length;
+    const countLewat = apps.filter(a => a.status === 'Lewat' || isOverdue(a)).length;
     const countDitolak = apps.filter(a => a.status === 'Ditolak' || a.status === 'Tolak').length;
 
     // Update stat cards
@@ -1472,30 +1479,63 @@ function renderDashboardStats() {
     // Update notification
     const notifEl = document.getElementById('actionNotifications');
 
-    // Logic for Upcoming in 7 Days (Peringatan 7 Hari)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Logic for Dynamic Upcoming Notifications (0-7 Days)
     const next7Days = new Date();
     next7Days.setDate(today.getDate() + 7);
     next7Days.setHours(23, 59, 59, 999);
 
-    const akanDatangSegera = apps.filter(a => {
-        // Hanya ambil yang 'Akan Datang' atau 'Lulus' yang belum mula
-        if (a.status !== 'Akan Datang' && a.status !== 'Lulus') return false;
+    const upcomingData = {
+        today: 0,
+        tomorrow: 0,
+        future: {} // Store counts for days 2-7
+    };
+
+    apps.forEach(a => {
+        if (a.status !== 'Akan Datang' && a.status !== 'Lulus' && a.status !== 'Baru' && a.status !== 'Menunggu') return;
         const loanDate = parseDateDMY(a.mula);
-        return loanDate && loanDate >= today && loanDate <= next7Days;
-    }).length;
+        if (!loanDate) return;
+
+        const diffTime = loanDate.getTime() - today.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+
+        if (diffDays === 0) upcomingData.today++;
+        else if (diffDays === 1) upcomingData.tomorrow++;
+        else if (diffDays > 1 && diffDays <= 7) {
+            upcomingData.future[diffDays] = (upcomingData.future[diffDays] || 0) + 1;
+        }
+    });
+    
+    const hasUpcoming = upcomingData.today > 0 || upcomingData.tomorrow > 0 || Object.keys(upcomingData.future).length > 0;
 
     if (notifEl) {
-        if (countBaru > 0 || akanDatangSegera > 0) {
+        if (countBaru > 0 || hasUpcoming || countLewat > 0) {
             let msg = `<i class="fas fa-info-circle" style="margin-right: 8px;"></i>`;
+            
+            if (countLewat > 0) {
+                msg += `<div style="color: #dc2626; background: #fee2e2; padding: 5px 10px; border-radius: 5px; margin-bottom: 8px; font-weight: bold; border-left: 4px solid #dc2626;">
+                            🚨 AMARAN: ${countLewat} peralatan LEWAT dipulangkan! <br>
+                            <span style="font-weight: normal; font-size: 0.8rem; color: #991b1b; cursor: pointer; text-decoration: underline;" onclick="filterApplicantTab('lewat')">
+                                Sila klik di sini untuk melihat senarai penama yang terlibat di tab <b>"Lewat"</b>.
+                            </span>
+                        </div>`;
+            }
+            
             if (countBaru > 0) {
-                msg += `Terdapat <b>${countBaru} permohonan baru</b> yang memerlukan kelulusan anda. `;
+                msg += `Terdapat <b>${countBaru} permohonan baru</b> menunggu kelulusan. `;
             }
-            if (akanDatangSegera > 0) {
-                msg += `Terdapat <b>${akanDatangSegera} pinjaman</b> yang akan bermula dalam tempoh 7 hari lagi. `;
+            
+            if (upcomingData.today > 0) {
+                msg += `<div style="margin-top:5px; color:#c2410c;">🔥 <b>${upcomingData.today} pinjaman</b> bermula <b style="text-decoration:underline;">HARI INI</b>.</div>`;
             }
-            msg += `<br><small>Jumlah keseluruhan rekod permohonan: ${apps.length}</small>`;
+            if (upcomingData.tomorrow > 0) {
+                msg += `<div style="margin-top:2px; color:#ea580c;">⏳ <b>${upcomingData.tomorrow} pinjaman</b> bermula <b>ESOK</b>.</div>`;
+            }
+            
+            Object.keys(upcomingData.future).sort().forEach(day => {
+                msg += `<div style="margin-top:2px; color:#0369a1;">📅 <b>${upcomingData.future[day]} pinjaman</b> bermula dalam <b>${day} hari</b> lagi.</div>`;
+            });
+
+            msg += `<div style="margin-top:8px; border-top:1px solid #ffeeba; padding-top:5px; font-size:0.8rem; opacity:0.8;">Jumlah keseluruhan rekod: ${apps.length}</div>`;
 
             notifEl.innerHTML = `
                 <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.6;">
@@ -1510,13 +1550,62 @@ function renderDashboardStats() {
     // Update notification bar (Blue Alert at the top)
     const alertBar = document.querySelector('#dashboard .alert');
     if (alertBar) {
-        let alertMsg = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> ${countBaru} permohonan baru menunggu kelulusan. Jumlah rekod: ${apps.length}.`;
+        const countSedangDigunakan = apps.filter(a => a.status === 'Sedang Digunakan').length;
+        
+        let alertMsg = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> `;
+        
+        if (countBaru > 0) {
+            alertMsg += `<span>${countBaru} permohonan baru menunggu kelulusan. </span>`;
+        } else {
+            alertMsg += `<span>Tiada permohonan baru. </span>`;
+        }
 
-        if (akanDatangSegera > 0) {
-            alertMsg += ` <span style="margin-left:10px; color:#c2410c; font-weight:bold;">⚠️ Peringatan: ${akanDatangSegera} permohonan akan bermula dalam 7 hari!</span>`;
+        if (countSedangDigunakan > 0) {
+            alertMsg += `<span class="pulse-badge" style="margin-left: 10px; padding: 2px 8px; background: #0ea5e9; color: white; border-radius: 4px; font-size: 0.75rem; display: flex; align-items: center; gap: 5px;"><i class="fas fa-laptop-house"></i> ${countSedangDigunakan} penggunaan sedang berjalan</span>
+            <style>
+                .pulse-badge {
+                    animation: pulse-blue 2s infinite;
+                }
+                @keyframes pulse-blue {
+                    0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+                    70% { box-shadow: 0 0 0 6px rgba(14, 165, 233, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+                }
+            </style>`;
+        }
+
+        alertMsg += `<span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;"> | Jumlah rekod: ${apps.length}</span>`;
+
+        if (countLewat > 0) {
+            alertMsg += ` <span class="pulse-red" style="margin-left:10px; color:white; background:#dc2626; font-weight:bold; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" onclick="filterApplicantTab('lewat')">🚨 LEWAT: ${countLewat}</span>
+            <style>
+                .pulse-red { animation: pulse-red-anim 1.5s infinite; }
+                @keyframes pulse-red-anim {
+                    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+                    70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+                }
+            </style>`;
+        }
+
+        if (upcomingData.today > 0) {
+            alertMsg += ` <span style="margin-left:10px; color:#c2410c; font-weight:bold; border: 1px solid #c2410c; padding: 2px 6px; border-radius: 4px;">⚠️ HARI INI: ${upcomingData.today}</span>`;
+        }
+
+        if (upcomingData.tomorrow > 0) {
+            alertMsg += ` <span style="margin-left:10px; color:#ea580c; font-weight:bold;">⏳ ESOK: ${upcomingData.tomorrow}</span>`;
+        }
+
+        const futureTotal = Object.values(upcomingData.future).reduce((a, b) => a + b, 0);
+        if (futureTotal > 0) {
+            alertMsg += ` <span style="margin-left:10px; color:#0369a1; font-weight:bold;">📅 Akan Datang: ${futureTotal}</span>`;
         }
 
         alertBar.innerHTML = alertMsg;
+        // Make sure it's flex for alignment
+        alertBar.style.display = 'flex';
+        alertBar.style.alignItems = 'center';
+        alertBar.style.flexWrap = 'wrap';
     }
 }
 
@@ -1706,11 +1795,20 @@ function renderApplicationTable() {
 
     const data = getDB(DB_KEYS.APPS);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const isOverdue = (app) => {
+        if (['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak'].includes(app.status)) return false;
+        const endDate = parseDateDMY(app.tamat);
+        return endDate && endDate < today;
+    };
+
     // Filter data
-    const activeData = data.filter(app => !['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak', 'Lewat', 'Akan Datang'].includes(app.status));
+    const activeData = data.filter(app => !['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak', 'Lewat', 'Akan Datang'].includes(app.status) && !isOverdue(app));
     const futureData = data.filter(app => app.status === 'Akan Datang');
     const completedData = data.filter(app => ['Selesai', 'Dipulangkan'].includes(app.status));
-    const delayedData = data.filter(app => app.status === 'Lewat');
+    const delayedData = data.filter(app => app.status === 'Lewat' || isOverdue(app));
     const rejectedData = data.filter(app => app.status === 'Ditolak' || app.status === 'Tolak');
 
     // Helper function to render rows
@@ -3331,25 +3429,6 @@ function renderComputerUsage() {
     }).join('');
 }
 
-function parseDateDMY(dateStr) {
-    if (!dateStr || dateStr === '-') return null;
-
-    // 1. Cuba parsing standard (ISO, etc)
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-        // Reset masa untuk perbandingan tarikh sahaja
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    }
-
-    // 2. Fallback untuk format DD/MM/YYYY
-    const parts = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-    if (parts) {
-        return new Date(parseInt(parts[3]), parseInt(parts[2]) - 1, parseInt(parts[1]));
-    }
-
-    return null;
-}
-
 function applyReportFilter() {
     const apps = getDB(DB_KEYS.APPS);
     const dateFrom = document.getElementById('rptDateFrom').value;
@@ -4094,15 +4173,29 @@ function searchPemohon() {
 let dashboardCalendarDate = new Date();
 
 function parseDateDMY(dateStr) {
-    if (!dateStr) return null;
-    // Handle DD/MM/YYYY format
+    if (!dateStr || dateStr === '-' || dateStr === 'undefined') return null;
+
+    // 1. Cuba parsing standard (ISO, etc)
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        // Reset masa untuk perbandingan tarikh sahaja (00:00:00)
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    // 2. Fallback untuk format DD/MM/YYYY
+    // Kita cuba split jika ada format 15/05/2026
     const parts = dateStr.split(' ')[0].split('/');
     if (parts.length === 3) {
         return new Date(parts[2], parts[1] - 1, parts[0]);
     }
-    // Fallback to standard Date parsing
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? null : d;
+    
+    // 3. Cuba match regex jika format lain (contoh: 15-05-2026)
+    const match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (match) {
+        return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+    }
+
+    return null;
 }
 
 function renderDashboardCalendar() {
@@ -4123,7 +4216,13 @@ function renderDashboardCalendar() {
 
     calendarDays.innerHTML = '';
 
-    const apps = (getDB(DB_KEYS.APPS) || []).filter(a => a.mula && a.tamat);
+    const apps = (getDB(DB_KEYS.APPS) || []).filter(a => {
+        if (!a.mula || !a.tamat) return false;
+        // Sembunyikan jika sudah dipulangkan atau selesai sepenuhnya
+        const s = (a.status || '').toLowerCase();
+        if (s.includes('pulang') || s.includes('selesai')) return false;
+        return true;
+    });
     const viewStart = new Date(year, month, 1);
     const viewEnd = new Date(year, month, daysInMonth);
 
@@ -4202,8 +4301,8 @@ function renderDashboardCalendar() {
                 const bar = document.createElement('div');
                 let type = 'tengah';
                 if (isStart && isEnd) type = 'single';
-                else if (isStart || (isMonday && app.startDate < dateObj)) type = 'mula';
-                else if (isEnd || (isSunday && app.endDate > dateObj)) type = 'tamat';
+                else if (isStart) type = 'mula';
+                else if (isEnd) type = 'tamat';
 
                 const statusClass = getStatusClass(app.status);
                 bar.className = `event-bar ${type} status-${statusClass}`;
@@ -4245,7 +4344,7 @@ function showAppDetails(app) {
         html: `<div style="text-align: left; padding: 10px;">
             <p><strong>Pemohon:</strong> ${app.nama}</p>
             <p><strong>Peralatan:</strong> ${app.model}</p>
-            <p><strong>Tempoh:</strong> ${app.mula} hingga ${app.tamat}</p>
+            <p><strong>Tempoh:</strong> ${formatDate(app.mula)} hingga ${formatDate(app.tamat)}</p>
             <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(app.status)}">${app.status}</span></p>
         </div>`,
         icon: 'info',

@@ -93,7 +93,7 @@ if (msBtn) {
             provider.addScope('Calendars.ReadWrite'); // TAMBAHAN: Untuk integrasi Kalendar Outlook
 
             const result = await auth.signInWithPopup(provider);
-            
+
             // Tunjukkan loading overlay selepas popup ditutup (untuk proses pengesahan akaun)
             Swal.fire({
                 title: 'Mengesahkan Akaun...',
@@ -120,11 +120,21 @@ if (msBtn) {
                 throw new Error("Gagal membaca emel dari akaun Microsoft anda.");
             }
 
+            // Validasi Domain UMS (Staff & Pelajar)
+            const allowedDomains = ['@ums.edu.my', '@student.ums.edu.my', '@iluv.ums.edu.my',];
+            const emailLower = email.toLowerCase();
+            const isAllowed = allowedDomains.some(domain => emailLower.endsWith(domain));
+
+            if (!isAllowed) {
+                await auth.signOut();
+                throw new Error("Akses Ditolak: Sila gunakan emel rasmi UMS (@ums.edu.my, @student.ums.edu.my, atau @iluv.ums.edu.my).");
+            }
+
             let finalAdmin = await findAdmin(email);
             const msName = user.displayName || (result.additionalUserInfo && result.additionalUserInfo.profile && result.additionalUserInfo.profile.displayName) || email.split('@')[0];
 
             if (!finalAdmin) {
-                console.log("ℹ️ Tiada padanan di Excel. Melog masuk sebagai Pengguna Biasa.");
+                console.log("ℹ️ Log masuk sebagai Pengguna Biasa.");
                 finalAdmin = {
                     nama: msName,
                     username: email.split('@')[0],
@@ -211,7 +221,7 @@ if (msBtn) {
 
             // 3. SUCCESS NOTIFICATION & REDIRECTION
             const displayName = msName || getVal(finalAdmin, 'nama') || email.split('@')[0];
-            
+
             btnMs.innerHTML = `<i class="fas fa-check"></i> Selamat Datang, ${displayName}!`;
 
             setTimeout(() => {

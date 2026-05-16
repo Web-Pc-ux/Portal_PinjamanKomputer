@@ -741,8 +741,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Verify UMS Email
-                if (email.toLowerCase().endsWith('@ums.edu.my')) {
+                // Verify UMS Email (Staff & Pelajar)
+                const allowedDomains = ['@ums.edu.my', '@student.ums.edu.my', '@iluv.ums.edu.my'];
+                const emailLower = email.toLowerCase();
+                const isAllowed = allowedDomains.some(domain => emailLower.endsWith(domain));
+
+                if (isAllowed) {
                     // Simpan data login secara rahsia (global)
                     window.loggedInGoogleEmail = email;
                     window.loggedInGoogleName = user.displayName || "";

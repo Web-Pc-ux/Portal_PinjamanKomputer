@@ -1421,7 +1421,26 @@ function renderDashboardStats() {
     // Update notification bar
     const alertBar = document.querySelector('#dashboard .alert');
     if (alertBar) {
-        alertBar.innerHTML = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> ${countBaru} permohonan baru menunggu kelulusan. Jumlah rekod: ${apps.length}.`;
+        const countSedangDigunakan = apps.filter(a => a.status === 'Sedang Digunakan').length;
+        
+        let alertMsg = `<i class="fas fa-bell"></i> <strong>Notifikasi:</strong> `;
+        
+        if (countBaru > 0) {
+            alertMsg += `<span>${countBaru} permohonan baru menunggu kelulusan. </span>`;
+        } else {
+            alertMsg += `<span>Tiada permohonan baru. </span>`;
+        }
+
+        if (countSedangDigunakan > 0) {
+            alertMsg += `<span style="margin-left: 10px; padding: 2px 8px; background: #0ea5e9; color: white; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-laptop-house"></i> ${countSedangDigunakan} penggunaan sedang berjalan</span>`;
+        }
+
+        alertMsg += `<span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;"> | Jumlah rekod: ${apps.length}</span>`;
+
+        alertBar.innerHTML = alertMsg;
+        alertBar.style.display = 'flex';
+        alertBar.style.alignItems = 'center';
+        alertBar.style.flexWrap = 'wrap';
     }
 }
 
@@ -1611,10 +1630,19 @@ function renderApplicationTable() {
 
     const data = getDB(DB_KEYS.APPS);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const isOverdue = (app) => {
+        if (['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak'].includes(app.status)) return false;
+        const endDate = parseDateDMY(app.tamat);
+        return endDate && endDate < today;
+    };
+
     // Filter data
-    const activeData = data.filter(app => !['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak', 'Lewat'].includes(app.status));
+    const activeData = data.filter(app => !['Selesai', 'Dipulangkan', 'Ditolak', 'Tolak', 'Lewat'].includes(app.status) && !isOverdue(app));
     const completedData = data.filter(app => ['Selesai', 'Dipulangkan'].includes(app.status));
-    const delayedData = data.filter(app => app.status === 'Lewat');
+    const delayedData = data.filter(app => app.status === 'Lewat' || isOverdue(app));
     const rejectedData = data.filter(app => app.status === 'Ditolak' || app.status === 'Tolak');
 
     // Helper function to render rows
@@ -1660,21 +1688,21 @@ function renderApplicationTable() {
                     <td data-label="Tempoh Penggunaan">
                         <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
                             <i class="fas fa-calendar-alt" style="color: var(--success); font-size: 0.7rem;"></i>
-                            <span><strong>Mula:</strong> ${app.mula}</span>
+                            <span><strong>Mula:</strong> ${formatDate(app.mula)}</span>
                         </div>
                         ${app.scanPinjam ? `
                             <div style="font-size: 0.7rem; color: #059669; padding-left: 1.1rem; line-height: 1.2;">
-                                <strong>Scan:</strong> ${app.scanPinjam}<br>
+                                <strong>Scan:</strong> ${formatDate(app.scanPinjam)}<br>
                                 <span style="font-style: italic; opacity: 0.8;">Oleh: ${app.authNamaPinjam || '-'}</span>
                             </div>` : ''}
                         
                         <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; margin-top: 4px;">
                             <i class="fas fa-calendar-check" style="color: var(--danger); font-size: 0.7rem;"></i>
-                            <span><strong>Tamat:</strong> ${app.tamat}</span>
+                            <span><strong>Tamat:</strong> ${formatDate(app.tamat)}</span>
                         </div>
                         ${app.scanPulang ? `
                             <div style="font-size: 0.7rem; color: #dc2626; padding-left: 1.1rem; line-height: 1.2;">
-                                <strong>Scan:</strong> ${app.scanPulang}<br>
+                                <strong>Scan:</strong> ${formatDate(app.scanPulang)}<br>
                                 <span style="font-style: italic; opacity: 0.8;">Oleh: ${app.authNamaPulang || '-'}</span>
                             </div>` : ''}
                     </td>
@@ -2983,11 +3011,28 @@ function renderComputerUsage() {
 }
 
 function parseDateDMY(dateStr) {
-    // Parse DD/MM/YYYY HH:MM format
-    if (!dateStr || dateStr === '-') return null;
-    const parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-    if (!parts) return null;
-    return new Date(parseInt(parts[3]), parseInt(parts[2]) - 1, parseInt(parts[1]));
+    if (!dateStr || dateStr === '-' || dateStr === 'undefined') return null;
+
+    // 1. Cuba parsing standard (ISO, etc)
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        // Reset masa untuk perbandingan tarikh sahaja (00:00:00)
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    // 2. Fallback untuk format DD/MM/YYYY
+    const parts = dateStr.split(' ')[0].split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    
+    // 3. Cuba match regex jika format lain (contoh: 15-05-2026)
+    const match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (match) {
+        return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+    }
+
+    return null;
 }
 
 function applyReportFilter() {

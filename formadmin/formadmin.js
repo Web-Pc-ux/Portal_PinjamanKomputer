@@ -680,11 +680,55 @@ async function fetchInitialData() {
             if (hasChanges) {
                 console.log('✨ Data dikemaskini (Turbo Mode).');
                 buildModelSection();
+                updateNotificationBar();
+            } else {
+                // Walaupun tiada perubahan, tetap kemaskini bar jika dipanggil masa init
+                updateNotificationBar();
             }
         }
     } catch (e) {
         console.error('❌ Gagal Turbo Sync:', e);
     }
+}
+
+/* ==============================
+   NOTIFICATION BAR LOGIC
+============================== */
+function updateNotificationBar() {
+    const notifBar = document.getElementById('notificationBar');
+    const notifContent = document.getElementById('notificationContent');
+    if (!notifBar || !notifContent) return;
+
+    const apps = getDB(DB_KEYS.APPS);
+    const countBaru = apps.filter(a => a.status === 'Menunggu' || a.status === 'Baru').length;
+    const countSedangDigunakan = apps.filter(a => a.status === 'Sedang Digunakan').length;
+
+    let html = `<strong>Notifikasi:</strong> `;
+    
+    if (countBaru > 0) {
+        html += `<span>${countBaru} permohonan baru menunggu kelulusan. </span>`;
+    } else {
+        html += `<span>Tiada permohonan baru. </span>`;
+    }
+
+    if (countSedangDigunakan > 0) {
+        html += `<span class="pulse-badge" style="margin-left: 10px; padding: 2px 8px; background: #0ea5e9; color: white; border-radius: 4px; font-size: 0.75rem; display: flex; align-items: center; gap: 5px;"><i class="fas fa-laptop-house"></i> ${countSedangDigunakan} penggunaan sedang berjalan</span>
+        <style>
+            .pulse-badge {
+                animation: pulse-blue 2s infinite;
+            }
+            @keyframes pulse-blue {
+                0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+                70% { box-shadow: 0 0 0 6px rgba(14, 165, 233, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+            }
+        </style>`;
+    }
+
+    html += `<span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;"> | Jumlah rekod: ${apps.length}</span>`;
+
+    notifContent.innerHTML = html;
+    notifBar.style.display = 'flex';
 }
 
 /* ==============================
