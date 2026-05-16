@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "portalpinjamankomputer",
+  "name": "pinjamkomputer",
   "compatibility_date": "2026-05-16",
   "observability": {
     "enabled": true
