@@ -4,3 +4,10 @@ _archive_lama/
 Thumbs.db
 *.log
 .vscode/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
