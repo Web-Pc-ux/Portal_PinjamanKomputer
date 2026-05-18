@@ -1,0 +1,117 @@
+@page {
+    size: A4 landscape;
+    margin: 8.5mm 4.5mm 8mm 10mm;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    max-width: 1000px;
+    color: #000;
+}
+.header-top {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 5px;
+}
+.header-right {
+    text-align: right;
+    line-height: 1.4;
+}
+.header-right .kew-pa {
+    margin-top: 8px;
+    font-size: 14px;
+}
+.logo-container {
+    text-align: center;
+    margin-bottom: 5px;
+}
+.logo-container img {
+    height: 70px;
+    width: auto;
+}
+.form-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+table.main-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.main-table th, .main-table td {
+    border: 1px solid black;
+    padding: 4px;
+}
+.main-table th {
+    text-align: center;
+    font-weight: normal;
+    vertical-align: middle;
+    font-size: 11px;
+    padding: 6px 4px;
+}
+
+/* Top section overrides */
+.top-left-cell {
+    padding: 0 !important;
+    vertical-align: top;
+}
+.inner-table {
+    width: 100%;
+    border-collapse: collapse;
+    height: 100%;
+}
+.inner-table td {
+    border: none;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    padding: 4px 6px !important;
+    font-size: 11px;
+    height: 20px;
+    vertical-align: middle;
+}
+.inner-table tr:last-child td {
+    border-bottom: none;
+}
+.inner-table td:last-child {
+    border-right: none;
+}
+
+.label-col { width: 30%; }
+.colon-col { width: 3%; text-align: center; }
+.fill-col { width: 67%; }
+
+.pegawai-col {
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 12px;
+}
+.catatan-col {
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 11px;
+}
+
+.bottom-row {
+    height: 25px;
+}
+.bottom-row td {
+    border: 1px solid black;
+}
+
+.page-number {
+    text-align: right;
+    margin-top: 40px;
+    margin-right: 10px;
+    font-size: 12px;
+}
+
+@media print {
+    body {
+        padding: 0;
+        max-width: none;
+    }
+}

@@ -1744,8 +1744,9 @@ function renderComputerTable() {
                     <td data-label="No. Siri">${comp.noSiri || '-'}</td>
                     <td data-label="No. Pendaftaran UMS">${comp.noPendaftaran || '-'}</td>
                     <td data-label="Tindakan">
-                        <button class="btn btn-outline" onclick="editComputer(${comp.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-outline" onclick="deleteComputer(${comp.id})" style="padding: 0.25rem 0.5rem; color: var(--danger);"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-outline" onclick="editComputer(${comp.id})" style="padding: 0.25rem 0.5rem;" title="Edit Komputer"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-outline" onclick="window.open('../kewpa6_print/kewpa6.html?compId=${comp.id}', '_blank')" style="padding: 0.25rem 0.5rem; color: var(--primary);" title="Cetak KEW PA-6"><i class="fas fa-print"></i></button>
+                        <button class="btn btn-outline" onclick="deleteComputer(${comp.id})" style="padding: 0.25rem 0.5rem; color: var(--danger);" title="Padam Komputer"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -1772,6 +1773,7 @@ function renderCategoryTable() {
         <tr>
             <td data-label="Nama Kategori">${cat.nama}</td>
             <td data-label="Tindakan">
+                <button class="btn btn-outline" onclick="window.open('../kewpa6_print/kewpa6.html?catName=${encodeURIComponent(cat.nama)}', '_blank')" style="padding: 0.25rem 0.5rem; color: var(--primary);" title="Cetak Semua KEW PA-6 Kategori Ini"><i class="fas fa-print"></i></button>
                 <button class="btn btn-outline" onclick="deleteCategory(${cat.id})" style="padding: 0.25rem 0.5rem; color: var(--danger);"><i class="fas fa-trash"></i></button>
             </td>
         </tr>
@@ -2669,9 +2671,11 @@ function updateAppManagement(id) {
 
                 // Build the assigned units for the 'siri' field
                 catSelected.forEach(cb => {
-                    const noPC = cb.dataset.nopc || '';
-                    const noSiri = cb.dataset.nosiri || '';
-                    siriParts.push(noPC || noSiri || cb.value);
+                    const rawNoPC = cb.dataset.nopc || '';
+                    const rawNoSiri = cb.dataset.nosiri || '';
+                    const validPC = (rawNoPC !== '-') ? rawNoPC : '';
+                    const validSiri = (rawNoSiri !== '-') ? rawNoSiri : '';
+                    siriParts.push(validPC || validSiri || cb.value);
                 });
             });
 
