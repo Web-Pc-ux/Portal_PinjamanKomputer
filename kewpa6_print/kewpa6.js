@@ -1,21 +1,27 @@
 const GAS_TOKEN = "CHRIS_SHEETS_KEY_2026";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzslQ-3jXX1wfKVUUJPu7Tt4XB9k4tUCOuDUa93sgXwBZvUflvGIFj-wq0Op6QkCpb7kg/exec";
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const appId = urlParams.get('id');
     const compId = urlParams.get('compId');
     const catName = urlParams.get('catName');
 
     if (appId) {
-        loadApplicationData(parseInt(appId));
+        await loadApplicationData(parseInt(appId));
     } else if (compId) {
-        loadComputerData(parseInt(compId));
+        await loadComputerData(parseInt(compId));
     } else if (catName) {
-        loadCategoryData(catName);
+        await loadCategoryData(catName);
     } else {
         console.log('Tiada ID permohonan atau komputer diberikan.');
+        return;
     }
+
+    // Auto trigger cetakan
+    setTimeout(() => {
+        window.print();
+    }, 500);
 });
 
 async function loadApplicationData(id) {
@@ -346,7 +352,12 @@ async function loadCategoryData(catName) {
         </div>
     `;
 
-    document.body.innerHTML = '';
+    document.body.innerHTML = `
+        <div class="no-print">
+            <button onclick="window.close()" class="btn-back">&#8592; Kembali</button>
+            <button onclick="window.print()" class="btn-print">🖨️ Cetak Borang Sekarang</button>
+        </div>
+    `;
 
     categoryComps.forEach(comp => {
         const pageDiv = document.createElement('div');
